@@ -13,6 +13,3 @@
 [submodule "Hazel/vendor/yaml-cpp"]
 	path = Hazel/vendor/yaml-cpp
 	url = https://github.com/TheCherno/yaml-cpp
-[submodule "Hazel/vendor/ImGuizmo"]
-	path = Hazel/vendor/ImGuizmo
-	url = https://github.com/TheCherno/imguizmo
