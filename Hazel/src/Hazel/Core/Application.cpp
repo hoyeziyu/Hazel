@@ -1,11 +1,8 @@
 #include "hzpch.h"
 #include "Application.h"
-
-#include <GLFW/glfw3.h>
-
 #include "Hazel/Renderer/Renderer.h"
 #include "Hazel/Renderer/Buffer.h"
-
+#include <GLFW/glfw3.h>
 
 namespace Hazel {
 

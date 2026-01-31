@@ -1,5 +1,7 @@
  # Directories
 .vs/
+out/
+build/
 bin/
 bin-int/
 Sandbox/log/
