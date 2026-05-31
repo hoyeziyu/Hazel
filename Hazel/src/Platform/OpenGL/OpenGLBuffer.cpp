@@ -12,7 +12,9 @@ namespace Hazel {
 		HZ_PROFILE_FUNCTION();
 		glCreateBuffers(1, &m_RendererID);
 		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
-		glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);	// ����ʵ��û�и�����,���ֶ�̬draw�������ߴ�
+		// glBufferData 这里不仅仅设置顶点，并实际把数据发给gpu，并存储到gpu内存中，还会分配gpu上的缓冲区（我们应该把这个函数当做分配函数使用）
+		// 传nullptr，意味着我可以用任何数据应用它， 这里只是动态分配size多大的内存空间
+		glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);	// ����ʵ��û�и�����,���ֶ�̬draw�������ߴ�
 	}
 	
 	OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, uint32_t size)
