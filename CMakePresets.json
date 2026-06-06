@@ -1,0 +1,69 @@
+{
+    "version": 6,
+    "configurePresets": [
+      {
+        "name": "base",
+        "hidden": true,
+        "generator": "Visual Studio 17 2022",
+        "architecture": "x64",
+        "cacheVariables": {
+          "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vendor/vcpkg/scripts/buildsystems/vcpkg.cmake",
+          "VCPKG_TARGET_TRIPLET": "x64-windows",
+          "VCPKG_MANIFEST_MODE": "ON",
+          "VCPKG_INSTALLED_DIR": "${sourceDir}/vendor/vcpkg_installed"
+        }
+      },
+      {
+        "name": "windows-msvc-debug",
+        "inherits": "base",
+        "displayName": "Windows MSVC x64 Debug",
+        "binaryDir": "${sourceDir}/build/msvc-debug",
+        "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Debug"
+        }
+      },
+      {
+        "name": "windows-msvc-release",
+        "inherits": "base",
+        "displayName": "Windows MSVC x64 Release",
+        "binaryDir": "${sourceDir}/build/msvc-release",
+        "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Release"
+        }
+      }
+    ],
+    "buildPresets": [
+      {
+        "name": "debug",
+        "configurePreset": "windows-msvc-debug",
+        "configuration": "Debug"
+      },
+      {
+        "name": "release",
+        "configurePreset": "windows-msvc-release",
+        "configuration": "Release"
+      }
+    ],
+    "testPresets": [
+      {
+        "name": "debug",
+        "displayName": "Run All Tests",
+        "configurePreset": "windows-msvc-debug",
+        "output": {
+          "outputOnFailure": true
+        }
+      },
+      {
+        "name": "release",
+        "displayName": "Run All Tests (Release)",
+        "configurePreset": "windows-msvc-release",
+        "configuration": "Release",
+        "output": {
+          "outputOnFailure": true
+        }
+      }
+    ],
+    "packagePresets": [
+    
+    ]
+  }

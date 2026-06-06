@@ -1,18 +1,13 @@
-project(hazel-sandbox)
+project(Sandbox)
 
 # Add source files (.cpp only)
 set (SANDBOX_SOURCES
     "src/SandboxApp.cpp"
-    "src/Sandbox2D.h" 
-    "src/Sandbox2D.cpp"
-    "src/ParticleSystem.h"
-    "src/ParticleSystem.cpp"
-    #"src/ExampleLayer.h" 
-    #"src/ExampleLayer.cpp"
 )
 
 # Define executable
 add_executable(${PROJECT_NAME} ${SANDBOX_SOURCES})
+hazel_set_output_dirs(${PROJECT_NAME})
 
 # Set include directories
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src)

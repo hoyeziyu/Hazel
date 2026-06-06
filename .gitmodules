@@ -1,15 +1,3 @@
-[submodule "Hazel/vendor/spdlog"]
-	path = Hazel/vendor/spdlog
-	url = https://github.com/gabime/spdlog
-[submodule "Hazel/vendor/GLFW"]
-	path = Hazel/vendor/GLFW
-	url = https://github.com/TheCherno/glfw
-[submodule "Hazel/vendor/imgui"]
-	path = Hazel/vendor/imgui
-	url = https://github.com/ocornut/imgui
-[submodule "Hazel/vendor/glm"]
-	path = Hazel/vendor/glm
-	url = https://github.com/g-truc/glm
-[submodule "Hazel/vendor/yaml-cpp"]
-	path = Hazel/vendor/yaml-cpp
-	url = https://github.com/TheCherno/yaml-cpp
+[submodule "vendor/vcpkg"]
+	path = vendor/vcpkg
+	url = https://github.com/microsoft/vcpkg
