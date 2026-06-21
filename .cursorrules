@@ -1,0 +1,59 @@
+# Hazel 游戏引擎 — Cursor 规则
+
+详细结构与模块说明见 `AGENTS.md`；子项目见 `Hazel/AGENTS.md`、`Sandbox/AGENTS.md`、`Hazelnut/AGENTS.md`。
+
+## 项目概览
+
+- C++17 游戏引擎（Cherno Hazel 教程），CMake + vcpkg manifest，当前仅 **Windows + OpenGL**
+- **Hazel/** → 静态库 `hazel-engine`（`Hazel::Engine`）
+- **Sandbox/** → 示例 exe，实现 `Hazel::CreateApplication()`
+- **Hazelnut/** → 预留编辑器，**空目录、未接入 CMake**，不要假设已有代码
+- 依赖：`vcpkg.json`；勿修改 `vendor/vcpkg_installed/`、`build/`、`bin/`、`bin-int/`
+
+## 构建与运行
+
+```powershell
+cmake --preset=windows-msvc-debug
+cmake --build --preset=debug
+.\bin\Debug-windows-x86_64\Sandbox\Sandbox.exe
+```
+
+- 产物：`bin/<Config>-windows-x86_64/<ProjectName>/`
+- 新增引擎源文件放 `Hazel/src/` 即可（GLOB 自动收录）；**Sandbox 新 .cpp 须加入 `SANDBOX_SOURCES`**
+- 新 vcpkg 依赖：改 `vcpkg.json` + `Hazel/CMakeLists.txt`，然后重新 `cmake --preset`
+
+## 代码约定
+
+- 命名空间 `Hazel`；智能指针：`Ref<T>`、`Scope<T>`（`Hazel/Core/Core.h`）
+- 渲染基类解绑方法名：**`UnBind`**（不是 `Unbind`）
+- 头文件自包含：用到 `Ref` / `std::vector` 等须自行 `#include`
+- EnTT：`#include <entt/entt.hpp>`
+- 日志：`HZ_CORE_*` / `HZ_*`；spdlog 用 **`critical()`**，不要用 `fatal()`
+- OpenGL：先 `#include <glad/glad.h>`，再 `#include <GLFW/glfw3.h>`
+- stb：仅在一个 `.cpp` 中 `#define STB_IMAGE_IMPLEMENTATION`（已在 `OpenGLTexture.cpp`）
+- ImGui：vcpkg 为标准版，**不要用** `DockingEnable` / `ViewportsEnable` / `UpdatePlatformWindows`
+- 平台抽象：渲染类用 `X::Create()` 工厂 + `Platform/OpenGL` 实现，不要直接在 Core 里调 GL API
+
+## 资源路径
+
+- 运行时相对 **exe 工作目录**：`assets/shaders/`、`assets/fonts/` 等
+- 资源源文件在 `Sandbox/assets/`；构建时 POST_BUILD 复制到 exe 旁，**改 assets 后需 rebuild Sandbox**
+- `glGetString` 等返回指针传给 spdlog/fmt 时须转为 `const char*`
+
+## 架构要点
+
+- `Application` → `LayerStack`（`OnUpdate` / `OnImGuiRender` / `OnEvent`）
+- `Renderer` / `Renderer2D` / `Scene`（EnTT ECS）/ `ImGuiLayer`
+- 默认 Sandbox 无绘制逻辑，**黑屏正常**；有 Layer 或 `Renderer2D` 调用后才有画面
+
+## 修改原则
+
+- **最小改动**：只改与任务相关的文件，不顺手重构
+- **匹配现有风格**：命名、抽象层次、注释密度与周围代码一致
+- **不提交**生成目录、`.user`、profile 日志；不主动 `git commit` 除非用户要求
+- 遇 MSVC **C1041（PDB）**：勿对 `COMPILE_PDB_OUTPUT_DIRECTORY` 重定向到共享目录；必要时结束残留 `cl.exe`
+- 遇 **PCH 被占用**：结束 `cl.exe` / `msbuild` 后重试
+
+## 回复语言
+
+- 与用户交流使用**中文**，除非用户明确要求英文

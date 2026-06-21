@@ -15,7 +15,16 @@ vendor/
 
 当前依赖：
 
-- `spdlog` — 在 `vcpkg.json` 中声明，由 vcpkg 自动下载安装
+- `spdlog` — 日志库
+- `glfw3` — 窗口与输入
+- `glad` — OpenGL 加载器
+- `entt` — ECS 实体组件系统
+- `glm` — 数学库
+- `imgui` — 即时模式 GUI（含 glfw / opengl3 后端）
+- `stb` — stb_image 等单头文件库
+- `yaml-cpp` — YAML 序列化
+
+均在 `vcpkg.json` 中声明，执行 `cmake --preset` 时自动安装。
 
 ## 首次设置
 

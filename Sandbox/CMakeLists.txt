@@ -16,6 +16,14 @@ target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 # Link libraries
 target_link_libraries(${PROJECT_NAME} Hazel::Engine)
 
+# Copy assets next to Sandbox.exe so paths like assets/shaders/... resolve at runtime
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
+    COMMENT "Copying Sandbox assets"
+)
+
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/bin" CACHE PATH "..." FORCE)
 endif()

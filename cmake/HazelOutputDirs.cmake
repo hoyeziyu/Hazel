@@ -36,10 +36,12 @@ function(hazel_set_output_dirs target)
             "LIBRARY_OUTPUT_DIRECTORY_${config_upper}" "${bin_dir}"
             "ARCHIVE_OUTPUT_DIRECTORY_${config_upper}" "${bin_dir}"
             "PDB_OUTPUT_DIRECTORY_${config_upper}" "${int_dir}"
-            "COMPILE_PDB_OUTPUT_DIRECTORY_${config_upper}" "${int_dir}"
         )
 
         if(MSVC)
+            # Keep .obj files in bin-int (Premake objdir), but leave compiler PDBs in the
+            # build tree (IntDir). Redirecting COMPILE_PDB_OUTPUT_DIRECTORY forces every
+            # translation unit to share one .pdb and triggers MSVC C1041 under /MP.
             target_compile_options(${target} PRIVATE
                 "$<$<CONFIG:${config}>:/Fo${int_dir}/>"
             )
