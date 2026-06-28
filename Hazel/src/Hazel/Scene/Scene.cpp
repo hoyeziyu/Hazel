@@ -7,13 +7,11 @@
 
 namespace Hazel {
 
-	static void DoMath(const glm::mat4& transform) {
-
-	}
-
-	static void OnTransformConstruct(entt::registry& registry, entt::entity entity)
+#if EXAMPLE_ENTT
+	static void OnTransformConstruct(entt::registry&, entt::entity)
 	{
 	}
+#endif
 
 	Scene::Scene()
 	{
@@ -36,8 +34,8 @@ namespace Hazel {
 		auto group = m_Registry.group<TransformComponent>(entt::get<MeshComponent>);
 		for (auto entity : group)
 		{
-			// todo：MeshComponent为空的话，这里会报错，不知道为什么！！！
-			// EnTT 不允许“get”与零大小的组件一起使用。这是一个内部优化。数据存在于稀疏集中，但没有用于零大小比较的实际存储阵列
+			// todo: group.get fails when MeshComponent is empty (zero-size component)
+			// EnTT does not support get() with zero-size components.
 			auto& [transform, mesh] = group.get<TransformComponent, MeshComponent>(entity);	
 		}
 #endif
@@ -113,7 +111,7 @@ namespace Hazel {
 	{
 		m_ViewportWidth = width;
 		m_ViewportHeight = height;
-		// 调整 非固定纵横比相机大小
+		// Resize non-fixed-aspect cameras when the viewport changes
 		auto view = m_Registry.view<CameraComponent>();
 		for (auto entity : view)
 		{
@@ -130,24 +128,24 @@ namespace Hazel {
 		static_assert(false);
 	}
 	template<>
-	void Scene::OnComponentAdded<TransformComponent>(Entity entity, TransformComponent& component)
+	void Scene::OnComponentAdded<TransformComponent>(Entity, TransformComponent&)
 	{
 	}
 	template<>
-	void Scene::OnComponentAdded<CameraComponent>(Entity entity, CameraComponent& component)
+	void Scene::OnComponentAdded<CameraComponent>(Entity, CameraComponent& component)
 	{
 		component.Camera.SetViewportSize(m_ViewportWidth, m_ViewportHeight);
 	}
 	template<>
-	void Scene::OnComponentAdded<SpriteRendererComponent>(Entity entity, SpriteRendererComponent& component)
+	void Scene::OnComponentAdded<SpriteRendererComponent>(Entity, SpriteRendererComponent&)
 	{
 	}
 	template<>
-	void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component)
+	void Scene::OnComponentAdded<TagComponent>(Entity, TagComponent&)
 	{
 	}
 	template<>
-	void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)
+	void Scene::OnComponentAdded<NativeScriptComponent>(Entity, NativeScriptComponent&)
 	{
 	}
 

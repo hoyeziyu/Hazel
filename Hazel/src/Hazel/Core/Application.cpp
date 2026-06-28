@@ -10,14 +10,14 @@ namespace Hazel {
 
 	Application* Application::s_Instance = nullptr;
 
-	Application::Application(const std::string& name) {
+	Application::Application([[maybe_unused]] const std::string& name) {
 		HZ_PROFILE_FUNCTION();
 		HZ_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 
 		m_Window = std::unique_ptr<Window>(Window::Create());
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
-		m_Window->SetVSync(false); // 这里设置为false，能看到真实帧速率
+		m_Window->SetVSync(false); // Disable VSync to observe the real frame rate
 
 		Renderer::Init();
 
@@ -65,7 +65,7 @@ namespace Hazel {
 
 		while (m_Running) {
 			HZ_PROFILE_SCOPE("RunLoop");
-			float time = (float)glfwGetTime();  // Platform::GetTime;这里和glfw进行耦合了
+			float time = (float)glfwGetTime(); // TODO: use Platform::GetTime() instead of coupling to GLFW
 			Timestep timestep = time - m_LastFrameTime;
 			m_LastFrameTime = time;
 
@@ -90,7 +90,7 @@ namespace Hazel {
 
 			}
 
-			m_Window->OnUpdate();		// 主要的游戏循环
+			m_Window->OnUpdate(); // Main game loop tick
 		}
 	}
 
@@ -99,7 +99,7 @@ namespace Hazel {
 		m_Running = false;
 	}
 
-	bool Application::OnWindowClose(WindowCloseEvent& e)
+	bool Application::OnWindowClose([[maybe_unused]] WindowCloseEvent& e)
 	{
 		m_Running = false;
 		return true;

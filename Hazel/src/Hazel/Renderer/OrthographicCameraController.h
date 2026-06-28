@@ -18,14 +18,14 @@ namespace Hazel {
 		float GetHeight() { return Top - Bottom; }
 	};
 
-	// OrthographicCamera 的包装器
+	// Wrapper around OrthographicCamera with input-driven pan/zoom.
 	class OrthographicCameraController
 	{
 
 	public:
-		// 默认情况： 纵横比（eg: 16:9） * 2 units
+		// Default bounds: aspect ratio (e.g. 16:9) * 2 world units
 		OrthographicCameraController(float aspectRatio, bool rotation = false);
-		void OnUpdate(Timestep ts);		// 时间步长
+		void OnUpdate(Timestep ts);
 		void OnEvent(Event& e);
 		void OnResize(float width, float height);
 		OrthographicCamera& GetCamera() { return m_Camera; }
@@ -40,9 +40,10 @@ namespace Hazel {
 		bool OnWindowResized(WindowResizeEvent& e);
 	
 	private:
-		float m_AspectRatio;		// 纵横比
-		float m_ZoomLevel = 1.0f;	// 实际缩放等级
-		OrthographicCameraBounds m_Bounds;	// 这里要注意 bound 和 camera的初始化顺序；不然会出现第一帧黑屏情况
+		float m_AspectRatio;
+		float m_ZoomLevel = 1.0f;
+		// Initialize bounds before the camera to avoid a black first frame.
+		OrthographicCameraBounds m_Bounds;
 		OrthographicCamera m_Camera;
 		bool m_Rotation;
 		glm::vec3 m_CameraPosition = { 0.0f, 0.0f, 0.0f };

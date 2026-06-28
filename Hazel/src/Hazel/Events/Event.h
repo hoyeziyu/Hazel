@@ -29,7 +29,7 @@ namespace Hazel {
 		EventCategoryMouse			= BIT(3),
 		EventCategoryMouseButton	= BIT(4)
 	};
-														// 这里的 ## 可以删掉，不确定是否有性能优化
+														// ## is required for EVENT_CLASS_TYPE token pasting
 #define EVENT_CLASS_TYPE(type) static EventType GetStaticType() { return EventType::##type; }\
 								virtual EventType GetEventType() const override { return GetStaticType(); }\
 								virtual const char* GetName() const override { return #type; }

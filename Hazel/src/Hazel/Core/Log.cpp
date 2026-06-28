@@ -8,7 +8,7 @@ namespace Hazel {
 
 
 	void Log::Init() {
-		spdlog::set_pattern("%^[%T] %n£º%v%$");
+		spdlog::set_pattern("%^[%T] %n: %v%$");
 		s_CoreLogger = spdlog::stdout_color_mt("Hazel");
 		s_CoreLogger->set_level(spdlog::level::trace);
 

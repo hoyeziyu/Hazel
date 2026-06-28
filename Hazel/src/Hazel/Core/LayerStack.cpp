@@ -24,7 +24,7 @@ namespace Hazel {
 	void LayerStack::PopLayer(Layer* layer)
 	{
 		auto it = std::find(m_Layers.begin(), m_Layers.end(), layer);
-		// if (it != m_Layers.begin() + m_LayerInsertIndex)  maybe2Ñ¡1£¿£¿£¿
+		// if (it != m_Layers.begin() + m_LayerInsertIndex) // optional: restrict to regular layers only
 		if (it != m_Layers.end())
 		{
 			m_Layers.erase(it);

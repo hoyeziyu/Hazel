@@ -20,3 +20,7 @@ option(HAZEL_BUILD_SANDBOX "Build sandbox application" ON)
 if(HAZEL_BUILD_SANDBOX)
     add_subdirectory(Sandbox)
 endif()
+
+
+# library的配置文件（cmakelists.txt）使用target_include_directories命令添加头文件的搜索路径
+# application的配置文件（cmakelists.txt）使用target_include_directories命令添加library的搜索路径

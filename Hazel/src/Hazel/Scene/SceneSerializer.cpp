@@ -91,7 +91,7 @@ namespace Hazel {
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 
 
-		m_Scene->m_Registry.view<entt::entity>().each([&](auto entityID)	// todo: ����ֱ��m_Registry.each
+		m_Scene->m_Registry.view<entt::entity>().each([&](auto entityID) // todo: use m_Registry.each directly
 			{
 				Entity entity = { entityID, m_Scene.get() };
 				if (!entity)
@@ -174,7 +174,7 @@ namespace Hazel {
 		out << YAML::EndMap; // Entity End
 	}
 
-	void SceneSerializer::SerializeRuntime(const std::string& filepath)
+	void SceneSerializer::SerializeRuntime([[maybe_unused]] const std::string& filepath)
 	{
 		HZ_CORE_ASSERT(false, "not implementation");
 	}
@@ -222,7 +222,7 @@ namespace Hazel {
 				{
 					auto& cc = deserializedEntity.AddComponent<CameraComponent>();
 
-					auto& cameraProps = cameraComponent["Camera"];
+					YAML::Node cameraProps = cameraComponent["Camera"];
 					cc.Camera.SetProjectionType((SceneCamera::ProjectionType)cameraProps["ProjectionType"].as<int>());
 
 					cc.Camera.SetPerspectiveVerticalFOV(cameraProps["PerspectiveFOV"].as<float>());
@@ -248,7 +248,7 @@ namespace Hazel {
 
 		return true;
 	}
-	bool SceneSerializer::DeserializeRuntime(const std::string& filepath)
+	bool SceneSerializer::DeserializeRuntime([[maybe_unused]] const std::string& filepath)
 	{
 		HZ_CORE_ASSERT(false, "not implementation");
 		return false;

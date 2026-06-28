@@ -102,7 +102,7 @@ namespace Hazel {
 		bool m_Stopped;
 	};
 }
-#define HZ_PROFILE 0	// นุ
+#define HZ_PROFILE 0
 #if HZ_PROFILE
 #define HZ_PROFILE_BEGIN_SESSION(name, filepath) ::Hazel::Instrumentor::Get().BeginSession(name, filepath)
 #define HZ_PROFILE_END_SESSION() ::Hazel::Instrumentor::Get().EndSession()

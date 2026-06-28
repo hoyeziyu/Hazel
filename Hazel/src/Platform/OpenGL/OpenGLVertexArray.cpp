@@ -84,15 +84,15 @@ namespace Hazel {
 						ShaderDataTypeToOpenGLBaseType(element.Type),
 						element.Normalized ? GL_TRUE : GL_FALSE,
 						layout.GetStride(),
-						(const void*)element.Offset);
+						reinterpret_cast<const void*>(static_cast<uintptr_t>(element.Offset)));
 					m_VertexBufferIndex++;
 					break;
 				}
 				case ShaderDataType::Mat3:
 				case ShaderDataType::Mat4:
 				{
-					uint8_t count = element.GetComponentCount();
-					for (uint8_t i = 0; i < count; i++)
+					uint32_t count = element.GetComponentCount();
+					for (uint32_t i = 0; i < count; i++)
 					{
 						glEnableVertexAttribArray(m_VertexBufferIndex);
 						glVertexAttribPointer(m_VertexBufferIndex,
@@ -100,7 +100,7 @@ namespace Hazel {
 							ShaderDataTypeToOpenGLBaseType(element.Type),
 							element.Normalized ? GL_TRUE : GL_FALSE,
 							layout.GetStride(),
-							(const void*)(element.Offset + sizeof(float) * count * i));
+							reinterpret_cast<const void*>(static_cast<uintptr_t>(element.Offset + sizeof(float) * count * i)));
 						glVertexAttribDivisor(m_VertexBufferIndex, 1);
 						m_VertexBufferIndex++;
 					}

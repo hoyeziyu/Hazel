@@ -22,9 +22,7 @@ find_package(imgui CONFIG REQUIRED)
 find_package(Stb REQUIRED)
 find_package(yaml-cpp CONFIG REQUIRED)
 
-add_library(${PROJECT_NAME} ${HAZEL_SOURCES}
-    # src/Platform/Windows/WindowsInput.h
-    )
+add_library(${PROJECT_NAME} ${HAZEL_SOURCES})
 add_library(Hazel::Engine ALIAS ${PROJECT_NAME})
 hazel_set_output_dirs(${PROJECT_NAME} NAME Hazel)
 
@@ -53,6 +51,37 @@ if(WIN32)
     target_link_libraries(${PROJECT_NAME} PUBLIC opengl32)
 endif()
 target_precompile_headers(${PROJECT_NAME} PRIVATE "src/hzpch.h")
+
+# Compiler warnings
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /utf-8)
+else()
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+# Enable architecture-specific optimizations for Release builds
+# -march=native: use instructions available on the build CPU (e.g. AVX)
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        $<$<CONFIG:Release>:-O3 -march=native>
+    )
+elseif(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        $<$<CONFIG:Release>:/O2 /arch:AVX2>
+    )
+endif()
+
+# Enable link-time optimization (LTO) if supported
+include(CheckIPOSupported)
+check_ipo_supported(RESULT result OUTPUT output)
+
+if(result)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        INTERPROCEDURAL_OPTIMIZATION TRUE
+    )
+else()
+    message(WARNING "IPO is not supported: ${output}")
+endif()
 
 install(TARGETS ${PROJECT_NAME}
     ARCHIVE DESTINATION bin

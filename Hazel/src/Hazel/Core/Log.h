@@ -32,7 +32,6 @@ namespace Hazel {
 #define HZ_ERROR(...)	::Hazel::Log::GetClientLogger()->error(__VA_ARGS__)
 #define HZ_FATAL(...)	::Hazel::Log::GetClientLogger()->critical(__VA_ARGS__)
 
-/*	what is mean?������
-	// if dist build
+/* Example: strip logging macros in distribution builds
 	#define HZ_CORE_INFO
 */
