@@ -23,8 +23,11 @@ vendor/
 - `imgui` — 即时模式 GUI（含 glfw / opengl3 后端）
 - `stb` — stb_image 等单头文件库
 - `yaml-cpp` — YAML 序列化
+- `gtest` — Google Test 单元测试（`tests/HazelTests`）
 
 均在 `vcpkg.json` 中声明，执行 `cmake --preset` 时自动安装。
+
+Google Benchmark（`benchmarks/HazelBench`）通过 CMake FetchContent 获取，不在 `vcpkg.json` 中。
 
 ## 首次设置
 
@@ -49,7 +52,15 @@ cmake --preset=windows-msvc-debug
 cmake --build --preset=debug
 ```
 
-首次执行 `cmake --preset` 时，vcpkg 会根据 `vcpkg.json` 自动安装 `spdlog` 等依赖。
+可选 CMake 选项（根 `CMakeLists.txt`）：
+
+| 选项 | 默认 | 说明 |
+|------|------|------|
+| `HAZEL_BUILD_SANDBOX` | ON | 构建 Sandbox.exe |
+| `HAZEL_BUILD_TESTS` | ON | 构建 Google Test（`HazelTests`） |
+| `HAZEL_BUILD_BENCHMARKS` | ON | 构建 Google Benchmark（`HazelBench`） |
+
+首次执行 `cmake --preset` 时，vcpkg 会根据 `vcpkg.json` 自动安装 `spdlog`、`gtest` 等依赖。
 
 `CMAKE_TOOLCHAIN_FILE` 已在 `CMakePresets.json` 中配置为：
 `vendor/vcpkg/scripts/buildsystems/vcpkg.cmake`
@@ -86,9 +97,57 @@ cmake --preset=windows-msvc-debug
 .\bin\Debug-windows-x86_64\Sandbox\Sandbox.exe
 ```
 
+## 单元测试（Google Test）
+
+测试代码在 `tests/`，可执行文件 `HazelTests`，用于验证引擎模块（Scene、Components、序列化等）。
+
+```powershell
+# 构建
+cmake --build --preset=debug --target HazelTests
+
+# 运行全部测试（CMakePresets 已配置 testPresets）
+ctest --preset debug --output-on-failure
+
+# 或直接运行
+.\bin\Debug-windows-x86_64\Tests\HazelTests.exe
+```
+
+新增测试：在 `tests/` 添加 `*Tests.cpp`，并注册到 `tests/CMakeLists.txt`。
+
+## 性能基准（Google Benchmark）
+
+基准代码在 `benchmarks/SceneBench.cpp`，可执行文件 `HazelBench`。与单元测试不同，**不走 ctest**，结果打印在终端。
+
+```powershell
+# 建议用 Release 测性能
+cmake --preset=windows-msvc-release
+cmake --build --preset=release --target HazelBench
+
+.\bin\Release-windows-x86_64\Benchmarks\HazelBench.exe --benchmark_min_time=0.5s
+
+# 只跑某一个 benchmark
+.\bin\Release-windows-x86_64\Benchmarks\HazelBench.exe --benchmark_filter=BM_SceneCreateEntity
+
+# 导出 JSON
+.\bin\Release-windows-x86_64\Benchmarks\HazelBench.exe --benchmark_out=bench.json --benchmark_out_format=json
+```
+
+输出列含义：**CPU** 为每次迭代 CPU 时间（优先参考），**Time** 为墙钟时间，**Iterations** 为自动迭代次数。
+
+## 构建产物目录
+
 构建产物目录（对齐 Premake）：
 
 ```
 bin/<Config>-windows-x86_64/<ProjectName>/     # 最终 exe / lib / dll
 bin-int/<Config>-windows-x86_64/<ProjectName>/ # 中间文件 .obj / .pdb
 ```
+
+常见产物：
+
+| 路径 | 说明 |
+|------|------|
+| `bin/.../Sandbox/Sandbox.exe` | 沙盒应用 |
+| `bin/.../Hazel/hazel-engine.lib` | 引擎静态库 |
+| `bin/.../Tests/HazelTests.exe` | 单元测试 |
+| `bin/.../Benchmarks/HazelBench.exe` | 性能基准 |

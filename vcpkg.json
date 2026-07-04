@@ -11,6 +11,7 @@
       "features": ["glfw-binding", "opengl3-binding"]
     },
     "stb",
-    "yaml-cpp"
+    "yaml-cpp",
+    "gtest"
   ]
 }
