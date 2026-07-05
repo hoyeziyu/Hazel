@@ -10,7 +10,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googlebenchmark)
 
-add_executable(HazelBench SceneBench.cpp)
+add_executable(HazelBench SceneBench.cpp main.cpp)
 
 target_link_libraries(HazelBench PRIVATE
     benchmark::benchmark

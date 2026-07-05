@@ -24,7 +24,11 @@ static void BM_TransformGetTransform(benchmark::State& state)
 	for (auto _ : state)
 	{
 		glm::mat4 matrix = transform.GetTransform();
-		benchmark::DoNotOptimize(matrix);
+		benchmark::DoNotOptimize(matrix);	// 利用“优化障碍["optimization barriers"]”来诱使编译器执行我们真正想要测量的操作
+
+		// Force the compiler to forget what 
+    	// it knows about memory 
+    	// benchmark::ClobberMemory();	// 强制编译器忘记它对内存的了解
 	}
 }
 BENCHMARK(BM_TransformGetTransform);
