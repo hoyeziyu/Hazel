@@ -19,12 +19,17 @@ add_subdirectory(Hazel)
 
 
 option(HAZEL_BUILD_SANDBOX "Build sandbox application" ON)
+option(HAZEL_BUILD_HAZELNUT "Build Hazelnut editor application" ON)
 option(HAZEL_BUILD_TESTS "Build Google Test unit tests" ON)
 option(HAZEL_BUILD_BENCHMARKS "Build Google Benchmark performance tests" ON)
 
 # Sandbox application
 if(HAZEL_BUILD_SANDBOX)
     add_subdirectory(Sandbox)
+endif()
+
+if(HAZEL_BUILD_HAZELNUT)
+    add_subdirectory(Hazelnut)
 endif()
 
 if(HAZEL_BUILD_TESTS)

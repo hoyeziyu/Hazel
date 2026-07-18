@@ -1,4 +1,4 @@
- # Directories
+# Directories
 .vs/
 out/
 build/
@@ -8,6 +8,10 @@ vendor/vcpkg_installed/
 Sandbox/log/
 Sandbox/assets/test_assets
 
+# clangd / compile DB (not used; project uses MSVC + ms-vscode.cpptools)
+.clangd
+compile_flags.txt
+compile_commands.json
 
 # Files
 *.user

@@ -6,22 +6,21 @@
 #include "SubTexture2D.h"
 
 namespace Hazel {
+	// 2D 合批渲染器：DrawQuad 攒顶点，BeginScene/EndScene 界定一批，Flush 才真正 draw。
 	class Renderer2D
 	{
-		// 全部是static方法的class，意味这个class的存储空间为0
-		// 目的是为了拥有的数据保持单例
+		// 全部是 static 方法；实际状态在 Renderer2D.cpp 的 s_Data 单例里
 	public:
 		static void Init();
 		static void Shutdown();
 
-		static void BeginScene(const Camera& camera, const glm::mat4& transform);
-		static void BeginScene(const OrthographicCamera& camera);	// 正交相机
-		static void EndScene();
+		static void BeginScene(const Camera& camera, const glm::mat4& transform);   // 设 u_ViewProjection，重置 staging
+		static void BeginScene(const OrthographicCamera& camera);
+		static void EndScene();   // 上传 VBO + Flush（至少 1 Draw Call）
 
-		static void Flush();
+		static void Flush();      // 绑纹理 slot + glDrawElements；Stats.DrawCalls++
 
-		// Primitives	基本体
-		// transform
+		// Primitives — Draw* 只写 CPU 缓冲，不触发 draw
 		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
 		
@@ -43,7 +42,7 @@ namespace Hazel {
 		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subtexture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
 		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subtexture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
 
-		// Stats 测试统计
+		// Stats：QuadCount = 提交 Quad 数；DrawCalls = Flush 次数（合批后通常远小于 QuadCount）
 		struct Statistics
 		{
 			uint32_t DrawCalls = 0;
@@ -54,6 +53,6 @@ namespace Hazel {
 		static void ResetStats();
 		static Statistics GetStats();
 	private:
-		static void FlushAndReset();
+		static void FlushAndReset();   // Quad/纹理 slot 满时拆批
 	};
 }

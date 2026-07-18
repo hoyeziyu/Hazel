@@ -73,6 +73,7 @@ namespace Hazel {
 			{
 				{
 					HZ_PROFILE_SCOPE("LayerStack OnUpdate");
+					// 每帧只遍历 Layer；Scene 是否更新取决于各 Layer 是否在 OnUpdate 里调用它。
 					for (Layer* layer : m_LayerStack)
 						layer->OnUpdate(timestep);
 				}

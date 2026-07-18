@@ -4,6 +4,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include "Hazel/Core/Application.h"
+#include "Hazel/Renderer/RenderCommand.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -65,10 +66,17 @@ namespace Hazel {
 		HZ_PROFILE_FUNCTION();
 		ImGuiIO& io = ImGui::GetIO();
 		Application& app = Application::Get();
-		io.DisplaySize = ImVec2((float)app.GetWindow().GetWidth(), (float)app.GetWindow().GetHeight());
+		auto& window = app.GetWindow();
+		io.DisplaySize = ImVec2((float)window.GetWidth(), (float)window.GetHeight());
 	
-		// Rendering
 		ImGui::Render();
+
+		// Scene/editor 画在离屏 FBO 里；默认帧缓冲每帧须先 Clear，否则拖动 ImGui 窗口时
+		// 旧位置不会被覆盖，会残留上一帧内容。
+		RenderCommand::SetViewport(0, 0, window.GetWidth(), window.GetHeight());
+		RenderCommand::SetClearColor({ 0.1f, 0.105f, 0.11f, 1.0f });
+		RenderCommand::Clear();
+
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}
 

@@ -1,0 +1,27 @@
+{
+  "configurations": [
+    {
+      "name": "windows-msvc",
+      "includePath": [
+        "${workspaceFolder}/Hazel/src",
+        "${workspaceFolder}/Hazel/src/Hazel/Renderer",
+        "${workspaceFolder}/Sandbox/src",
+        "${workspaceFolder}/vendor/vcpkg_installed/x64-windows/include"
+      ],
+      "defines": [
+        "HZ_PLATFORM_WINDOWS",
+        "HZ_ENABLE_ASSERTS",
+        "SPDLOG_SHARED_LIB",
+        "SPDLOG_COMPILED_LIB",
+        "SPDLOG_FMT_EXTERNAL",
+        "FMT_SHARED",
+        "GLFW_DLL"
+      ],
+      "windowsSdkVersion": "10.0.26100.0",
+      "cStandard": "c17",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "windows-msvc-x64"
+    }
+  ],
+  "version": 4
+}

@@ -1,16 +1,27 @@
-# Hazelnut（编辑器 — 预留）
+# Hazelnut（编辑器）
 
-对应 Cherno 教程后期的 **Hazel 编辑器** 项目。
+Cherno 教程 **Hazel 编辑器**，链接 `Hazel::Engine`。
 
-## 当前状态
+## 构建与运行
 
-- 目录存在，**尚无源码与 CMake 目标**
-- 根 `CMakeLists.txt` 未 `add_subdirectory(Hazelnut)`
+```powershell
+cmake --preset=windows-msvc-debug
+cmake --build --preset=debug --target Hazelnut
+.\bin\Debug-windows-x86_64\Hazelnut\Hazelnut.exe
+```
 
-## 接入时建议
+- CMake 开关：`HAZEL_BUILD_HAZELNUT`（根 `CMakeLists.txt`，默认 ON）
+- 产物：`bin/<Config>-windows-x86_64/Hazelnut/Hazelnut.exe`
+- 资源：`Hazelnut/assets/` 构建时 POST_BUILD 复制到 exe 旁
 
-1. 参照 `Sandbox/`：`CMakeLists.txt` + `src/*App.cpp` + 链接 `Hazel::Engine`
-2. 在根 `CMakeLists.txt` 增加 `option(HAZEL_BUILD_HAZELNUT ...)` 与 `add_subdirectory(Hazelnut)`
-3. 编辑器 UI 可复用引擎内 `ImGuiLayer` 与 Scene 系统
+## 功能
 
-详见根目录 **[`../AGENTS.md`](../AGENTS.md)** §6。
+- Scene Viewport（Framebuffer 离屏渲染）
+- Scene Hierarchy + Properties 面板
+- File → New / Open / Save As（`.hazel` 场景序列化）
+- 示例场景：`assets/scenes/Example.hazel`
+
+## 说明
+
+- 使用 vcpkg **标准 imgui**（无 Docking），UI 为 MainMenuBar + 独立窗口布局
+- 详见根目录 [`../AGENTS.md`](../AGENTS.md) §6

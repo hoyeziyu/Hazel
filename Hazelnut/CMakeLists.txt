@@ -1,0 +1,25 @@
+project(Hazelnut)
+
+set(HAZELNUT_SOURCES
+    src/HazelnutApp.cpp
+    src/EditorLayer.cpp
+    src/Panels/SceneHierarchyPanel.cpp
+)
+
+add_executable(${PROJECT_NAME} ${HAZELNUT_SOURCES})
+hazel_set_output_dirs(${PROJECT_NAME})
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+target_link_libraries(${PROJECT_NAME} Hazel::Engine)
+
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /utf-8)
+endif()
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
+    COMMENT "Copying Hazelnut assets"
+)

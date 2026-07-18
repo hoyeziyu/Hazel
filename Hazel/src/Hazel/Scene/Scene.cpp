@@ -76,7 +76,7 @@ namespace Hazel {
 			});
 		}
 
-		// render 2d
+		// render 2d — Scene 主动调 Renderer2D；不经过 Layer 的虚函数表再画一遍。
 		Camera* mainCamera = nullptr;
 		glm::mat4 cameraTransform;
 		{
@@ -95,6 +95,8 @@ namespace Hazel {
 		}
 
 		if (mainCamera) {
+			// 一批 2D 渲染：BeginScene → 多次 DrawQuad（只写缓冲）→ EndScene（1 次 Flush）
+			// 当前纯色 Sprite 用 TexIndex=0，整场景通常只需 1 Draw Call
 			Renderer2D::BeginScene(*mainCamera, cameraTransform);
 			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (auto entity : group)

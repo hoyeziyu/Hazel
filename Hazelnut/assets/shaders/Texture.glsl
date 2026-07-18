@@ -1,12 +1,12 @@
-// Basic Texture Shader — 2D 合批用：u_Textures[32] 多纹理数组，顶点 a_TexIndex 选 slot
+// Basic Texture Shader
 #type vertex
 #version 330 core
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec4 a_Color;
 layout(location = 2) in vec2 a_TexCoord;
-layout(location = 3) in float a_TexIndex;      // 对应 Renderer2D TextureSlots[slot]
+layout(location = 3) in float a_TexIndex;
 layout(location = 4) in float a_TilingFactor;
-uniform mat4 u_ViewProjection;                   // BeginScene 设一次；无 per-quad u_Transform
+uniform mat4 u_ViewProjection;
 uniform mat4 u_Transform;
 out vec4 v_Color;
 out vec2 v_TexCoord;
@@ -27,9 +27,9 @@ in vec4 v_Color;
 in vec2 v_TexCoord;
 in float v_TexIndex;
 in float v_TilingFactor;
-uniform sampler2D u_Textures[32];              // 与 Renderer2D MaxTextureSlots 一致
+uniform sampler2D u_Textures[32];
 void main()
 {
-	// 一次 draw 内按顶点索引采样不同纹理；SubTexture 靠 a_TexCoord 区分区域
+	// color = texture(u_Texture, v_TexCoord * u_TilingFactor) * u_Color;
 	color = texture(u_Textures[int(v_TexIndex)], v_TexCoord * v_TilingFactor) * v_Color;
 }

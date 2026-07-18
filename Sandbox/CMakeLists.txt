@@ -3,6 +3,7 @@ project(Sandbox)
 # Add source files (.cpp only)
 set (SANDBOX_SOURCES
     "src/SandboxApp.cpp"
+    "src/ExampleLayer.cpp"
 )
 
 # Define executable
