@@ -31,7 +31,7 @@ cmake --build --preset=debug
 - 日志：`HZ_CORE_*` / `HZ_*`；spdlog 用 **`critical()`**，不要用 `fatal()`
 - OpenGL：先 `#include <glad/glad.h>`，再 `#include <GLFW/glfw3.h>`
 - stb：仅在一个 `.cpp` 中 `#define STB_IMAGE_IMPLEMENTATION`（已在 `OpenGLTexture.cpp`）
-- ImGui：vcpkg 为标准版，**不要用** `DockingEnable` / `ViewportsEnable` / `UpdatePlatformWindows`
+- ImGui：`vendor/imgui`（**ocornut docking** 分支）+ `vendor/ImGuizmo`；启用 Docking/Viewports；EditorLayer 使用 `DockSpace`
 - 平台抽象：渲染类用 `X::Create()` 工厂 + `Platform/OpenGL` 实现，不要直接在 Core 里调 GL API
 
 ## 资源路径

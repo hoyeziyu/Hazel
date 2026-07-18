@@ -32,9 +32,9 @@ Application 构造
 
 ---
 
-## 约束（vcpkg 标准 imgui）
+## 约束（vendor imgui docking + ImGuizmo）
 
-- **不要**使用 `DockingEnable` / `ViewportsEnable` / `UpdatePlatformWindows`（需 docking 分支）。
+- `ImGuiLayer` 启用 `DockingEnable` / `ViewportsEnable`；`End()` 中调用 `UpdatePlatformWindows` / `RenderPlatformWindowsDefault`。
 - 字体路径：`assets/fonts/opensans/*.ttf`（构建时复制到 exe 旁）。
 - `io.DisplaySize` 在 `End()` 中按窗口尺寸更新。
 

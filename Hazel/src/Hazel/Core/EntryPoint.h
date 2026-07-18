@@ -5,6 +5,7 @@
 extern Hazel::Application* Hazel::CreateApplication();
 
 int main(int argc, char** argv) {
+	(void)argv;
 	Hazel::Log::Init();
 	HZ_CORE_WARN("Initialized Log!");
 	HZ_INFO("Hello! argc={0}", argc);

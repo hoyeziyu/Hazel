@@ -5,6 +5,7 @@ build/
 bin/
 bin-int/
 vendor/vcpkg_installed/
+vcpkg_installed/
 Sandbox/log/
 Sandbox/assets/test_assets
 

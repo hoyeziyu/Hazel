@@ -3,15 +3,25 @@
 #include "Hazel/Core/Layer.h"
 #include "Hazel/Events/KeyEvent.h"
 #include "Hazel/Renderer/Texture.h"
-#include "Hazel/Renderer/OrthographicCameraController.h"
+#include "Hazel/Editor/EditorCamera.h"
 #include "Hazel/Renderer/Framebuffer.h"
 #include "Hazel/Renderer/Shader.h"
 #include "Hazel/Renderer/VertexArray.h"
 #include "Hazel/Scene/Scene.h"
 #include "Hazel/Scene/Entity.h"
 #include "Panels/SceneHierarchyPanel.h"
+#include "Panels/ContentBrowserPanel.h"
 #include <glm/glm.hpp>
+#include <filesystem>
+#include <optional>
+
 namespace Hazel {
+
+	enum class SceneState
+	{
+		Edit = 0, Play = 1
+	};
+
 	class EditorLayer : public Layer
 	{
 	public:
@@ -23,32 +33,39 @@ namespace Hazel {
 		virtual void OnImGuiRender() override;
 		void OnEvent(Event& e) override;
 	private:
-		Hazel::OrthographicCameraController m_CameraController;
-		// Temp
-		Ref<VertexArray> m_SquareVA;
-		Ref<Shader> m_FlatColorShader;
+		EditorCamera m_EditorCamera;
 		Ref<Framebuffer> m_Framebuffer;
 
-		Ref<Scene> m_ActiveScene;
-		Entity m_SquareEntity;
-		Entity m_CameraEntity;
-		Entity m_SecondCamera;
-		bool m_PrimaryCamera = true;
+		SceneState m_SceneState = SceneState::Edit;
+		Ref<Scene> m_EditorScene;
+		Ref<Scene> m_RuntimeScene;
+		std::optional<std::filesystem::path> m_ActiveScenePath;
 
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
-		Ref<Texture2D> m_CheckerboardTexture;
-		glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.0f };
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
 
 		int m_GizmoType = -1;
 
-		// Panels
 		SceneHierarchyPanel m_SceneHierarchyPanel;
+		ContentBrowserPanel m_ContentBrowserPanel;
 
 		bool OnKeyPressed(KeyPressedEvent& e);
 		void UI_GizmoToolbar();
+		void UI_PlayToolbar();
+
+		void OnScenePlay();
+		void OnSceneStop();
+
 		void NewScene();
 		void OpenScene();
 		void SaveSceneAs();
+		bool LoadScene(const std::filesystem::path& filepath);
+
+		void CreateProject();
+		void OpenProject();
+		void OpenProject(const std::filesystem::path& filepath);
+		void SaveProject();
+		void CloseProject();
+		void TryOpenStartupProject();
 	};
 }

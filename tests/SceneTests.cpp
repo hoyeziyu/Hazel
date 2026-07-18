@@ -43,6 +43,21 @@ TEST(SceneTest, DestroyEntityDoesNotBreakScene)
 	EXPECT_EQ(another.GetComponent<Hazel::TagComponent>().Tag, "Next");
 }
 
+TEST(SceneTest, CopyToCopiesPrimaryCamera)
+{
+	Hazel::Scene editorScene;
+	editorScene.OnViewportResize(800, 600);
+
+	Hazel::Entity camera = editorScene.CreateEntity("Camera");
+	camera.AddComponent<Hazel::CameraComponent>();
+
+	auto runtimeScene = Hazel::CreateRef<Hazel::Scene>();
+	editorScene.CopyTo(runtimeScene);
+
+	ASSERT_TRUE(runtimeScene->GetPrimaryCameraEntity());
+	EXPECT_EQ(runtimeScene->GetPrimaryCameraEntity().GetComponent<Hazel::TagComponent>().Tag, "Camera");
+}
+
 TEST(SceneSerializerTest, SerializeAndDeserializeRoundTrip)
 {
 	auto scene = Hazel::CreateRef<Hazel::Scene>();

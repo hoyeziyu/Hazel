@@ -80,9 +80,9 @@ namespace Hazel {
 
 		if (opened)
 		{
-			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-			bool opened = ImGui::TreeNodeEx((void*)9817239, flags, tag.c_str());
-			if (opened)
+			ImGuiTreeNodeFlags childFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+			bool childOpened = ImGui::TreeNodeEx((void*)9817239, childFlags, tag.c_str());
+			if (childOpened)
 				ImGui::TreePop();
 			ImGui::TreePop();
 		}

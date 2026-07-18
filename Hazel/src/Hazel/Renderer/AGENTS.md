@@ -45,12 +45,23 @@ Renderer/
 
 ## Renderer2D 合批流程（当前主路径）
 
+**批处理本质：** 把所有 Quad 批量合并到一块 VBO + IBO，当作一个几何体，`glDrawElements` 只调用一次。
+
 ```
 BeginScene(camera)     设 u_ViewProjection，重置 CPU staging
   DrawQuad × N         只写 CPU 缓冲（staging），不 draw
-EndScene()             staging → GPU VBO，Flush()
+EndScene()             staging → GPU VBO（stream），Flush()
   Flush()              绑纹理 slot + 一次 DrawIndexed  → Stats.DrawCalls++
 ```
+
+### 动态批处理（VBO / IBO 思路，对应 Renderer2D + OpenGLBuffer）
+
+| 缓冲 | Init（分配/固定） | 每帧（渲染） |
+|------|-------------------|--------------|
+| **VBO** | `glBufferData(size, nullptr, GL_DYNAMIC_DRAW)` 只分配容量 | `SetData` → `glBufferSubData` 从 CPU 复制本帧顶点 |
+| **IBO** | 预生成「最多 MaxQuads 个 Quad」的索引模式（静态） | `DrawIndexed(..., indexCount)` 控制本批实际画几个 Quad |
+
+**粒子系统：** 四边形每帧运动 → 顶点每帧变 → VBO 必须 Dynamic + 每帧 stream；IBO 模式可不变，只改 `indexCount`。
 
 **拆批（FlushAndReset）：** Quad ≥ 20000，或纹理种类 ≥ 32，或正常 `EndScene`。
 

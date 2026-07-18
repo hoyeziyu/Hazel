@@ -8,6 +8,8 @@
 namespace Hazel {
 	// 2D 合批渲染器（学习入口）
 	//
+	// 批处理：多个 Quad 拼进同一 VBO/IBO，Flush 时只 draw 一次（见 Renderer2D.cpp 文件头）。
+	// 粒子等每帧变化的数据 → Dynamic VBO + 每帧 SetData stream。
 	// 一批的生命周期：
 	//   BeginScene()  → 重置 staging，设相机
 	//   DrawQuad*()   → 只写 CPU 缓冲（合批）
@@ -23,6 +25,7 @@ namespace Hazel {
 		static void Shutdown();
 
 		static void BeginScene(const Camera& camera, const glm::mat4& transform);   // 设 u_ViewProjection，重置 staging
+		static void BeginScene(const glm::mat4& viewProjection);
 		static void BeginScene(const OrthographicCamera& camera);
 		static void EndScene();   // 上传 VBO + Flush（至少 1 Draw Call）
 

@@ -14,6 +14,10 @@ project(Hazel)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(HazelOutputDirs)
 
+find_package(glfw3 CONFIG REQUIRED)
+find_package(glad CONFIG REQUIRED)
+include(HazelImGui)
+
 # Hazel library
 add_subdirectory(Hazel)
 

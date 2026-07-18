@@ -65,6 +65,8 @@ namespace Hazel {
 
 		while (m_Running) {
 			HZ_PROFILE_SCOPE("RunLoop");
+			glfwPollEvents();
+
 			float time = (float)glfwGetTime(); // TODO: use Platform::GetTime() instead of coupling to GLFW
 			Timestep timestep = time - m_LastFrameTime;
 			m_LastFrameTime = time;

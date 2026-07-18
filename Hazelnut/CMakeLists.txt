@@ -4,6 +4,7 @@ set(HAZELNUT_SOURCES
     src/HazelnutApp.cpp
     src/EditorLayer.cpp
     src/Panels/SceneHierarchyPanel.cpp
+    src/Panels/ContentBrowserPanel.cpp
 )
 
 add_executable(${PROJECT_NAME} ${HAZELNUT_SOURCES})
@@ -21,5 +22,11 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/assets"
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
-    COMMENT "Copying Hazelnut assets"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/SampleProject"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/SampleProject"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/imgui.ini"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/imgui.ini"
+    COMMENT "Copying Hazelnut assets, SampleProject, and default imgui.ini"
 )

@@ -18,17 +18,15 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(EnTT CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
-find_package(imgui CONFIG REQUIRED)
 find_package(Stb REQUIRED)
 find_package(yaml-cpp CONFIG REQUIRED)
-find_package(imguizmo CONFIG REQUIRED)
 
 add_library(${PROJECT_NAME} ${HAZEL_SOURCES})
 add_library(Hazel::Engine ALIAS ${PROJECT_NAME})
 hazel_set_output_dirs(${PROJECT_NAME} NAME Hazel)
 
 if(WIN32)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC HZ_PLATFORM_WINDOWS HZ_ENABLE_ASSERTS IMGUI_DEFINE_MATH_OPERATORS)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC HZ_PLATFORM_WINDOWS HZ_ENABLE_ASSERTS)
     if(BUILD_SHARED_LIBS)
         target_compile_definitions(${PROJECT_NAME} PRIVATE HZ_BUILD_DLL)
     endif()
@@ -79,7 +77,7 @@ check_ipo_supported(RESULT result OUTPUT output)
 
 if(result)
     set_target_properties(${PROJECT_NAME} PROPERTIES
-        INTERPROCEDURAL_OPTIMIZATION TRUE
+        INTERPROCEDURAL_OPTIMIZATION $<CONFIG:Release>
     )
 else()
     message(WARNING "IPO is not supported: ${output}")

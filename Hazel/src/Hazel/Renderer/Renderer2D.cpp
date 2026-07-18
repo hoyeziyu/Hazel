@@ -9,12 +9,21 @@
 namespace Hazel {
 
 	// -------------------------------------------------------------------------
+	// 【批处理 / 合批 是什么】
+	// 把所有 Quad 当作「一个几何体」拼进同一块顶点/索引缓冲，只 glDrawElements 一次。
+	// 不是每个 Quad 单独 draw，而是：攒数据 → 一次上传 → 一次渲染。
+	//
 	// 【合批思路】把 N 次 Draw Call 合并成 1 次（或少量几次）
 	//   1. 延迟提交：DrawQuad 只写 CPU staging，不立刻 glDraw
 	//   2. 共享状态：同一批只 Bind 一次 Shader，只设一次 u_ViewProjection
 	//   3. CPU 烘焙 Transform：顶点 Position 已含世界坐标，无需 per-draw u_Transform
 	//   4. 多纹理数组：最多 32 张纹理绑到 u_Textures[]，顶点带 a_TexIndex 选 slot
 	//   5. 静态 IBO：索引模式 Init 时固定，每帧只 Upload VBO
+	//
+	// 【动态批处理 · 粒子系统等每帧变化的数据】
+	// 持续运动的四边形 → VBO 须 Dynamic，每帧 stream（流式上传）CPU 数据到 GPU。
+	//   VBO：Init 用 glBufferData 只分配容量；EndScene 用 SetData(glBufferSubData) 每帧写入
+	//   IBO：Init 预生成「最多 N 个 Quad」的索引模式；Draw 时用 indexCount 控制实际画多少
 	//
 	// 【拆批时机】FlushAndReset = 先 Flush（+1 DrawCall）再清空 staging 继续攒
 	//   ① EndScene()           — 正常结束一批（每帧至少 1 次）
@@ -61,6 +70,7 @@ namespace Hazel {
 	{
 		HZ_PROFILE_FUNCTION();
 		s_Data.QuadVertexArray = VertexArray::Create();
+		// 【动态 VBO · a】Init：glBufferData 只分配 GPU 容量（见 OpenGLBuffer GL_DYNAMIC_DRAW），不传顶点内容
 		s_Data.QuadVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(QuadVertex));
 
 		s_Data.QuadVertexBuffer->SetLayout({
@@ -76,7 +86,8 @@ namespace Hazel {
 		s_Data.QuadVertexBufferBase = new QuadVertex[s_Data.MaxVertices];
 		uint32_t* quadIndices = new uint32_t[s_Data.MaxIndices];
 
-		// IBO 预生成固定索引模式（每 Quad 两个三角形），Init 后不再改动；每帧只更新 VBO
+		// 【静态 IBO · a】Init 一次：预生成 MaxQuads 个 Quad 的索引模式（每 Quad 6 index）
+		// 一次 draw call 最多画 MaxQuads 个四边形；实际数量由 Flush 时的 QuadIndexCount 决定
 		uint32_t offset = 0;
 		for (uint32_t i = 0; i < s_Data.MaxIndices; i += 6)
 		{
@@ -132,6 +143,19 @@ namespace Hazel {
 		s_Data.TextureSlotIndex = 1;
 
 	}
+
+	void Renderer2D::BeginScene(const glm::mat4& viewProjection)
+	{
+		HZ_PROFILE_FUNCTION();
+
+		s_Data.TextureShader->Bind();
+		s_Data.TextureShader->SetMat4("u_ViewProjection", viewProjection);
+
+		s_Data.QuadIndexCount = 0;
+		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
+		s_Data.TextureSlotIndex = 1;
+	}
+
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
 		HZ_PROFILE_FUNCTION();
@@ -147,7 +171,7 @@ namespace Hazel {
 	{
 		HZ_PROFILE_FUNCTION();
 
-		// CPU staging → GPU VBO，再 Flush；正常一帧 EndScene 至少产生 1 次 Draw Call
+		// 【动态 VBO · b】每帧 EndScene：CPU staging → GPU（glBufferSubData stream），再 draw 一次
 		uint32_t dataSize = static_cast<uint32_t>((uint8_t*)s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase);
 		s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
 		Flush();
@@ -159,6 +183,7 @@ namespace Hazel {
 		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
 			s_Data.TextureSlots[i]->Bind(i);
 
+		// 一次 draw：IBO 已含 MaxQuads 模式，QuadIndexCount 决定本批实际画几个 Quad（粒子同理）
 		RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
 		s_Data.Stats.DrawCalls++;   // DrawCalls ≠ QuadCount；1000 Quad 同批仍可能是 1
 	}

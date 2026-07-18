@@ -43,6 +43,8 @@ Hazel/                          # 仓库根（project 名也为 Hazel）
 ├── Hazelnut/                   # 预留：未来 Editor，当前为空
 ├── vendor/
 │   ├── vcpkg/                  # git submodule
+│   ├── imgui/                  # git submodule（ocornut/imgui，docking 分支）
+│   ├── ImGuizmo/               # git submodule
 │   └── vcpkg_installed/        # 自动生成，勿提交
 ├── build/                      # CMake 生成文件（勿提交）
 ├── bin/                          # 最终产物 exe / lib
@@ -148,11 +150,11 @@ Hazel/                          # 仓库根（project 名也为 Hazel）
 | glad | OpenGL 加载 |
 | entt | ECS |
 | glm | 数学 |
-| imgui (+ glfw/opengl3 binding) | GUI（**标准版，无 Docking/多视口**） |
+| imgui / ImGuizmo | **`vendor/imgui`**（docking 分支）+ **`vendor/ImGuizmo`**；Docking + 多视口 |
 | stb | 图像加载（需在**一个** `.cpp` 中 `#define STB_IMAGE_IMPLEMENTATION`） |
 | yaml-cpp | 场景序列化 |
 
-ImGui 若使用 `ImGuiConfigFlags_DockingEnable` / `ViewportsEnable` 会与 vcpkg 标准 imgui **不兼容**。
+ImGui 来自 **`vendor/imgui`**（[ocornut/imgui](https://github.com/ocornut/imgui) `docking` 分支，CMake 见 `cmake/HazelImGui.cmake`）；`ImGuiLayer` 启用 Docking/Viewports，`EditorLayer` 提供 `DockSpace`。
 
 ---
 
@@ -160,7 +162,7 @@ ImGui 若使用 `ImGuiConfigFlags_DockingEnable` / `ViewportsEnable` 会与 vcpk
 
 ```powershell
 # 首次
-git submodule update --init vendor/vcpkg
+git submodule update --init --recursive
 cd vendor/vcpkg && .\bootstrap-vcpkg.bat && cd ..\..
 
 # 配置 + 构建

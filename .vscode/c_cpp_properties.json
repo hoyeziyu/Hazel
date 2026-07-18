@@ -2,11 +2,15 @@
   "configurations": [
     {
       "name": "windows-msvc",
+      "configurationProvider": "ms-vscode.cmake-tools",
       "includePath": [
         "${workspaceFolder}/Hazel/src",
-        "${workspaceFolder}/Hazel/src/Hazel/Renderer",
+        "${workspaceFolder}/Hazelnut/src",
         "${workspaceFolder}/Sandbox/src",
-        "${workspaceFolder}/vendor/vcpkg_installed/x64-windows/include"
+        "${workspaceFolder}/vendor/vcpkg_installed/x64-windows/include",
+        "${workspaceFolder}/vendor/imgui",
+        "${workspaceFolder}/vendor/imgui/backends",
+        "${workspaceFolder}/vendor/ImGuizmo/src"
       ],
       "defines": [
         "HZ_PLATFORM_WINDOWS",
@@ -18,6 +22,7 @@
         "GLFW_DLL"
       ],
       "windowsSdkVersion": "10.0.26100.0",
+      "compilerPath": "D:/Apps/vs2022/path/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe",
       "cStandard": "c17",
       "cppStandard": "c++17",
       "intelliSenseMode": "windows-msvc-x64"

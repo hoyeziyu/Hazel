@@ -26,7 +26,8 @@ namespace Hazel {
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
 		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-		// Docking / multi-viewport require imgui docking branch (not in vcpkg standard package)
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
 		
 		io.Fonts->AddFontFromFileTTF("assets/fonts/opensans/OpenSans-Bold.ttf", 18.0f);
 		io.FontDefault = io.Fonts->AddFontFromFileTTF("assets/fonts/opensans/OpenSans-Regular.ttf", 18.0f);
@@ -34,6 +35,17 @@ namespace Hazel {
 		// Setup Dear ImGui style
 		ImGui::StyleColorsDark();
 		//ImGui::StyleColorsClassic();
+
+		ImGuiStyle& style = ImGui::GetStyle();
+		style.HoverDelayShort = 0.0f;
+		style.HoverDelayNormal = 0.0f;
+		style.HoverStationaryDelay = 0.0f;
+		style.HoverFlagsForTooltipMouse = ImGuiHoveredFlags_None;
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			style.WindowRounding = 0.0f;
+			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+		}
 
 		SetDarkThemeColors();
 
@@ -89,6 +101,14 @@ namespace Hazel {
 		RenderCommand::Clear();
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			GLFWwindow* backup_current_context = glfwGetCurrentContext();
+			ImGui::UpdatePlatformWindows();
+			ImGui::RenderPlatformWindowsDefault();
+			glfwMakeContextCurrent(backup_current_context);
+		}
 	}
 
 	// ????debug????
@@ -125,6 +145,9 @@ namespace Hazel {
 		colors[ImGuiCol_TitleBg] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
 		colors[ImGuiCol_TitleBgActive] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
 		colors[ImGuiCol_TitleBgCollapsed] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
+		// Tooltips / popups (menus, SetTooltip)
+		colors[ImGuiCol_PopupBg] = ImVec4{ 0.12f, 0.12f, 0.13f, 0.94f };
+		colors[ImGuiCol_Border] = ImVec4{ 0.35f, 0.35f, 0.38f, 0.50f };
 	}
 
 }

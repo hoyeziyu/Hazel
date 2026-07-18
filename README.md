@@ -2,25 +2,27 @@ Hazel Game Engine
 
 ## 依赖管理
 
-第三方库通过 **vcpkg manifest 模式** 管理，依赖声明在项目根目录的 `vcpkg.json` 中。
-不需要对每个库单独执行 `git submodule add`。
+第三方库主要通过 **vcpkg manifest**（`vcpkg.json`）管理；ImGui / ImGuizmo 为 **git submodule**（docking 版 UI）。
 
 目录约定：
 
 ```
 vendor/
 ├── vcpkg/              # vcpkg 工具（git submodule）
-└── vcpkg_installed/    # 已安装的包（自动生成，勿提交）
+├── vcpkg_installed/    # 已安装的包（自动生成，勿提交）
+├── imgui/              # ocornut/imgui docking 分支（git submodule）
+└── ImGuizmo/           # Viewport Gizmo（git submodule）
 ```
 
-当前依赖：
+ImGui / ImGuizmo 由 `cmake/HazelImGui.cmake` 编译，不在 vcpkg 中。
+
+当前 vcpkg 依赖：
 
 - `spdlog` — 日志库
 - `glfw3` — 窗口与输入
 - `glad` — OpenGL 加载器
 - `entt` — ECS 实体组件系统
 - `glm` — 数学库
-- `imgui` — 即时模式 GUI（含 glfw / opengl3 后端）
 - `stb` — stb_image 等单头文件库
 - `yaml-cpp` — YAML 序列化
 - `gtest` — Google Test 单元测试（`tests/HazelTests`）
@@ -31,11 +33,19 @@ Google Benchmark（`benchmarks/HazelBench`）通过 CMake FetchContent 获取，
 
 ## 首次设置
 
-1. 在项目根目录拉取 vcpkg 子模块：
+1. 拉取 git submodules（vcpkg + ImGui + ImGuizmo）：
 
 ```
-git submodule update --init vendor/vcpkg
+git submodule update --init --recursive
 ```
+
+或仅初始化所需子模块：
+
+```
+git submodule update --init vendor/vcpkg vendor/imgui vendor/ImGuizmo
+```
+
+`vendor/imgui` 跟踪 **`docking`** 分支（见 `.gitmodules`）。
 
 2. 初始化 vcpkg：
 

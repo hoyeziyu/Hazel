@@ -3,7 +3,10 @@
 #include "Components.h"
 #include <glm/glm.hpp>
 #include "Hazel/Renderer/Renderer2D.h"
+#include "Hazel/Editor/EditorCamera.h"
 #include "Entity.h"
+
+#include <unordered_map>
 
 namespace Hazel {
 
@@ -60,23 +63,18 @@ namespace Hazel {
 		m_Registry.destroy(entity);
 	}
 
-	void Scene::OnUpdate(Timestep ts)
+	void Scene::RenderSprites()
 	{
-		// update scripts
+		auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+		for (auto entity : group)
 		{
-			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc) {
-				if (!nsc.Instance) {
-					nsc.Instance = nsc.InstantiateScript();
-					nsc.Instance->m_Entity = Entity{ entity, this };
-
-					nsc.Instance->OnCreate();
-				}
-
-				nsc.Instance->OnUpdate(ts);
-			});
+			auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+			Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
 		}
+	}
 
-		// render 2d — Scene 主动调 Renderer2D；不经过 Layer 的虚函数表再画一遍。
+	void Scene::RenderScene()
+	{
 		Camera* mainCamera = nullptr;
 		glm::mat4 cameraTransform;
 		{
@@ -94,20 +92,106 @@ namespace Hazel {
 			}
 		}
 
-		if (mainCamera) {
-			// 【应用层合批入口】整场景一次 BeginScene/EndScene = 一批
-			// 所有 Sprite 的 DrawQuad 写入同一 staging → EndScene 时 1 次 Flush
-			// 拆批仅当 Quad>20000 或 纹理种类>32（见 Renderer2D.cpp 文件头）
+		if (mainCamera)
+		{
 			Renderer2D::BeginScene(*mainCamera, cameraTransform);
-			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-			for (auto entity : group)
-			{
-				auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-				Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
-			}
+			RenderSprites();
 			Renderer2D::EndScene();
 		}
-		
+	}
+
+	void Scene::OnRenderEditor(const EditorCamera& camera)
+	{
+		Renderer2D::BeginScene(camera.GetViewProjection());
+		RenderSprites();
+		Renderer2D::EndScene();
+	}
+
+	void Scene::OnUpdateRuntime(Timestep ts)
+	{
+		// update scripts
+		{
+			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc) {
+				if (!nsc.Instance) {
+					nsc.Instance = nsc.InstantiateScript();
+					nsc.Instance->m_Entity = Entity{ entity, this };
+
+					nsc.Instance->OnCreate();
+				}
+
+				nsc.Instance->OnUpdate(ts);
+			});
+		}
+
+		RenderScene();
+	}
+
+	void Scene::OnUpdateEditor(Timestep ts)
+	{
+		(void)ts;
+	}
+
+	void Scene::OnUpdate(Timestep ts)
+	{
+		OnUpdateRuntime(ts);
+	}
+
+	void Scene::OnRuntimeStart()
+	{
+	}
+
+	void Scene::OnRuntimeStop()
+	{
+		m_Registry.view<NativeScriptComponent>().each([](auto, auto& nsc) {
+			if (nsc.Instance && nsc.DestroyScript)
+			{
+				nsc.DestroyScript(&nsc);
+				nsc.Instance = nullptr;
+			}
+		});
+	}
+
+	namespace {
+
+		template<typename T>
+		static void CopyComponent(entt::registry& dst, entt::registry& src, const std::unordered_map<entt::entity, entt::entity>& enttMap)
+		{
+			auto view = src.view<T>();
+			for (auto srcEntity : view)
+			{
+				entt::entity dstEntity = enttMap.at(srcEntity);
+				auto& srcComponent = src.get<T>(srcEntity);
+				dst.emplace_or_replace<T>(dstEntity, srcComponent);
+			}
+		}
+
+	}
+
+	void Scene::CopyTo(const Ref<Scene>& target)
+	{
+		target->m_ViewportWidth = m_ViewportWidth;
+		target->m_ViewportHeight = m_ViewportHeight;
+
+		std::unordered_map<entt::entity, entt::entity> enttMap;
+		{
+			auto view = m_Registry.view<TagComponent>();
+			for (auto entity : view)
+			{
+				const auto& tag = m_Registry.get<TagComponent>(entity);
+				Entity newEntity = target->CreateEntity(tag.Tag);
+				enttMap[entity] = newEntity;
+			}
+		}
+
+		CopyComponent<TagComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<TransformComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<CameraComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<SpriteRendererComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<NativeScriptComponent>(target->m_Registry, m_Registry, enttMap);
+
+		target->m_Registry.view<NativeScriptComponent>().each([](auto, auto& nsc) {
+			nsc.Instance = nullptr;
+		});
 	}
 
 	void Scene::OnViewportResize(uint32_t width, uint32_t height)
