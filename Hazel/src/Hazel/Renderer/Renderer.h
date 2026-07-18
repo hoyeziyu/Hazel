@@ -6,7 +6,8 @@
 #include "Shader.h"
 
 namespace Hazel {
-	
+	// 早期渲染路径：Submit = 每物体一次 DrawCall（无合批）。
+	// 当前 2D 场景请用 Renderer2D；本类仍负责 Init 与 GetAPI 工厂分发。
 	class Renderer
 	{
 	public:

@@ -1,19 +1,25 @@
 #include "hzpch.h"
 #include "Renderer2D.h"
-
+#include "Hazel/Debug/Instrumentor.h"
 #include "Hazel/Renderer/VertexArray.h"
 #include "Hazel/Renderer/Shader.h"
 #include "Hazel/Renderer/RenderCommand.h"
-
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Hazel {
 
 	// -------------------------------------------------------------------------
-	// 2D 合批渲染（Batch Rendering）
-	// DrawQuad 只写 CPU 顶点缓冲，不立刻 draw；EndScene → Flush 才 glDrawElements。
-	// 理想情况：同一 Scene、≤32 种纹理、≤20000 Quad → 1 次 Draw Call。
-	// 对比旧 Renderer::Submit：每物体 Bind + Uniform + Draw，Draw Call = O(N)。
+	// 【合批思路】把 N 次 Draw Call 合并成 1 次（或少量几次）
+	//   1. 延迟提交：DrawQuad 只写 CPU staging，不立刻 glDraw
+	//   2. 共享状态：同一批只 Bind 一次 Shader，只设一次 u_ViewProjection
+	//   3. CPU 烘焙 Transform：顶点 Position 已含世界坐标，无需 per-draw u_Transform
+	//   4. 多纹理数组：最多 32 张纹理绑到 u_Textures[]，顶点带 a_TexIndex 选 slot
+	//   5. 静态 IBO：索引模式 Init 时固定，每帧只 Upload VBO
+	//
+	// 【拆批时机】FlushAndReset = 先 Flush（+1 DrawCall）再清空 staging 继续攒
+	//   ① EndScene()           — 正常结束一批（每帧至少 1 次）
+	//   ② QuadIndexCount ≥ 上限 — 单批超过 MaxQuads(20000)
+	//   ③ TextureSlotIndex ≥ 32 — 单批纹理种类超过 MaxTextureSlots
 	// -------------------------------------------------------------------------
 
 	struct QuadVertex
@@ -159,11 +165,11 @@ namespace Hazel {
 
 	void Renderer2D::FlushAndReset()
 	{
-		// 批次切分：Quad 数或纹理 slot 满时先提交当前批，再清空 staging 继续攒
+		// 拆批：见文件头【拆批时机】①②③；EndScene 会 Flush，此处再 Reset 以便继续 DrawQuad
 		EndScene();
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
-		s_Data.TextureSlotIndex = 1;
+		s_Data.TextureSlotIndex = 1;   // 保留 slot 0 白纹理，用户纹理 slot 从 1 重新分配
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
@@ -270,6 +276,10 @@ namespace Hazel {
 	}
 	
 
+	// -------------------------------------------------------------------------
+	// 贴图 Quad 合批核心：为新纹理分配 slot，已绑定的复用（见 OpenGLTexture2D::operator==）
+	// 拆批条件 ②③ 见 DrawQuad(mat4+texture) 重载；SubTexture/Rotated 部分重载尚未统一 ③
+	// -------------------------------------------------------------------------
 	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
 		HZ_PROFILE_FUNCTION();

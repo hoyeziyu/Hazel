@@ -23,6 +23,7 @@ namespace Hazel {
 
 		virtual bool operator==(const Texture& other) const override
 		{
+			// Renderer2D 纹理 slot 查重复用此比较（同 GPU 纹理 ID = 同 slot，可合批）
 			return m_RendererID == ((OpenGLTexture2D&)other).m_RendererID;
 		}
 	private:

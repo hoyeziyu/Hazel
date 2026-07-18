@@ -36,6 +36,8 @@ namespace Hazel {
 
 	void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform)
 	{
+		// 无合批：Bind + 设 Uniform + DrawIndexed，每个 Submit = 1 DrawCall
+		// 对比 Renderer2D：Transform 走 GPU uniform；Renderer2D 在 CPU 烘焙进顶点
 		shader->Bind();
 		std::dynamic_pointer_cast<Hazel::OpenGLShader>(shader)->UploadUniformMat4("u_ViewProjection", s_SceneData->ViewProjectionMatrix);
 		std::dynamic_pointer_cast<Hazel::OpenGLShader>(shader)->UploadUniformMat4("u_Transform", transform);

@@ -2,6 +2,7 @@
 
 #include "RendererAPI.h"
 namespace Hazel {
+	// 底层绘制命令门面；Renderer2D::Flush 与 Renderer::Submit 最终都走 DrawIndexed → glDrawElements
 	class RenderCommand
 	{
 	public:

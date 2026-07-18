@@ -6,7 +6,15 @@
 #include "SubTexture2D.h"
 
 namespace Hazel {
-	// 2D 合批渲染器：DrawQuad 攒顶点，BeginScene/EndScene 界定一批，Flush 才真正 draw。
+	// 2D 合批渲染器（学习入口）
+	//
+	// 一批的生命周期：
+	//   BeginScene()  → 重置 staging，设相机
+	//   DrawQuad*()   → 只写 CPU 缓冲（合批）
+	//   EndScene()    → Upload VBO + Flush（正常结束，+1 DrawCall）
+	//   FlushAndReset → 缓冲/slot 满时中途拆批（见 Renderer2D.cpp 文件头）
+	//
+	// 与 Renderer::Submit 对比：Submit 每物体 1 DrawCall；Renderer2D 整批通常 1 DrawCall。
 	class Renderer2D
 	{
 		// 全部是 static 方法；实际状态在 Renderer2D.cpp 的 s_Data 单例里

@@ -95,8 +95,9 @@ namespace Hazel {
 		}
 
 		if (mainCamera) {
-			// 一批 2D 渲染：BeginScene → 多次 DrawQuad（只写缓冲）→ EndScene（1 次 Flush）
-			// 当前纯色 Sprite 用 TexIndex=0，整场景通常只需 1 Draw Call
+			// 【应用层合批入口】整场景一次 BeginScene/EndScene = 一批
+			// 所有 Sprite 的 DrawQuad 写入同一 staging → EndScene 时 1 次 Flush
+			// 拆批仅当 Quad>20000 或 纹理种类>32（见 Renderer2D.cpp 文件头）
 			Renderer2D::BeginScene(*mainCamera, cameraTransform);
 			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (auto entity : group)

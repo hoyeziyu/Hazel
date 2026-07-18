@@ -1,4 +1,5 @@
-// Basic Texture Shader
+// Basic Texture Shader — 2D 合批用：u_Textures[32] 多纹理数组，顶点 a_TexIndex 选 slot
+// 超过 32 种不同纹理时 C++ 端 FlushAndReset 拆批（见 Renderer2D MaxTextureSlots）
 #type vertex
 #version 330 core
 layout(location = 0) in vec3 a_Position;

@@ -104,16 +104,16 @@ namespace Hazel {
 		m_CameraController.OnUpdate(ts);
 
 
-		// Render
-		Renderer2D::ResetStats();
+		// Render ?? ???????????? FBO???????????? Scene::OnUpdate ?? Renderer2D ??
+		Renderer2D::ResetStats();   // ??????Stats ?????? DrawCalls vs QuadCount
 		{
 			HZ_PROFILE_SCOPE("Renderer Prep");
-			m_Framebuffer->Bind();
+			m_Framebuffer->Bind();    // ?????????Renderer2D ?? draw ????? FBO
 			RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 			RenderCommand::Clear();
 		}
 		{
-			// ???????
+			// Scene::OnUpdate ?? BeginScene / DrawQuad??N / EndScene?????? 1 DrawCall??
 			m_ActiveScene->OnUpdate(ts);
 
 			m_Framebuffer->Unbind();
@@ -149,6 +149,7 @@ namespace Hazel {
 
 		ImGui::Begin("Stats");
 		auto stats = Renderer2D::GetStats();
+		// ????Ч????Quads ??????Draw Calls ???? Flush ???????????? 1??
 		ImGui::Text("Renderer2D Stats:");
 		ImGui::Text("Draw Calls: %d", stats.DrawCalls);
 		ImGui::Text("Quads: %d", stats.QuadCount);
@@ -162,6 +163,7 @@ namespace Hazel {
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
 		uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
+		// 显示离屏 FBO 纹理；ImGui 不参与 2D 合批，只是采样已画好的结果
 		ImGui::Image((ImTextureID)(uintptr_t)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 		ImGui::End();
 		ImGui::PopStyleVar();
