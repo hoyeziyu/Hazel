@@ -21,13 +21,14 @@ find_package(glm CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(Stb REQUIRED)
 find_package(yaml-cpp CONFIG REQUIRED)
+find_package(imguizmo CONFIG REQUIRED)
 
 add_library(${PROJECT_NAME} ${HAZEL_SOURCES})
 add_library(Hazel::Engine ALIAS ${PROJECT_NAME})
 hazel_set_output_dirs(${PROJECT_NAME} NAME Hazel)
 
 if(WIN32)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC HZ_PLATFORM_WINDOWS HZ_ENABLE_ASSERTS)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC HZ_PLATFORM_WINDOWS HZ_ENABLE_ASSERTS IMGUI_DEFINE_MATH_OPERATORS)
     if(BUILD_SHARED_LIBS)
         target_compile_definitions(${PROJECT_NAME} PRIVATE HZ_BUILD_DLL)
     endif()
@@ -43,6 +44,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     glm::glm
     imgui::imgui
     yaml-cpp::yaml-cpp
+    imguizmo::imguizmo
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${Stb_INCLUDE_DIR})

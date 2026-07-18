@@ -21,6 +21,7 @@ namespace Hazel {
 		void DestroyEntity(Entity entity);
 		void OnUpdate(Timestep ts); // 脚本 + 找主相机 + Renderer2D 画所有 Sprite
 		void OnViewportResize(uint32_t width, uint32_t height);
+		Entity GetPrimaryCameraEntity();
 
 	private:
 		template<typename T>

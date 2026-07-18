@@ -19,6 +19,7 @@ cmake --build --preset=debug --target Hazelnut
 - Scene Viewport（Framebuffer 离屏渲染）
 - Scene Hierarchy + Properties 面板
 - File → New / Open / Save As（`.hazel` 场景序列化）
+- Viewport **ImGuizmo Gizmo**（Q/W/E/R 切换 无/平移/旋转/缩放；Ctrl 吸附）
 - 示例场景：`assets/scenes/Example.hazel`
 
 ## 说明

@@ -11,10 +11,13 @@
 #include "Hazel/Renderer/RenderCommand.h"
 #include "Hazel/Renderer/Renderer2D.h"
 #include "Hazel/Renderer/Texture.h"
-#include "Hazel/Scene/Components.h"
+#include "Hazel/Scene/Components.h"   // SpriteRendererComponent, CameraComponent, TransformComponent
 #include "Hazel/Scene/SceneSerializer.h"
 #include "Hazel/Scene/ScriptableEntity.h"
+#include "Hazel/Math/Math.h"
 #include "Hazel/Utils/PlatformUtils.h"
+
+#include <ImGuizmo.h>
 
 namespace Hazel {
 
@@ -149,7 +152,7 @@ namespace Hazel {
 
 		ImGui::Begin("Stats");
 		auto stats = Renderer2D::GetStats();
-		// ????Ч????Quads ??????Draw Calls ???? Flush ???????????? 1??
+		// ??????????Quads ??????Draw Calls ???? Flush ???????????? 1??
 		ImGui::Text("Renderer2D Stats:");
 		ImGui::Text("Draw Calls: %d", stats.DrawCalls);
 		ImGui::Text("Quads: %d", stats.QuadCount);
@@ -159,14 +162,84 @@ namespace Hazel {
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport");
+		m_ViewportFocused = ImGui::IsWindowFocused();
+		m_ViewportHovered = ImGui::IsWindowHovered();
+		Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
+
+		UI_GizmoToolbar();
+
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
 		uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
-		// 显示离屏 FBO 纹理；ImGui 不参与 2D 合批，只是采样已画好的结果
 		ImGui::Image((ImTextureID)(uintptr_t)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+
+		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+		if (selectedEntity && m_GizmoType != -1)
+		{
+			Entity cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
+			if (cameraEntity)
+			{
+				ImGuizmo::SetOrthographic(true);
+				ImGuizmo::SetDrawlist();
+
+				const ImVec2 windowPos = ImGui::GetWindowPos();
+				const ImVec2 windowSize = ImGui::GetWindowSize();
+				ImGuizmo::SetRect(windowPos.x, windowPos.y, windowSize.x, windowSize.y);
+
+				const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
+				const glm::mat4& cameraProjection = camera.GetProjection();
+				glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
+
+				auto& tc = selectedEntity.GetComponent<TransformComponent>();
+				glm::mat4 transform = tc.GetTransform();
+
+				bool snap = Input::IsKeyPressed(HZ_KEY_LEFT_CONTROL);
+				float snapValue = 0.5f;
+				if (m_GizmoType == ImGuizmo::ROTATE)
+					snapValue = 45.0f;
+
+				float snapValues[3] = { snapValue, snapValue, snapValue };
+
+				ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
+					(ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform),
+					nullptr, snap ? snapValues : nullptr);
+
+				if (ImGuizmo::IsUsing())
+				{
+					glm::vec3 translation, rotation, scale;
+					Math::DecomposeTransform(transform, translation, rotation, scale);
+
+					glm::vec3 deltaRotation = rotation - tc.Rotation;
+					tc.Translation = translation;
+					tc.Rotation += deltaRotation;
+					tc.Scale = scale;
+				}
+			}
+		}
+
 		ImGui::End();
 		ImGui::PopStyleVar();
+	}
+
+	void EditorLayer::UI_GizmoToolbar()
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 6, 6 });
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 8, 4 });
+
+		if (ImGui::RadioButton("Q", m_GizmoType == -1))
+			m_GizmoType = -1;
+		ImGui::SameLine();
+		if (ImGui::RadioButton("W", m_GizmoType == ImGuizmo::TRANSLATE))
+			m_GizmoType = ImGuizmo::TRANSLATE;
+		ImGui::SameLine();
+		if (ImGui::RadioButton("E", m_GizmoType == ImGuizmo::ROTATE))
+			m_GizmoType = ImGuizmo::ROTATE;
+		ImGui::SameLine();
+		if (ImGui::RadioButton("R", m_GizmoType == ImGuizmo::SCALE))
+			m_GizmoType = ImGuizmo::SCALE;
+
+		ImGui::PopStyleVar(2);
 	}
 	void EditorLayer::OnEvent(Event& e)
 	{
@@ -204,6 +277,30 @@ namespace Hazel {
 			if (control && shift)
 				SaveSceneAs();
 
+			break;
+		}
+		case HZ_KEY_Q:
+		{
+			if (m_ViewportFocused && !ImGuizmo::IsUsing())
+				m_GizmoType = -1;
+			break;
+		}
+		case HZ_KEY_W:
+		{
+			if (m_ViewportFocused && !ImGuizmo::IsUsing())
+				m_GizmoType = ImGuizmo::TRANSLATE;
+			break;
+		}
+		case HZ_KEY_E:
+		{
+			if (m_ViewportFocused && !ImGuizmo::IsUsing())
+				m_GizmoType = ImGuizmo::ROTATE;
+			break;
+		}
+		case HZ_KEY_R:
+		{
+			if (m_ViewportFocused && !ImGuizmo::IsUsing())
+				m_GizmoType = ImGuizmo::SCALE;
 			break;
 		}
 		}

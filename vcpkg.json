@@ -12,6 +12,7 @@
     },
     "stb",
     "yaml-cpp",
-    "gtest"
+    "gtest",
+    "imguizmo"
   ]
 }

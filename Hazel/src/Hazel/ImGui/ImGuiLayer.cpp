@@ -5,6 +5,7 @@
 #include <imgui_impl_opengl3.h>
 #include "Hazel/Core/Application.h"
 #include "Hazel/Renderer/RenderCommand.h"
+#include <ImGuizmo.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -51,6 +52,16 @@ namespace Hazel {
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
 	}
+
+	void ImGuiLayer::OnEvent(Event& e)
+	{
+		if (m_BlockEvents)
+		{
+			ImGuiIO& io = ImGui::GetIO();
+			e.Handled |= e.IsInCategory(EventCategoryMouse) & io.WantCaptureMouse;
+			e.Handled |= e.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+		}
+	}
 	
 	void ImGuiLayer::Begin()
 	{
@@ -58,6 +69,7 @@ namespace Hazel {
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+		ImGuizmo::BeginFrame();
 	}
 
 	void ImGuiLayer::End()
