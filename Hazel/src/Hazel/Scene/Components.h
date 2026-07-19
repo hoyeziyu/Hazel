@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -6,10 +7,28 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
+#include "Hazel/Core/UUID.h"
+#include "Hazel/Asset/Asset.h"
 #include "SceneCamera.h"
 #include "ScriptableEntity.h"
 
 namespace Hazel {
+
+	struct IDComponent
+	{
+		UUID ID = 0;
+	};
+
+	struct PrefabComponent
+	{
+		UUID PrefabID = 0;
+		UUID EntityID = 0;
+
+		PrefabComponent() = default;
+		PrefabComponent(UUID prefabID, UUID entityID)
+			: PrefabID(prefabID), EntityID(entityID) {}
+	};
+
 	struct TagComponent
 	{
 		std::string Tag;
@@ -44,6 +63,7 @@ namespace Hazel {
 
 	struct SpriteRendererComponent
 	{
+		AssetHandle Texture = 0;
 		glm::vec4 Color{ 1.0f,1.0f,1.0f,1.0f };
 		SpriteRendererComponent() = default;
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;

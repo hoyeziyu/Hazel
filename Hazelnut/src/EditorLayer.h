@@ -66,6 +66,9 @@ namespace Hazel {
 		void OpenProject(const std::filesystem::path& filepath);
 		void SaveProject();
 		void CloseProject();
+		void BuildAssetPack();
 		void TryOpenStartupProject();
+
+		std::string m_AssetPackStatus;
 	};
 }

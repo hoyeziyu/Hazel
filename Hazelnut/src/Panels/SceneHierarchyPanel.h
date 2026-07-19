@@ -18,7 +18,9 @@ namespace Hazel {
 	private:
 		void DrawEntityNode(Entity entity);
 		void DrawComponents(Entity entity);
-	
+		void DrawPrefabActions(Entity entity);
+		void CreatePrefabFromEntity(Entity entity);
+
 	private:
 		Ref<Scene> m_Context;
 		Entity m_SelectionContext;

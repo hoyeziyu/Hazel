@@ -1,5 +1,6 @@
 #include "hzpch.h"
 #include "Entity.h"
+#include "Components.h"
 
 namespace Hazel {
 
@@ -8,4 +9,11 @@ namespace Hazel {
 	{
 
 	}
+
+	UUID Entity::GetUUID() const
+	{
+		HZ_CORE_ASSERT(HasComponent<IDComponent>(), "Entity does not have IDComponent!");
+		return GetComponent<IDComponent>().ID;
+	}
+
 }

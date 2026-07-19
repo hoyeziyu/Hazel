@@ -1,5 +1,8 @@
 #include "Panels/ContentBrowserPanel.h"
 
+#include "Hazel/Asset/AssetExtensions.h"
+#include "Hazel/Asset/AssetManager.h"
+#include "Hazel/Asset/AssetTypes.h"
 #include "Hazel/Core/Log.h"
 #include "Hazel/ImGui/ImGuiUtilities.h"
 
@@ -78,6 +81,9 @@ namespace Hazel {
 			item.RelativePath = std::filesystem::relative(item.AbsolutePath, m_AssetRoot, ec);
 			if (ec)
 				continue;
+
+			if (!item.IsDirectory)
+				item.Handle = AssetManager::ImportAsset(item.AbsolutePath);
 
 			if (item.IsDirectory)
 				directories.push_back(std::move(item));
@@ -221,7 +227,18 @@ namespace Hazel {
 					ActivateItem(item);
 
 				ImGui::TableNextColumn();
-				ImGui::TextUnformatted(item.IsDirectory ? "Folder" : GetTypeLabel(item.AbsolutePath));
+				if (item.IsDirectory)
+				{
+					ImGui::TextUnformatted("Folder");
+				}
+				else if (AssetManager::IsAssetHandleValid(item.Handle))
+				{
+					ImGui::TextUnformatted(std::string(AssetTypeToString(AssetManager::GetAssetType(item.Handle))).c_str());
+				}
+				else
+				{
+					ImGui::TextUnformatted(GetTypeLabel(item.AbsolutePath));
+				}
 				ImGui::PopID();
 			}
 
@@ -234,6 +251,20 @@ namespace Hazel {
 		if (item.IsDirectory)
 		{
 			SetCurrentDirectory(item.RelativePath);
+			return;
+		}
+
+		if (AssetManager::IsAssetHandleValid(item.Handle) && AssetManager::GetAssetType(item.Handle) == AssetType::Scene)
+		{
+			if (m_SceneActivatedCallback)
+				m_SceneActivatedCallback(AssetManager::GetFileSystemPath(item.Handle));
+			return;
+		}
+
+		if (AssetManager::IsAssetHandleValid(item.Handle) && AssetManager::GetAssetType(item.Handle) == AssetType::Prefab)
+		{
+			if (m_PrefabActivatedCallback)
+				m_PrefabActivatedCallback(item.Handle);
 			return;
 		}
 
@@ -251,6 +282,8 @@ namespace Hazel {
 		const auto filename = path.filename().string();
 		if (filename.empty())
 			return true;
+		if (filename == "AssetRegistry.hzr")
+			return true;
 		return filename.front() == '.';
 	}
 
@@ -259,6 +292,8 @@ namespace Hazel {
 		const std::string ext = path.extension().string();
 		if (ext == ".hazel")
 			return "Scene";
+		if (ext == ".hprefab")
+			return "Prefab";
 		if (ext == ".png" || ext == ".jpg" || ext == ".jpeg")
 			return "Texture";
 		if (ext == ".glsl")

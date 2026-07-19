@@ -4,6 +4,9 @@
 #include <glm/glm.hpp>
 #include "Hazel/Renderer/Renderer2D.h"
 #include "Hazel/Editor/EditorCamera.h"
+#include "Hazel/Asset/AssetManager.h"
+#include "Hazel/Asset/TextureAsset.h"
+#include "Hazel/Scene/Prefab.h"
 #include "Entity.h"
 
 #include <unordered_map>
@@ -51,11 +54,33 @@ namespace Hazel {
 
 	Entity Scene::CreateEntity(const std::string& name)
 	{
+		return CreateEntityWithID(UUID(), name);
+	}
+
+	Entity Scene::CreateEntityWithID(UUID uuid, const std::string& name)
+	{
 		Entity entity = { m_Registry.create(), this };
+		entity.AddComponent<IDComponent>(uuid);
 		entity.AddComponent<TransformComponent>();
 		auto& tag = entity.AddComponent<TagComponent>();
 		tag.Tag = name.empty() ? "Entity" : name;
 		return entity;
+	}
+
+	Entity Scene::GetEntityWithUUID(UUID uuid)
+	{
+		auto view = m_Registry.view<IDComponent>();
+		for (auto entity : view)
+		{
+			if (view.get<IDComponent>(entity).ID == uuid)
+				return Entity{ entity, this };
+		}
+		return {};
+	}
+
+	Ref<Scene> Scene::CreateEmpty()
+	{
+		return CreateRef<Scene>();
 	}
 
 	void Scene::DestroyEntity(Entity entity)
@@ -69,6 +94,16 @@ namespace Hazel {
 		for (auto entity : group)
 		{
 			auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+
+			if (sprite.Texture && AssetManager::IsAssetValid(sprite.Texture))
+			{
+				if (auto textureAsset = AssetManager::GetAsset<TextureAsset>(sprite.Texture))
+				{
+					Renderer2D::DrawQuad(transform.GetTransform(), textureAsset->Texture, 1.0f, sprite.Color);
+					continue;
+				}
+			}
+
 			Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
 		}
 	}
@@ -183,10 +218,12 @@ namespace Hazel {
 			}
 		}
 
+		CopyComponent<IDComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<TagComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<TransformComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<CameraComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<SpriteRendererComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<PrefabComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<NativeScriptComponent>(target->m_Registry, m_Registry, enttMap);
 
 		target->m_Registry.view<NativeScriptComponent>().each([](auto, auto& nsc) {
@@ -222,9 +259,109 @@ namespace Hazel {
 	}
 
 	template<typename T>
+	void Scene::CopyComponentIfExists(Entity dst, Entity src)
+	{
+		if (!src.HasComponent<T>())
+			return;
+
+		if (dst.HasComponent<T>())
+			dst.GetComponent<T>() = src.GetComponent<T>();
+		else
+			dst.AddComponent<T>(src.GetComponent<T>());
+	}
+
+	Entity Scene::CreatePrefabEntity(Entity entity, const glm::vec3* translation, const glm::vec3* rotation, const glm::vec3* scale)
+	{
+		HZ_CORE_ASSERT(entity.HasComponent<PrefabComponent>(), "Entity missing PrefabComponent");
+
+		Entity newEntity = CreateEntity();
+		CopyComponentIfExists<TagComponent>(newEntity, entity);
+		CopyComponentIfExists<PrefabComponent>(newEntity, entity);
+		CopyComponentIfExists<TransformComponent>(newEntity, entity);
+		CopyComponentIfExists<SpriteRendererComponent>(newEntity, entity);
+		CopyComponentIfExists<CameraComponent>(newEntity, entity);
+
+		if (translation)
+			newEntity.GetComponent<TransformComponent>().Translation = *translation;
+		if (rotation)
+			newEntity.GetComponent<TransformComponent>().Rotation = *rotation;
+		if (scale)
+			newEntity.GetComponent<TransformComponent>().Scale = *scale;
+
+		return newEntity;
+	}
+
+	Entity Scene::Instantiate(const Ref<Prefab>& prefab, const glm::vec3* translation, const glm::vec3* rotation, const glm::vec3* scale)
+	{
+		if (!prefab || !prefab->m_Entity)
+			return {};
+
+		return CreatePrefabEntity(prefab->m_Entity, translation, rotation, scale);
+	}
+
+	Entity Scene::DuplicateEntity(Entity entity)
+	{
+		if (entity.HasComponent<PrefabComponent>())
+		{
+			auto prefabID = entity.GetComponent<PrefabComponent>().PrefabID;
+			if (!AssetManager::IsAssetHandleValid(prefabID))
+				return {};
+
+			auto prefab = AssetManager::GetAsset<Prefab>(prefabID);
+			if (!prefab)
+				return {};
+
+			const auto& transform = entity.GetComponent<TransformComponent>();
+			glm::vec3 rotation = transform.Rotation;
+			return Instantiate(prefab, &transform.Translation, &rotation, &transform.Scale);
+		}
+
+		Entity newEntity = CreateEntity(entity.GetComponent<TagComponent>().Tag);
+		CopyComponentIfExists<TransformComponent>(newEntity, entity);
+		CopyComponentIfExists<SpriteRendererComponent>(newEntity, entity);
+		CopyComponentIfExists<CameraComponent>(newEntity, entity);
+		return newEntity;
+	}
+
+	std::unordered_set<AssetHandle> Scene::GetAssetList() const
+	{
+		std::unordered_set<AssetHandle> result;
+
+		{
+			auto view = m_Registry.view<SpriteRendererComponent>();
+			for (auto entity : view)
+			{
+				const auto& sprite = view.get<SpriteRendererComponent>(entity);
+				if (sprite.Texture && (uint64_t)sprite.Texture != 0)
+					result.insert(sprite.Texture);
+			}
+		}
+
+		{
+			auto view = m_Registry.view<PrefabComponent>();
+			for (auto entity : view)
+			{
+				const auto& prefab = view.get<PrefabComponent>(entity);
+				if (prefab.PrefabID && (uint64_t)prefab.PrefabID != 0)
+					result.insert(prefab.PrefabID);
+			}
+		}
+
+		return result;
+	}
+
+	template<typename T>
 	void Scene::OnComponentAdded(Entity entity, T& component)
 	{
 		static_assert(false);
+	}
+	template<>
+	void Scene::OnComponentAdded<IDComponent>(Entity, IDComponent&)
+	{
+	}
+	template<>
+	void Scene::OnComponentAdded<PrefabComponent>(Entity, PrefabComponent&)
+	{
 	}
 	template<>
 	void Scene::OnComponentAdded<TransformComponent>(Entity, TransformComponent&)

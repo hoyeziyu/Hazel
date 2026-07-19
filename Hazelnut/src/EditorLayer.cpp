@@ -16,10 +16,14 @@
 #include "Hazel/Math/Math.h"
 #include "Hazel/Project/Project.h"
 #include "Hazel/Project/ProjectSerializer.h"
+#include "Hazel/Asset/AssetManager.h"
+#include "Hazel/Serialization/AssetPack.h"
+#include "Hazel/Scene/Prefab.h"
 #include "Hazel/ImGui/ImGuiUtilities.h"
 #include "Hazel/Utils/PlatformUtils.h"
 
 #include <ImGuizmo.h>
+#include <atomic>
 #include <fstream>
 
 namespace Hazel {
@@ -85,6 +89,18 @@ namespace Hazel {
 		m_ContentBrowserPanel.SetSceneActivatedCallback([this](const std::filesystem::path& absolutePath)
 		{
 			LoadScene(absolutePath);
+		});
+
+		m_ContentBrowserPanel.SetPrefabActivatedCallback([this](AssetHandle handle)
+		{
+			if (!m_EditorScene || m_SceneState == SceneState::Play)
+				return;
+
+			if (auto prefab = AssetManager::GetAsset<Prefab>(handle))
+			{
+				m_EditorScene->Instantiate(prefab);
+				HZ_CORE_INFO("Instantiated prefab {}", (uint64_t)handle);
+			}
 		});
 
 		TryOpenStartupProject();
@@ -182,6 +198,15 @@ namespace Hazel {
 
 				ImGui::EndMenu();
 			}
+
+			if (ImGui::BeginMenu("Build"))
+			{
+				if (ImGui::MenuItem("Build Asset Pack"))
+					BuildAssetPack();
+				UI::SetTooltip("Bake scenes and dependencies to assets/AssetPack.hap");
+
+				ImGui::EndMenu();
+			}
 			ImGui::EndMainMenuBar();
 		}
 
@@ -223,12 +248,22 @@ namespace Hazel {
 			const std::string startSceneLine = "Start Scene: " + project->GetConfig().StartScene;
 			UI::HoverRow(startSceneLine.c_str(), "Start scene (relative to assets)\n%s", startScenePath.c_str());
 
+			const std::string registryPath = project->GetAssetRegistryPath().string();
+			const std::string registryLine = "Registry: " + registryPath;
+			UI::HoverRow(registryLine.c_str(), "Asset registry (.hzr)\n%s", registryPath.c_str());
+
+			const std::string assetCountLine = "Registry Entries: " + std::to_string(AssetManager::GetRegistryEntryCount());
+			UI::HoverRow(assetCountLine.c_str(), "Assets registered in AssetRegistry.hzr");
+
 			if (m_ActiveScenePath)
 			{
 				const std::string openScenePath = m_ActiveScenePath->string();
 				const std::string openSceneLine = "Open Scene: " + openScenePath;
 				UI::HoverRow(openSceneLine.c_str(), "Currently open scene file\n%s", openScenePath.c_str());
 			}
+
+			if (!m_AssetPackStatus.empty())
+				UI::HoverRow(m_AssetPackStatus.c_str(), "Last AssetPack build status");
 
 			const std::string stateLine = std::string("State: ") + (m_SceneState == SceneState::Edit ? "Edit" : "Play");
 			UI::HoverRow(stateLine.c_str(), m_SceneState == SceneState::Edit ? "Editing the scene" : "Running a runtime copy of the editor scene");
@@ -599,6 +634,39 @@ namespace Hazel {
 		ProjectSerializer serializer(project);
 		serializer.Serialize(project->GetConfig().ProjectFilePath);
 		HZ_CORE_INFO("Saved project '{0}'", project->GetConfig().Name);
+	}
+
+	void EditorLayer::BuildAssetPack()
+	{
+		auto project = Project::GetActive();
+		if (!project)
+		{
+			m_AssetPackStatus = "AssetPack: no active project";
+			HZ_CORE_WARN("Cannot build AssetPack without an active project.");
+			return;
+		}
+
+		const auto outputPath = project->GetAssetDirectory() / "AssetPack.hap";
+		std::atomic<float> progress = 0.0f;
+		const bool success = AssetPack::CreateFromActiveProject(outputPath, progress);
+
+		if (success)
+		{
+			m_AssetPackStatus = "AssetPack: built " + outputPath.filename().string();
+			HZ_CORE_INFO("Built AssetPack at {}", outputPath.string());
+
+			if (auto pack = AssetPack::Load(outputPath))
+			{
+				HZ_CORE_INFO("AssetPack index: {} scenes", pack->GetIndex().Index.Scenes.size());
+				Project::SetActiveRuntime(project, pack);
+				Project::SetActive(project);
+			}
+		}
+		else
+		{
+			m_AssetPackStatus = "AssetPack: build failed";
+			HZ_CORE_ERROR("Failed to build AssetPack.");
+		}
 	}
 
 	void EditorLayer::CloseProject()

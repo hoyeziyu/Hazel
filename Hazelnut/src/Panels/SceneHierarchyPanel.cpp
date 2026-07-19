@@ -2,8 +2,13 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <cstring>
+#include <filesystem>
 #include <string>
+#include "Hazel/Asset/AssetManager.h"
+#include "Hazel/Asset/AssetTypes.h"
 #include "Hazel/Scene/Components.h"
+#include "Hazel/Project/Project.h"
+#include "Hazel/Scene/Prefab.h"
 #include <glm/gtc/type_ptr.hpp>
 namespace Hazel {
 
@@ -37,10 +42,18 @@ namespace Hazel {
 			m_SelectionContext = {};
 
 		// Right-click on blank space
-		if (ImGui::BeginPopupContextWindow(0, 1))
+		if (ImGui::BeginPopupContextWindow(0, ImGuiPopupFlags_MouseButtonRight))
 		{
 			if (ImGui::MenuItem("Create Empty Entity"))
 				m_Context->CreateEntity("Empty Entity");
+
+			if (m_SelectionContext)
+			{
+				ImGui::Separator();
+				if (ImGui::MenuItem("Create Prefab from Selected..."))
+					CreatePrefabFromEntity(m_SelectionContext);
+			}
+
 			ImGui::EndPopup();
 		}
 
@@ -48,44 +61,108 @@ namespace Hazel {
 		
 		ImGui::Begin("Properties");
 		if (m_SelectionContext) {
+			DrawPrefabActions(m_SelectionContext);
 			DrawComponents(m_SelectionContext);
-
 		}
 		ImGui::End();
 
 		//ImGui::ShowDemoWindow();	// demo??????????
 	}
 
+	void SceneHierarchyPanel::CreatePrefabFromEntity(Entity entity)
+	{
+		if (!Project::GetActive())
+		{
+			HZ_CORE_WARN("Open a project before creating prefabs.");
+			return;
+		}
+
+		if (!entity || !entity.HasComponent<TagComponent>())
+			return;
+
+		const std::string& tag = entity.GetComponent<TagComponent>().Tag;
+		const std::string prefabName = tag + ".hprefab";
+		const auto relativePath = std::filesystem::path("prefabs") / prefabName;
+
+		AssetHandle handle = AssetManager::CreateNewAsset(relativePath);
+		if ((uint64_t)handle == 0)
+		{
+			HZ_CORE_WARN("Failed to create prefab asset at {}", relativePath.generic_string());
+			return;
+		}
+
+		auto prefab = CreateRef<Prefab>();
+		prefab->Handle = handle;
+		AssetManager::SetLoadedAsset(handle, prefab);
+		prefab->Create(entity, true);
+		HZ_CORE_INFO("Created prefab {}", relativePath.generic_string());
+	}
+
+	void SceneHierarchyPanel::DrawPrefabActions(Entity entity)
+	{
+		if (!entity)
+			return;
+
+		const bool isPrefabInstance = entity.HasComponent<PrefabComponent>();
+
+		if (ImGui::Button("Create Prefab"))
+			CreatePrefabFromEntity(entity);
+
+		ImGui::SameLine();
+
+		ImGui::BeginDisabled(!isPrefabInstance);
+		if (ImGui::Button("Update Prefab"))
+		{
+			auto prefabID = entity.GetComponent<PrefabComponent>().PrefabID;
+			if (auto prefab = AssetManager::GetAsset<Prefab>(prefabID))
+			{
+				prefab->Create(entity, true);
+				HZ_CORE_INFO("Updated prefab {}", (uint64_t)prefabID);
+			}
+		}
+		ImGui::EndDisabled();
+
+		if (!Project::GetActive())
+			ImGui::TextDisabled("Open a project to create prefabs.");
+
+		ImGui::Separator();
+	}
+
 	void SceneHierarchyPanel::DrawEntityNode(Entity entity)
 	{
 		auto& tag = entity.GetComponent<TagComponent>().Tag;
-		ImGui::Text("%s", tag.c_str());
+		const bool isPrefabInstance = entity.HasComponent<PrefabComponent>();
+		const std::string label = isPrefabInstance ? ("[P] " + tag) : tag;
 
-		ImGuiTreeNodeFlags flags = ((m_SelectionContext == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
-		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
-		
-		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tag.c_str());
-		if (ImGui::IsItemClicked())
-		{
+		ImGui::PushID((int)(uint32_t)entity);
+
+		const bool selected = m_SelectionContext == entity;
+		if (ImGui::Selectable(label.c_str(), selected, ImGuiSelectableFlags_SpanAvailWidth))
 			m_SelectionContext = entity;
-		}
 
 		bool entityDeleted = false;
 		if (ImGui::BeginPopupContextItem())
 		{
 			if (ImGui::MenuItem("Delete Entity"))
 				entityDeleted = true;
+
+			if (ImGui::MenuItem("Create Prefab..."))
+				CreatePrefabFromEntity(entity);
+
+			if (isPrefabInstance && ImGui::MenuItem("Update Prefab"))
+			{
+				auto prefabID = entity.GetComponent<PrefabComponent>().PrefabID;
+				if (auto prefab = AssetManager::GetAsset<Prefab>(prefabID))
+				{
+					prefab->Create(entity, true);
+					HZ_CORE_INFO("Updated prefab {}", (uint64_t)prefabID);
+				}
+			}
+
 			ImGui::EndPopup();
 		}
 
-		if (opened)
-		{
-			ImGuiTreeNodeFlags childFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-			bool childOpened = ImGui::TreeNodeEx((void*)9817239, childFlags, tag.c_str());
-			if (childOpened)
-				ImGui::TreePop();
-			ImGui::TreePop();
-		}
+		ImGui::PopID();
 
 		if (entityDeleted)
 		{
@@ -291,8 +368,34 @@ namespace Hazel {
 		
 
 		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](auto& component) {
-			
+
 			ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
+
+			const char* preview = "None";
+			std::string previewLabel;
+			if (component.Texture && AssetManager::IsAssetHandleValid(component.Texture))
+			{
+				previewLabel = AssetManager::GetMetadata(component.Texture).FilePath.string();
+				preview = previewLabel.c_str();
+			}
+
+			if (ImGui::BeginCombo("Texture", preview))
+			{
+				const bool noneSelected = component.Texture == AssetHandle(0);
+				if (ImGui::Selectable("None", noneSelected))
+					component.Texture = 0;
+
+				for (AssetHandle handle : AssetManager::GetAllAssetsWithType(AssetType::Texture))
+				{
+					const auto& metadata = AssetManager::GetMetadata(handle);
+					const std::string label = metadata.FilePath.string();
+					const bool selected = component.Texture == handle;
+					if (ImGui::Selectable(label.c_str(), selected))
+						component.Texture = handle;
+				}
+
+				ImGui::EndCombo();
+			}
 			});
 		
 	}

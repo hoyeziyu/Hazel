@@ -17,7 +17,8 @@
 | M2 | Play 模式 | ✅ 完成 | [module-02-play.md](./module-02-play.md) |
 | M3 | Content Browser | ✅ 完成 | [module-03-content-browser.md](./module-03-content-browser.md) |
 | M4 | Editor Camera | ✅ 完成 | [module-04-editor-camera.md](./module-04-editor-camera.md) |
-| M5 | 资产系统 | 待做 | — |
+| M5 | 资产系统 | ✅ 完成 | [module-05-asset-system.md](./module-05-asset-system.md) |
+| M6 | Prefab / AssetPack | ✅ 完成 | [module-06-prefab-assetpack.md](./module-06-prefab-assetpack.md) |
 
 ## 学习流程（每个模块）
 

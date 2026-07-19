@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Hazel/Core/Core.h"
+#include "Hazel/Asset/Asset.h"
 #include "Hazel/Project/Project.h"
 
 #include <filesystem>
@@ -15,6 +16,7 @@ namespace Hazel {
 		std::filesystem::path AbsolutePath;
 		std::filesystem::path RelativePath;
 		std::string DisplayName;
+		AssetHandle Handle = 0;
 		bool IsDirectory = false;
 	};
 
@@ -22,8 +24,10 @@ namespace Hazel {
 	{
 	public:
 		using SceneActivatedCallback = std::function<void(const std::filesystem::path& absolutePath)>;
+		using PrefabActivatedCallback = std::function<void(AssetHandle handle)>;
 
 		void SetSceneActivatedCallback(const SceneActivatedCallback& callback) { m_SceneActivatedCallback = callback; }
+		void SetPrefabActivatedCallback(const PrefabActivatedCallback& callback) { m_PrefabActivatedCallback = callback; }
 
 		void OnProjectChanged(const Ref<Project>& project);
 		void OnImGuiRender();
@@ -51,6 +55,7 @@ namespace Hazel {
 		std::filesystem::path m_SelectedPath;
 
 		SceneActivatedCallback m_SceneActivatedCallback;
+		PrefabActivatedCallback m_PrefabActivatedCallback;
 	};
 
 }

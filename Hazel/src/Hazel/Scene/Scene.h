@@ -3,12 +3,17 @@
 #include <entt/entt.hpp>
 #include "Hazel/Core/Timestep.h"
 #include "Hazel/Core/Core.h"
+#include "Hazel/Core/UUID.h"
+#include "Hazel/Asset/Asset.h"
+#include <glm/glm.hpp>
 #include <string>
+#include <unordered_set>
 
 namespace Hazel {
 
 	class Entity;
 	class EditorCamera;
+	class Prefab;
 
 	class Scene
 	{
@@ -17,7 +22,16 @@ namespace Hazel {
 		~Scene();
 
 		Entity CreateEntity(const std::string& name = std::string());
+		Entity CreateEntityWithID(UUID uuid, const std::string& name = std::string());
+		Entity GetEntityWithUUID(UUID uuid);
 		void DestroyEntity(Entity entity);
+
+		Entity DuplicateEntity(Entity entity);
+		Entity Instantiate(const Ref<Prefab>& prefab, const glm::vec3* translation = nullptr, const glm::vec3* rotation = nullptr, const glm::vec3* scale = nullptr);
+
+		std::unordered_set<AssetHandle> GetAssetList() const;
+
+		static Ref<Scene> CreateEmpty();
 
 		void OnUpdate(Timestep ts);
 		void OnUpdateEditor(Timestep ts);
@@ -35,6 +49,10 @@ namespace Hazel {
 	private:
 		void RenderScene();
 		void RenderSprites();
+		Entity CreatePrefabEntity(Entity entity, const glm::vec3* translation, const glm::vec3* rotation, const glm::vec3* scale);
+
+		template<typename T>
+		void CopyComponentIfExists(Entity dst, Entity src);
 
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);
@@ -46,6 +64,8 @@ namespace Hazel {
 		friend class Entity;
 		friend class SceneHierarchyPanel;
 		friend class SceneSerializer;
+		friend class Prefab;
+		friend class PrefabSerializer;
 	};
 
 }

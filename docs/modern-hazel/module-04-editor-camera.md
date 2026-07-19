@@ -69,6 +69,6 @@ static void BeginScene(const glm::mat4& viewProjection);
 - 聚焦选中实体（Frame Selected）
 - 2D 正交 Editor 模式切换
 
-## 下一模块（M5）
+## 下一模块（M6）
 
-资产系统：AssetManager、`.hzr` 注册表、Content Browser 与 Handle 对接。
+可选：Runtime AssetPack，或 Prefab/Script 接入同一 Handle 体系。

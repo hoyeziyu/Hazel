@@ -23,6 +23,7 @@ cmake --build --preset=debug --target Hazelnut
 - **Play 模式（M2）**：Edit/Play 双场景；Viewport Play/Stop + `Alt+P`
 - **Content Browser（M3）**：浏览 `assets/`；双击 `.hazel` 打开场景
 - **Editor Camera（M4）**：Edit 用透视 EditorCamera；Play 用场景 Primary Camera
+- **资产系统（M5）**：`.hzr` 注册表 + `AssetHandle`；Content Browser / Sprite 纹理引用
 - Viewport **ImGuizmo Gizmo**（Q/W/E/R，Edit 模式，透视矩阵）
 - 示例场景：`assets/scenes/Example.hazel`
 

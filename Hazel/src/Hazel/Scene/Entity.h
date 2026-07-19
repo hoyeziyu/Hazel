@@ -29,8 +29,19 @@ namespace Hazel {
 		}
 
 		template<typename T>
+		bool HasComponent() const {
+			return m_Scene->m_Registry.any_of<T>(m_EntityHandle);
+		}
+
+		template<typename T>
 		bool HasComponent() {
 			return m_Scene->m_Registry.any_of<T>(m_EntityHandle);
+		}
+
+		template<typename T>
+		const T& GetComponent() const {
+			HZ_CORE_ASSERT(HasComponent<T>(), "Get! Entity does not have component!");
+			return m_Scene->m_Registry.get<T>(m_EntityHandle);
 		}
 
 		template<typename T>
@@ -42,6 +53,8 @@ namespace Hazel {
 		operator bool() const { return m_EntityHandle != entt::null; }
 		operator entt::entity() const { return m_EntityHandle; }
 		operator uint32_t() const { return (uint32_t)m_EntityHandle; }
+
+		UUID GetUUID() const;
 
 		bool operator==(const Entity& other) const
 		{
