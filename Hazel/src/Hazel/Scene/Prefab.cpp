@@ -27,6 +27,12 @@ namespace Hazel {
 		if (entity.HasComponent<SpriteRendererComponent>())
 			newEntity.AddComponent<SpriteRendererComponent>(entity.GetComponent<SpriteRendererComponent>());
 
+		if (entity.HasComponent<MeshRendererComponent>())
+			newEntity.AddComponent<MeshRendererComponent>(entity.GetComponent<MeshRendererComponent>());
+
+		if (entity.HasComponent<StaticMeshComponent>())
+			newEntity.AddComponent<StaticMeshComponent>(entity.GetComponent<StaticMeshComponent>());
+
 		if (entity.HasComponent<CameraComponent>())
 			newEntity.AddComponent<CameraComponent>(entity.GetComponent<CameraComponent>());
 

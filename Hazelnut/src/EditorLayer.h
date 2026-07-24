@@ -17,6 +17,8 @@
 
 namespace Hazel {
 
+	class SceneRenderer;
+
 	enum class SceneState
 	{
 		Edit = 0, Play = 1
@@ -35,6 +37,8 @@ namespace Hazel {
 	private:
 		EditorCamera m_EditorCamera;
 		Ref<Framebuffer> m_Framebuffer;
+		Ref<SceneRenderer> m_SceneRenderer;
+		bool m_ShowGrid = true;
 
 		SceneState m_SceneState = SceneState::Edit;
 		Ref<Scene> m_EditorScene;
@@ -55,6 +59,7 @@ namespace Hazel {
 
 		void OnScenePlay();
 		void OnSceneStop();
+		void UpdateRuntimeCameraControls(Timestep ts);
 
 		void NewScene();
 		void OpenScene();

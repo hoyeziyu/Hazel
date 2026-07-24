@@ -16,6 +16,8 @@ namespace Hazel {
 		Scope<TextureSerializer> s_TextureSerializer;
 		Scope<PrefabSerializer> s_PrefabSerializer;
 		Scope<SceneAssetSerializer> s_SceneAssetSerializer;
+		Scope<MeshSourceSerializer> s_MeshSourceSerializer;
+		Scope<StaticMeshSerializer> s_StaticMeshSerializer;
 
 	}
 
@@ -26,6 +28,8 @@ namespace Hazel {
 			s_TextureSerializer = CreateScope<TextureSerializer>();
 			s_PrefabSerializer = CreateScope<PrefabSerializer>();
 			s_SceneAssetSerializer = CreateScope<SceneAssetSerializer>();
+			s_MeshSourceSerializer = CreateScope<MeshSourceSerializer>();
+			s_StaticMeshSerializer = CreateScope<StaticMeshSerializer>();
 		}
 	}
 
@@ -34,9 +38,11 @@ namespace Hazel {
 		Init();
 		switch (type)
 		{
-		case AssetType::Texture: return s_TextureSerializer.get();
-		case AssetType::Prefab:  return s_PrefabSerializer.get();
-		case AssetType::Scene:   return s_SceneAssetSerializer.get();
+		case AssetType::Texture:    return s_TextureSerializer.get();
+		case AssetType::Prefab:     return s_PrefabSerializer.get();
+		case AssetType::Scene:      return s_SceneAssetSerializer.get();
+		case AssetType::MeshSource: return s_MeshSourceSerializer.get();
+		case AssetType::StaticMesh: return s_StaticMeshSerializer.get();
 		default: return nullptr;
 		}
 	}

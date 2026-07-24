@@ -19,6 +19,8 @@
 | M4 | Editor Camera | ✅ 完成 | [module-04-editor-camera.md](./module-04-editor-camera.md) |
 | M5 | 资产系统 | ✅ 完成 | [module-05-asset-system.md](./module-05-asset-system.md) |
 | M6 | Prefab / AssetPack | ✅ 完成 | [module-06-prefab-assetpack.md](./module-06-prefab-assetpack.md) |
+| M7 | SceneRenderer（3D 视口） | ✅ 完成 | [module-07-scene-renderer.md](./module-07-scene-renderer.md) |
+| M8 | StaticMesh 资产 | ✅ 完成 | [module-08-staticmesh.md](./module-08-staticmesh.md) |
 
 ## 学习流程（每个模块）
 

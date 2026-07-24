@@ -303,6 +303,18 @@ namespace Hazel {
 				ImGui::CloseCurrentPopup();
 			}
 
+			if (ImGui::MenuItem("Mesh Renderer"))
+			{
+				m_SelectionContext.AddComponent<MeshRendererComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
+			if (ImGui::MenuItem("Static Mesh"))
+			{
+				m_SelectionContext.AddComponent<StaticMeshComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
 			ImGui::EndPopup();
 		}
 
@@ -396,6 +408,42 @@ namespace Hazel {
 
 				ImGui::EndCombo();
 			}
+			});
+
+		DrawComponent<MeshRendererComponent>("Mesh Renderer", entity, [](auto& component) {
+			ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
+			ImGui::Checkbox("Visible", &component.Visible);
+			});
+
+		DrawComponent<StaticMeshComponent>("Static Mesh", entity, [](auto& component) {
+			const char* preview = "None";
+			std::string previewLabel;
+			if (component.StaticMesh && AssetManager::IsAssetHandleValid(component.StaticMesh))
+			{
+				previewLabel = AssetManager::GetMetadata(component.StaticMesh).FilePath.string();
+				preview = previewLabel.c_str();
+			}
+
+			if (ImGui::BeginCombo("Mesh", preview))
+			{
+				const bool noneSelected = component.StaticMesh == AssetHandle(0);
+				if (ImGui::Selectable("None", noneSelected))
+					component.StaticMesh = 0;
+
+				for (AssetHandle handle : AssetManager::GetAllAssetsWithType(AssetType::StaticMesh))
+				{
+					const auto& metadata = AssetManager::GetMetadata(handle);
+					const std::string label = metadata.FilePath.string();
+					const bool selected = component.StaticMesh == handle;
+					if (ImGui::Selectable(label.c_str(), selected))
+						component.StaticMesh = handle;
+				}
+
+				ImGui::EndCombo();
+			}
+
+			ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
+			ImGui::Checkbox("Visible", &component.Visible);
 			});
 		
 	}

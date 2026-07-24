@@ -8,6 +8,7 @@
 #include "Hazel/Scene/Prefab.h"
 #include "Hazel/Scene/Scene.h"
 #include "Hazel/Scene/SceneSerializer.h"
+#include "Hazel/Asset/StaticMesh.h"
 
 #include <chrono>
 
@@ -149,6 +150,14 @@ namespace Hazel {
 					{
 						auto childAssets = prefab->GetAssetList(true);
 						sceneAssetList.insert(childAssets.begin(), childAssets.end());
+					}
+				}
+				else if (AssetManager::GetAssetType(assetHandle) == AssetType::StaticMesh)
+				{
+					if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(assetHandle))
+					{
+						if ((uint64_t)staticMesh->GetMeshSource() != 0)
+							sceneAssetList.insert(staticMesh->GetMeshSource());
 					}
 				}
 			}

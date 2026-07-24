@@ -71,6 +71,29 @@ namespace Hazel {
 			: Color(color) {}
 	};
 
+	struct MeshRendererComponent
+	{
+		glm::vec4 Color{ 0.8f, 0.3f, 0.2f, 1.0f };
+		bool Visible = true;
+
+		MeshRendererComponent() = default;
+		MeshRendererComponent(const MeshRendererComponent&) = default;
+		MeshRendererComponent(const glm::vec4& color)
+			: Color(color) {}
+	};
+
+	struct StaticMeshComponent
+	{
+		AssetHandle StaticMesh = 0;
+		glm::vec4 Color{ 0.8f, 0.3f, 0.2f, 1.0f };
+		bool Visible = true;
+
+		StaticMeshComponent() = default;
+		StaticMeshComponent(const StaticMeshComponent&) = default;
+		StaticMeshComponent(AssetHandle staticMesh)
+			: StaticMesh(staticMesh) {}
+	};
+
 
 	struct CameraComponent
 	{

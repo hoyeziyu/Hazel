@@ -14,6 +14,7 @@ namespace Hazel {
 	class Entity;
 	class EditorCamera;
 	class Prefab;
+	class SceneRenderer;
 
 	class Scene
 	{
@@ -36,7 +37,8 @@ namespace Hazel {
 		void OnUpdate(Timestep ts);
 		void OnUpdateEditor(Timestep ts);
 		void OnUpdateRuntime(Timestep ts);
-		void OnRenderEditor(const EditorCamera& camera);
+		void OnRenderEditor(SceneRenderer& renderer, const EditorCamera& camera, bool showGrid);
+		void OnRenderRuntime(SceneRenderer& renderer, bool showGrid);
 
 		void OnRuntimeStart();
 		void OnRuntimeStop();
@@ -49,6 +51,8 @@ namespace Hazel {
 	private:
 		void RenderScene();
 		void RenderSprites();
+		void RenderMeshes(SceneRenderer& renderer);
+		void RenderScene3D(SceneRenderer& renderer, const glm::mat4& viewProjection, bool showGrid);
 		Entity CreatePrefabEntity(Entity entity, const glm::vec3* translation, const glm::vec3* rotation, const glm::vec3* scale);
 
 		template<typename T>

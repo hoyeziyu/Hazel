@@ -13,6 +13,8 @@ namespace Hazel {
 		static const std::unordered_map<std::string, AssetType> s_Map = {
 			{ ".hazel", AssetType::Scene },
 			{ ".hprefab", AssetType::Prefab },
+			{ ".hmesh", AssetType::MeshSource },
+			{ ".hsm",   AssetType::StaticMesh },
 			{ ".png",   AssetType::Texture },
 			{ ".jpg",   AssetType::Texture },
 			{ ".jpeg",  AssetType::Texture },

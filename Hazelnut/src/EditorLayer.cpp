@@ -11,6 +11,7 @@
 #include "Hazel/Renderer/Framebuffer.h"
 #include "Hazel/Renderer/RenderCommand.h"
 #include "Hazel/Renderer/Renderer2D.h"
+#include "Hazel/Renderer/SceneRenderer.h"
 #include "Hazel/Scene/Components.h"
 #include "Hazel/Scene/SceneSerializer.h"
 #include "Hazel/Math/Math.h"
@@ -47,7 +48,17 @@ namespace Hazel {
 				"      Scale: [1, 1, 1]\n"
 				"    SpriteRendererComponent:\n"
 				"      Color: [0, 1, 0, 1]\n"
-				"  - Entity: 2\n"
+				"  - Entity: 3\n"
+				"    TagComponent:\n"
+				"      Tag: Cube\n"
+				"    TransformComponent:\n"
+				"      Translation: [0, 0.5, 0]\n"
+				"      Rotation: [0, 0, 0]\n"
+				"      Scale: [1, 1, 1]\n"
+				"    MeshRendererComponent:\n"
+				"      Color: [0.8, 0.3, 0.2, 1]\n"
+				"      Visible: true\n"
+				"  - Entity: 4\n"
 				"    TagComponent:\n"
 				"      Tag: Camera Entity\n"
 				"    TransformComponent:\n"
@@ -82,6 +93,9 @@ namespace Hazel {
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
 		m_Framebuffer = Framebuffer::Create(fbSpec);
+
+		m_SceneRenderer = CreateRef<SceneRenderer>();
+		m_SceneRenderer->Init();
 
 		m_EditorScene = CreateRef<Scene>();
 		m_SceneHierarchyPanel.SetContext(m_EditorScene);
@@ -134,6 +148,10 @@ namespace Hazel {
 			m_EditorCamera.OnUpdate(ts);
 			m_EditorScene->OnUpdateEditor(ts);
 		}
+		else if (m_RuntimeScene && (m_ViewportFocused || m_ViewportHovered))
+		{
+			UpdateRuntimeCameraControls(ts);
+		}
 
 		Renderer2D::ResetStats();
 		{
@@ -144,9 +162,12 @@ namespace Hazel {
 		}
 		{
 			if (m_SceneState == SceneState::Edit)
-				m_EditorScene->OnRenderEditor(m_EditorCamera);
+				m_EditorScene->OnRenderEditor(*m_SceneRenderer, m_EditorCamera, m_ShowGrid);
 			else if (m_RuntimeScene)
+			{
 				m_RuntimeScene->OnUpdateRuntime(ts);
+				m_RuntimeScene->OnRenderRuntime(*m_SceneRenderer, m_ShowGrid);
+			}
 
 			m_Framebuffer->Unbind();
 		}
@@ -204,6 +225,15 @@ namespace Hazel {
 				if (ImGui::MenuItem("Build Asset Pack"))
 					BuildAssetPack();
 				UI::SetTooltip("Bake scenes and dependencies to assets/AssetPack.hap");
+
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("View"))
+			{
+				if (ImGui::MenuItem("Show Grid", nullptr, m_ShowGrid))
+					m_ShowGrid = !m_ShowGrid;
+				UI::SetTooltip("Toggle editor viewport ground grid");
 
 				ImGui::EndMenu();
 			}
@@ -426,6 +456,28 @@ namespace Hazel {
 		HZ_CORE_INFO("Stopped Play mode");
 	}
 
+	void EditorLayer::UpdateRuntimeCameraControls(Timestep ts)
+	{
+		if (!m_RuntimeScene)
+			return;
+
+		Entity cameraEntity = m_RuntimeScene->GetPrimaryCameraEntity();
+		if (!cameraEntity)
+			return;
+
+		auto& transform = cameraEntity.GetComponent<TransformComponent>();
+		const float speed = 5.0f * ts;
+
+		if (Input::IsKeyPressed(HZ_KEY_A) || Input::IsKeyPressed(HZ_KEY_LEFT))
+			transform.Translation.x -= speed;
+		if (Input::IsKeyPressed(HZ_KEY_D) || Input::IsKeyPressed(HZ_KEY_RIGHT))
+			transform.Translation.x += speed;
+		if (Input::IsKeyPressed(HZ_KEY_W) || Input::IsKeyPressed(HZ_KEY_UP))
+			transform.Translation.y += speed;
+		if (Input::IsKeyPressed(HZ_KEY_S) || Input::IsKeyPressed(HZ_KEY_DOWN))
+			transform.Translation.y -= speed;
+	}
+
 	void EditorLayer::OnEvent(Event& e)
 	{
 		if (m_SceneState == SceneState::Edit)
@@ -553,6 +605,7 @@ namespace Hazel {
 
 			std::filesystem::create_directories(projectDir / "assets" / "scenes");
 			std::filesystem::create_directories(projectDir / "assets" / "textures");
+			std::filesystem::create_directories(projectDir / "assets" / "meshes");
 			std::filesystem::create_directories(projectDir / "assets" / "shaders");
 			std::filesystem::create_directories(projectDir / "assets" / "fonts");
 

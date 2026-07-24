@@ -3,11 +3,16 @@
 #include "Components.h"
 #include <glm/glm.hpp>
 #include "Hazel/Renderer/Renderer2D.h"
+#include "Hazel/Renderer/SceneRenderer.h"
 #include "Hazel/Editor/EditorCamera.h"
 #include "Hazel/Asset/AssetManager.h"
 #include "Hazel/Asset/TextureAsset.h"
+#include "Hazel/Asset/MeshSource.h"
+#include "Hazel/Asset/StaticMesh.h"
 #include "Hazel/Scene/Prefab.h"
 #include "Entity.h"
+
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <unordered_map>
 
@@ -90,10 +95,10 @@ namespace Hazel {
 
 	void Scene::RenderSprites()
 	{
-		auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-		for (auto entity : group)
+		auto view = m_Registry.view<TransformComponent, SpriteRendererComponent>();
+		for (auto entity : view)
 		{
-			auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+			auto [transform, sprite] = view.get<TransformComponent, SpriteRendererComponent>(entity);
 
 			if (sprite.Texture && AssetManager::IsAssetValid(sprite.Texture))
 			{
@@ -135,11 +140,92 @@ namespace Hazel {
 		}
 	}
 
-	void Scene::OnRenderEditor(const EditorCamera& camera)
+	void Scene::RenderMeshes(SceneRenderer& renderer)
 	{
+		auto staticMeshView = m_Registry.view<TransformComponent, StaticMeshComponent>();
+		for (auto entity : staticMeshView)
+		{
+			auto [transform, mesh] = staticMeshView.get<TransformComponent, StaticMeshComponent>(entity);
+			if (!mesh.Visible)
+				continue;
+
+			Ref<VertexArray> vertexArray = renderer.GetDefaultCubeMesh();
+			if (mesh.StaticMesh && AssetManager::IsAssetHandleValid(mesh.StaticMesh))
+			{
+				if (auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.StaticMesh))
+				{
+					if (auto meshSource = AssetManager::GetAsset<MeshSource>(staticMesh->GetMeshSource()))
+					{
+						if (meshSource->GetVertexArray())
+							vertexArray = meshSource->GetVertexArray();
+					}
+				}
+			}
+
+			renderer.SubmitMesh(vertexArray, transform.GetTransform(), mesh.Color);
+		}
+
+		auto legacyView = m_Registry.view<TransformComponent, MeshRendererComponent>();
+		for (auto entity : legacyView)
+		{
+			auto [transform, mesh] = legacyView.get<TransformComponent, MeshRendererComponent>(entity);
+			if (!mesh.Visible)
+				continue;
+
+			renderer.SubmitMesh(transform.GetTransform(), mesh.Color);
+		}
+	}
+
+	void Scene::RenderScene3D(SceneRenderer& renderer, const glm::mat4& viewProjection, bool showGrid)
+	{
+		renderer.SetGridEnabled(showGrid);
+		renderer.BeginScene(viewProjection);
+		RenderMeshes(renderer);
+		renderer.RenderGrid();
+		renderer.EndScene();
+	}
+
+	void Scene::OnRenderEditor(SceneRenderer& renderer, const EditorCamera& camera, bool showGrid)
+	{
+		RenderScene3D(renderer, camera.GetViewProjection(), showGrid);
+
+		renderer.Prepare2DOverlay();
 		Renderer2D::BeginScene(camera.GetViewProjection());
 		RenderSprites();
 		Renderer2D::EndScene();
+		renderer.RestoreAfter2D();
+	}
+
+	void Scene::OnRenderRuntime(SceneRenderer& renderer, bool showGrid)
+	{
+		Camera* mainCamera = nullptr;
+		glm::mat4 cameraTransform;
+		{
+			auto view = m_Registry.view<TransformComponent, CameraComponent>();
+			for (auto entity : view)
+			{
+				auto [transform, camera] = view.get<TransformComponent, CameraComponent>(entity);
+
+				if (camera.Primary)
+				{
+					mainCamera = &camera.Camera;
+					cameraTransform = transform.GetTransform();
+					break;
+				}
+			}
+		}
+
+		if (!mainCamera)
+			return;
+
+		glm::mat4 viewProjection = mainCamera->GetProjection() * glm::inverse(cameraTransform);
+		RenderScene3D(renderer, viewProjection, showGrid);
+
+		renderer.Prepare2DOverlay();
+		Renderer2D::BeginScene(*mainCamera, cameraTransform);
+		RenderSprites();
+		Renderer2D::EndScene();
+		renderer.RestoreAfter2D();
 	}
 
 	void Scene::OnUpdateRuntime(Timestep ts)
@@ -157,8 +243,6 @@ namespace Hazel {
 				nsc.Instance->OnUpdate(ts);
 			});
 		}
-
-		RenderScene();
 	}
 
 	void Scene::OnUpdateEditor(Timestep ts)
@@ -223,6 +307,8 @@ namespace Hazel {
 		CopyComponent<TransformComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<CameraComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<SpriteRendererComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<MeshRendererComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<StaticMeshComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<PrefabComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<NativeScriptComponent>(target->m_Registry, m_Registry, enttMap);
 
@@ -279,6 +365,8 @@ namespace Hazel {
 		CopyComponentIfExists<PrefabComponent>(newEntity, entity);
 		CopyComponentIfExists<TransformComponent>(newEntity, entity);
 		CopyComponentIfExists<SpriteRendererComponent>(newEntity, entity);
+		CopyComponentIfExists<MeshRendererComponent>(newEntity, entity);
+		CopyComponentIfExists<StaticMeshComponent>(newEntity, entity);
 		CopyComponentIfExists<CameraComponent>(newEntity, entity);
 
 		if (translation)
@@ -319,6 +407,8 @@ namespace Hazel {
 		Entity newEntity = CreateEntity(entity.GetComponent<TagComponent>().Tag);
 		CopyComponentIfExists<TransformComponent>(newEntity, entity);
 		CopyComponentIfExists<SpriteRendererComponent>(newEntity, entity);
+		CopyComponentIfExists<MeshRendererComponent>(newEntity, entity);
+		CopyComponentIfExists<StaticMeshComponent>(newEntity, entity);
 		CopyComponentIfExists<CameraComponent>(newEntity, entity);
 		return newEntity;
 	}
@@ -334,6 +424,16 @@ namespace Hazel {
 				const auto& sprite = view.get<SpriteRendererComponent>(entity);
 				if (sprite.Texture && (uint64_t)sprite.Texture != 0)
 					result.insert(sprite.Texture);
+			}
+		}
+
+		{
+			auto view = m_Registry.view<StaticMeshComponent>();
+			for (auto entity : view)
+			{
+				const auto& mesh = view.get<StaticMeshComponent>(entity);
+				if (mesh.StaticMesh && (uint64_t)mesh.StaticMesh != 0)
+					result.insert(mesh.StaticMesh);
 			}
 		}
 
@@ -374,6 +474,14 @@ namespace Hazel {
 	}
 	template<>
 	void Scene::OnComponentAdded<SpriteRendererComponent>(Entity, SpriteRendererComponent&)
+	{
+	}
+	template<>
+	void Scene::OnComponentAdded<MeshRendererComponent>(Entity, MeshRendererComponent&)
+	{
+	}
+	template<>
+	void Scene::OnComponentAdded<StaticMeshComponent>(Entity, StaticMeshComponent&)
 	{
 	}
 	template<>

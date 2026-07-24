@@ -192,6 +192,32 @@ namespace Hazel {
 			out << YAML::EndMap;
 		}
 
+		if (entity.HasComponent<MeshRendererComponent>())
+		{
+			out << YAML::Key << "MeshRendererComponent";
+			out << YAML::BeginMap;
+
+			auto& meshRendererComponent = entity.GetComponent<MeshRendererComponent>();
+			out << YAML::Key << "Color" << YAML::Value << meshRendererComponent.Color;
+			out << YAML::Key << "Visible" << YAML::Value << meshRendererComponent.Visible;
+
+			out << YAML::EndMap;
+		}
+
+		if (entity.HasComponent<StaticMeshComponent>())
+		{
+			out << YAML::Key << "StaticMeshComponent";
+			out << YAML::BeginMap;
+
+			auto& staticMeshComponent = entity.GetComponent<StaticMeshComponent>();
+			if (staticMeshComponent.StaticMesh)
+				out << YAML::Key << "StaticMesh" << YAML::Value << (uint64_t)staticMeshComponent.StaticMesh;
+			out << YAML::Key << "Color" << YAML::Value << staticMeshComponent.Color;
+			out << YAML::Key << "Visible" << YAML::Value << staticMeshComponent.Visible;
+
+			out << YAML::EndMap;
+		}
+
 		out << YAML::EndMap;
 	}
 
@@ -252,6 +278,26 @@ namespace Hazel {
 				src.Color = spriteRendererComponent["Color"].as<glm::vec4>();
 				if (spriteRendererComponent["Texture"])
 					src.Texture = spriteRendererComponent["Texture"].as<uint64_t>();
+			}
+
+			auto meshRendererComponent = entity["MeshRendererComponent"];
+			if (meshRendererComponent)
+			{
+				auto& src = deserializedEntity.AddComponent<MeshRendererComponent>();
+				src.Color = meshRendererComponent["Color"].as<glm::vec4>();
+				if (meshRendererComponent["Visible"])
+					src.Visible = meshRendererComponent["Visible"].as<bool>();
+			}
+
+			auto staticMeshComponent = entity["StaticMeshComponent"];
+			if (staticMeshComponent)
+			{
+				auto& src = deserializedEntity.AddComponent<StaticMeshComponent>();
+				if (staticMeshComponent["StaticMesh"])
+					src.StaticMesh = staticMeshComponent["StaticMesh"].as<uint64_t>();
+				src.Color = staticMeshComponent["Color"].as<glm::vec4>(glm::vec4(0.8f, 0.3f, 0.2f, 1.0f));
+				if (staticMeshComponent["Visible"])
+					src.Visible = staticMeshComponent["Visible"].as<bool>();
 			}
 		}
 	}
