@@ -14,3 +14,6 @@ Assets:
   - Handle: 18402389245123987102
     FilePath: meshes/Cube.hsm
     Type: StaticMesh
+  - Handle: 19402389245123987103
+    FilePath: materials/Checkerboard.hmaterial
+    Type: Material

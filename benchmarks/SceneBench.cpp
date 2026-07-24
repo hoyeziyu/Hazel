@@ -1,5 +1,6 @@
 #include <benchmark/benchmark.h>
 
+#include "Hazel/Asset/MaterialAsset.h"
 #include "Hazel/Scene/Scene.h"
 #include "Hazel/Scene/Components.h"
 
@@ -32,3 +33,19 @@ static void BM_TransformGetTransform(benchmark::State& state)
 	}
 }
 BENCHMARK(BM_TransformGetTransform);
+
+static void BM_MaterialAssetLookup(benchmark::State& state)
+{
+	Hazel::Ref<Hazel::MaterialAsset> material = Hazel::MaterialAsset::Create();
+	material->AlbedoColor = glm::vec3(0.5f, 0.6f, 0.7f);
+	material->AlbedoMap = Hazel::AssetHandle(12345);
+
+	for (auto _ : state)
+	{
+		glm::vec3 color = material->AlbedoColor;
+		bool hasMap = material->AlbedoMap != Hazel::AssetHandle(0);
+		benchmark::DoNotOptimize(color);
+		benchmark::DoNotOptimize(hasMap);
+	}
+}
+BENCHMARK(BM_MaterialAssetLookup);

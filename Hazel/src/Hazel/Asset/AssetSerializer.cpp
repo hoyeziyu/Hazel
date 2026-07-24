@@ -4,6 +4,7 @@
 #include "TextureAsset.h"
 #include "MeshSource.h"
 #include "StaticMesh.h"
+#include "MaterialAsset.h"
 #include "Hazel/Project/Project.h"
 #include "Hazel/Asset/AssetManager.h"
 #include "Hazel/Scene/Prefab.h"
@@ -40,6 +41,28 @@ namespace YAML {
 			rhs.x = node[0].as<float>();
 			rhs.y = node[1].as<float>();
 			rhs.z = node[2].as<float>();
+			return true;
+		}
+	};
+
+	template<>
+	struct convert<glm::vec2>
+	{
+		static Node encode(const glm::vec2& rhs)
+		{
+			Node node;
+			node.push_back(rhs.x);
+			node.push_back(rhs.y);
+			return node;
+		}
+
+		static bool decode(const Node& node, glm::vec2& rhs)
+		{
+			if (!node.IsSequence() || node.size() != 2)
+				return false;
+
+			rhs.x = node[0].as<float>();
+			rhs.y = node[1].as<float>();
 			return true;
 		}
 	};
@@ -349,6 +372,15 @@ namespace Hazel {
 		}
 		out << YAML::EndSeq;
 		out << YAML::Key << "Indices" << YAML::Value << meshSource->GetIndices();
+		if (!meshSource->GetTexCoords().empty())
+		{
+			out << YAML::Key << "TexCoords" << YAML::Value << YAML::BeginSeq;
+			for (const auto& texCoord : meshSource->GetTexCoords())
+			{
+				out << YAML::Flow << YAML::BeginSeq << texCoord.x << texCoord.y << YAML::EndSeq;
+			}
+			out << YAML::EndSeq;
+		}
 		out << YAML::EndMap;
 		out << YAML::EndMap;
 		return std::string(out.c_str());
@@ -372,7 +404,103 @@ namespace Hazel {
 		if (positions.empty() || indices.empty())
 			return false;
 
-		target = CreateRef<MeshSource>(positions, indices);
+		std::vector<glm::vec2> texCoords;
+		if (rootNode["TexCoords"])
+		{
+			for (const auto& texCoordNode : rootNode["TexCoords"])
+				texCoords.push_back(texCoordNode.as<glm::vec2>());
+		}
+
+		target = CreateRef<MeshSource>(positions, indices, texCoords);
+		return true;
+	}
+
+	void MaterialAssetSerializer::Serialize(const AssetMetadata& metadata, const Ref<Asset>& asset) const
+	{
+		Ref<MaterialAsset> material = std::dynamic_pointer_cast<MaterialAsset>(asset);
+		if (!material)
+			return;
+
+		std::ofstream fout(Project::GetActiveAssetManager()->GetFileSystemPath(metadata));
+		fout << SerializeToYAML(material);
+	}
+
+	bool MaterialAssetSerializer::TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const
+	{
+		std::ifstream stream(Project::GetActiveAssetManager()->GetFileSystemPath(metadata));
+		if (!stream.is_open())
+			return false;
+
+		std::stringstream strStream;
+		strStream << stream.rdbuf();
+
+		Ref<MaterialAsset> material;
+		if (!DeserializeFromYAML(strStream.str(), material))
+			return false;
+
+		asset = material;
+		asset->Handle = metadata.Handle;
+		material->Handle = metadata.Handle;
+		return true;
+	}
+
+	bool MaterialAssetSerializer::SerializeToAssetPack(AssetHandle handle, FileStreamWriter& stream, AssetSerializationInfo& outInfo) const
+	{
+		Ref<MaterialAsset> material = AssetManager::GetAsset<MaterialAsset>(handle);
+		if (!material)
+			return false;
+
+		std::string yamlString = SerializeToYAML(material);
+		outInfo.Offset = stream.GetStreamPosition();
+		stream.WriteString(yamlString);
+		outInfo.Size = stream.GetStreamPosition() - outInfo.Offset;
+		return true;
+	}
+
+	Ref<Asset> MaterialAssetSerializer::DeserializeFromAssetPack(FileStreamReader& stream, const AssetPackFile::AssetInfo& assetInfo) const
+	{
+		stream.SetStreamPosition(assetInfo.PackedOffset);
+		std::string yamlString;
+		stream.ReadString(yamlString);
+
+		Ref<MaterialAsset> material;
+		if (!DeserializeFromYAML(yamlString, material))
+			return nullptr;
+
+		return material;
+	}
+
+	std::string MaterialAssetSerializer::SerializeToYAML(const Ref<MaterialAsset>& material) const
+	{
+		YAML::Emitter out;
+		out << YAML::BeginMap;
+		out << YAML::Key << "Material";
+		out << YAML::BeginMap;
+		out << YAML::Key << "AlbedoColor" << YAML::Value << YAML::Flow << YAML::BeginSeq
+			<< material->AlbedoColor.x << material->AlbedoColor.y << material->AlbedoColor.z << YAML::EndSeq;
+		out << YAML::Key << "Metalness" << YAML::Value << material->Metalness;
+		out << YAML::Key << "Roughness" << YAML::Value << material->Roughness;
+		out << YAML::Key << "Emission" << YAML::Value << material->Emission;
+		out << YAML::Key << "AlbedoMap" << YAML::Value << (uint64_t)material->AlbedoMap;
+		out << YAML::EndMap;
+		out << YAML::EndMap;
+		return std::string(out.c_str());
+	}
+
+	bool MaterialAssetSerializer::DeserializeFromYAML(const std::string& yamlString, Ref<MaterialAsset>& target) const
+	{
+		YAML::Node data = YAML::Load(yamlString);
+		if (!data["Material"])
+			return false;
+
+		YAML::Node rootNode = data["Material"];
+		target = MaterialAsset::Create();
+		target->AlbedoColor = rootNode["AlbedoColor"].as<glm::vec3>(glm::vec3(1.0f));
+		target->Metalness = rootNode["Metalness"].as<float>(0.0f);
+		target->Roughness = rootNode["Roughness"].as<float>(0.5f);
+		target->Emission = rootNode["Emission"].as<float>(0.0f);
+		if (rootNode["AlbedoMap"])
+			target->AlbedoMap = rootNode["AlbedoMap"].as<uint64_t>();
 		return true;
 	}
 

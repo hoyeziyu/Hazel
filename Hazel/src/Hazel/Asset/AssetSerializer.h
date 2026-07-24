@@ -10,6 +10,7 @@ namespace Hazel {
 	class Scene;
 	class MeshSource;
 	class StaticMesh;
+	class MaterialAsset;
 
 	struct AssetSerializationInfo
 	{
@@ -91,6 +92,19 @@ namespace Hazel {
 	private:
 		std::string SerializeToYAML(const Ref<StaticMesh>& staticMesh) const;
 		bool DeserializeFromYAML(const std::string& yamlString, Ref<StaticMesh>& target) const;
+	};
+
+	class MaterialAssetSerializer : public AssetSerializer
+	{
+	public:
+		void Serialize(const AssetMetadata& metadata, const Ref<Asset>& asset) const override;
+		bool TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const override;
+
+		bool SerializeToAssetPack(AssetHandle handle, FileStreamWriter& stream, AssetSerializationInfo& outInfo) const override;
+		Ref<Asset> DeserializeFromAssetPack(FileStreamReader& stream, const AssetPackFile::AssetInfo& assetInfo) const override;
+
+		std::string SerializeToYAML(const Ref<MaterialAsset>& material) const;
+		bool DeserializeFromYAML(const std::string& yamlString, Ref<MaterialAsset>& target) const;
 	};
 
 }

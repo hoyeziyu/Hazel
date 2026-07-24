@@ -15,6 +15,7 @@ namespace Hazel {
 			{ ".hprefab", AssetType::Prefab },
 			{ ".hmesh", AssetType::MeshSource },
 			{ ".hsm",   AssetType::StaticMesh },
+			{ ".hmaterial", AssetType::Material },
 			{ ".png",   AssetType::Texture },
 			{ ".jpg",   AssetType::Texture },
 			{ ".jpeg",  AssetType::Texture },

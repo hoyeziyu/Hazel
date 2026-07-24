@@ -21,6 +21,9 @@
 | M6 | Prefab / AssetPack | ✅ 完成 | [module-06-prefab-assetpack.md](./module-06-prefab-assetpack.md) |
 | M7 | SceneRenderer（3D 视口） | ✅ 完成 | [module-07-scene-renderer.md](./module-07-scene-renderer.md) |
 | M8 | StaticMesh 资产 | ✅ 完成 | [module-08-staticmesh.md](./module-08-staticmesh.md) |
+| M9 | Material 资产（Albedo 纹理） | ✅ 完成 | [module-09-material.md](./module-09-material.md) |
+
+完整路线见 [ROADMAP.md](./ROADMAP.md)。
 
 ## 学习流程（每个模块）
 

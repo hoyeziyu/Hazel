@@ -212,6 +212,8 @@ namespace Hazel {
 			auto& staticMeshComponent = entity.GetComponent<StaticMeshComponent>();
 			if (staticMeshComponent.StaticMesh)
 				out << YAML::Key << "StaticMesh" << YAML::Value << (uint64_t)staticMeshComponent.StaticMesh;
+			if (staticMeshComponent.Material)
+				out << YAML::Key << "Material" << YAML::Value << (uint64_t)staticMeshComponent.Material;
 			out << YAML::Key << "Color" << YAML::Value << staticMeshComponent.Color;
 			out << YAML::Key << "Visible" << YAML::Value << staticMeshComponent.Visible;
 
@@ -295,6 +297,8 @@ namespace Hazel {
 				auto& src = deserializedEntity.AddComponent<StaticMeshComponent>();
 				if (staticMeshComponent["StaticMesh"])
 					src.StaticMesh = staticMeshComponent["StaticMesh"].as<uint64_t>();
+				if (staticMeshComponent["Material"])
+					src.Material = staticMeshComponent["Material"].as<uint64_t>();
 				src.Color = staticMeshComponent["Color"].as<glm::vec4>(glm::vec4(0.8f, 0.3f, 0.2f, 1.0f));
 				if (staticMeshComponent["Visible"])
 					src.Visible = staticMeshComponent["Visible"].as<bool>();

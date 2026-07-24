@@ -12,6 +12,7 @@ namespace Hazel {
 		Texture,
 		MeshSource,
 		StaticMesh,
+		Material,
 		Font,
 		Shader,
 	};
@@ -25,6 +26,7 @@ namespace Hazel {
 		case AssetType::Texture:    return "Texture";
 		case AssetType::MeshSource: return "MeshSource";
 		case AssetType::StaticMesh: return "StaticMesh";
+		case AssetType::Material: return "Material";
 		case AssetType::Font:    return "Font";
 		case AssetType::Shader:  return "Shader";
 		default:                 return "None";
@@ -38,6 +40,7 @@ namespace Hazel {
 		if (type == "Texture")    return AssetType::Texture;
 		if (type == "MeshSource") return AssetType::MeshSource;
 		if (type == "StaticMesh") return AssetType::StaticMesh;
+		if (type == "Material") return AssetType::Material;
 		if (type == "Font")    return AssetType::Font;
 		if (type == "Shader")  return AssetType::Shader;
 		return AssetType::None;

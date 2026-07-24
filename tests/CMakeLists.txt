@@ -4,6 +4,7 @@ add_executable(HazelTests
     HazelTestMain.cpp
     SceneTests.cpp
     TransformTests.cpp
+    MaterialTests.cpp
 )
 
 target_link_libraries(HazelTests PRIVATE Hazel::Engine GTest::gtest)

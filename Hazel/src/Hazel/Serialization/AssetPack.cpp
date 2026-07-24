@@ -9,6 +9,7 @@
 #include "Hazel/Scene/Scene.h"
 #include "Hazel/Scene/SceneSerializer.h"
 #include "Hazel/Asset/StaticMesh.h"
+#include "Hazel/Asset/MaterialAsset.h"
 
 #include <chrono>
 
@@ -158,6 +159,14 @@ namespace Hazel {
 					{
 						if ((uint64_t)staticMesh->GetMeshSource() != 0)
 							sceneAssetList.insert(staticMesh->GetMeshSource());
+					}
+				}
+				else if (AssetManager::GetAssetType(assetHandle) == AssetType::Material)
+				{
+					if (auto material = AssetManager::GetAsset<MaterialAsset>(assetHandle))
+					{
+						if ((uint64_t)material->AlbedoMap != 0)
+							sceneAssetList.insert(material->AlbedoMap);
 					}
 				}
 			}

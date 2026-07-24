@@ -9,6 +9,7 @@
 #include "Hazel/Asset/TextureAsset.h"
 #include "Hazel/Asset/MeshSource.h"
 #include "Hazel/Asset/StaticMesh.h"
+#include "Hazel/Asset/MaterialAsset.h"
 #include "Hazel/Scene/Prefab.h"
 #include "Entity.h"
 
@@ -162,7 +163,20 @@ namespace Hazel {
 				}
 			}
 
-			renderer.SubmitMesh(vertexArray, transform.GetTransform(), mesh.Color);
+			MeshMaterialData materialData;
+			materialData.ColorTint = mesh.Color;
+			materialData.AlbedoColor = glm::vec3(1.0f);
+
+			if (mesh.Material && AssetManager::IsAssetHandleValid(mesh.Material))
+			{
+				if (auto materialAsset = AssetManager::GetAsset<MaterialAsset>(mesh.Material))
+				{
+					materialData.AlbedoColor = materialAsset->AlbedoColor;
+					materialData.AlbedoTexture = materialAsset->GetAlbedoTexture();
+				}
+			}
+
+			renderer.SubmitMesh(vertexArray, transform.GetTransform(), materialData);
 		}
 
 		auto legacyView = m_Registry.view<TransformComponent, MeshRendererComponent>();
@@ -434,6 +448,8 @@ namespace Hazel {
 				const auto& mesh = view.get<StaticMeshComponent>(entity);
 				if (mesh.StaticMesh && (uint64_t)mesh.StaticMesh != 0)
 					result.insert(mesh.StaticMesh);
+				if (mesh.Material && (uint64_t)mesh.Material != 0)
+					result.insert(mesh.Material);
 			}
 		}
 
