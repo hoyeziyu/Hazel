@@ -32,6 +32,8 @@ namespace Hazel {
 		std::filesystem::path GetAssetPath(const std::filesystem::path& relativePath) const;
 		std::filesystem::path GetStartScenePath() const;
 		std::filesystem::path GetAssetRegistryPath() const;
+		std::filesystem::path GetScriptModulePath() const;
+		std::filesystem::path GetScriptProjectPath() const;
 
 		Ref<EditorAssetManager> GetAssetManager() const { return m_AssetManager; }
 
@@ -41,7 +43,6 @@ namespace Hazel {
 		static void ClearActive();
 		static void ReloadScriptEngine();
 
-		static std::filesystem::path GetScriptModulePath();
 		static std::filesystem::path GetScriptModuleFilePath();
 
 		static Ref<EditorAssetManager> GetActiveAssetManager();

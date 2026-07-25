@@ -168,6 +168,21 @@ namespace Hazel {
 			&& m_ScriptMetadata.contains(scriptID);
 	}
 
+	UUID ScriptEngine::GetScriptIDByFullName(const std::string& fullName) const
+	{
+		const Hazel::UUID hashedID = Hazel::UUID(static_cast<uint64_t>(Hash::GenerateFNVHash(fullName)));
+		if (IsValidScript(hashedID))
+			return hashedID;
+
+		for (const auto& [scriptID, metadata] : m_ScriptMetadata)
+		{
+			if (metadata.FullName == fullName && IsValidScript(scriptID))
+				return scriptID;
+		}
+
+		return 0;
+	}
+
 	const ScriptMetadata* ScriptEngine::GetScriptMetadata(UUID scriptID) const
 	{
 		auto it = m_ScriptMetadata.find(scriptID);

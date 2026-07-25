@@ -18,6 +18,7 @@
 #include "Hazel/Project/Project.h"
 #include "Hazel/Project/ProjectSerializer.h"
 #include "Hazel/Script/ScriptEngine.h"
+#include "Hazel/Script/ScriptBuilder.h"
 #include "Hazel/Asset/AssetManager.h"
 #include "Hazel/Serialization/AssetPack.h"
 #include "Hazel/Scene/Prefab.h"
@@ -223,6 +224,16 @@ namespace Hazel {
 
 			if (ImGui::BeginMenu("Build"))
 			{
+				if (ImGui::MenuItem("Build C# Scripts"))
+					BuildCSharpScripts();
+				UI::SetTooltip("dotnet build the active project's game script assembly");
+
+				if (ImGui::MenuItem("Reload C# Assembly"))
+					ReloadCSharp();
+				UI::SetTooltip("Reload Hazel-ScriptCore and game scripts without restarting Hazelnut");
+
+				ImGui::Separator();
+
 				if (ImGui::MenuItem("Build Asset Pack"))
 					BuildAssetPack();
 				UI::SetTooltip("Bake scenes and dependencies to assets/AssetPack.hap");
@@ -465,6 +476,7 @@ namespace Hazel {
 		ScriptEngine::GetMutable().SetCurrentScene(nullptr);
 		m_SceneState = SceneState::Edit;
 		m_RuntimeScene = nullptr;
+		Project::ReloadScriptEngine();
 		HZ_CORE_INFO("Stopped Play mode");
 	}
 
@@ -662,6 +674,7 @@ namespace Hazel {
 			return;
 
 		Project::SetActive(project);
+		ScriptBuilder::BuildScriptAssembly(project);
 		ScriptEngine::GetMutable().LoadProjectAssembly();
 		m_ContentBrowserPanel.OnProjectChanged(project);
 		HZ_CORE_INFO("Opened project '{0}'", project->GetConfig().Name);
@@ -700,6 +713,31 @@ namespace Hazel {
 		ProjectSerializer serializer(project);
 		serializer.Serialize(project->GetConfig().ProjectFilePath);
 		HZ_CORE_INFO("Saved project '{0}'", project->GetConfig().Name);
+	}
+
+	void EditorLayer::BuildCSharpScripts()
+	{
+		auto project = Project::GetActive();
+		if (!project)
+		{
+			HZ_CORE_WARN("No active project — cannot build C# scripts.");
+			return;
+		}
+
+		if (ScriptBuilder::BuildScriptAssembly(project))
+			ScriptEngine::GetMutable().LoadProjectAssembly();
+	}
+
+	void EditorLayer::ReloadCSharp()
+	{
+		if (m_SceneState == SceneState::Play)
+		{
+			HZ_CORE_WARN("Stop Play mode before reloading the C# assembly.");
+			return;
+		}
+
+		Project::ReloadScriptEngine();
+		HZ_CORE_INFO("Reloaded C# script assemblies.");
 	}
 
 	void EditorLayer::BuildAssetPack()

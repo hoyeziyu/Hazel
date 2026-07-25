@@ -32,6 +32,16 @@ namespace Hazel {
 		return GetAssetDirectory() / m_Config.AssetRegistryPath;
 	}
 
+	std::filesystem::path Project::GetScriptModulePath() const
+	{
+		return m_Config.ProjectDirectory / m_Config.ScriptModulePath;
+	}
+
+	std::filesystem::path Project::GetScriptProjectPath() const
+	{
+		return GetAssetDirectory() / "Scripts" / (m_Config.Name + ".csproj");
+	}
+
 	Ref<Project> Project::GetActive()
 	{
 		return s_ActiveProject;
@@ -83,16 +93,10 @@ namespace Hazel {
 		scriptEngine.LoadProjectAssembly();
 	}
 
-	std::filesystem::path Project::GetScriptModulePath()
-	{
-		HZ_CORE_ASSERT(s_ActiveProject, "No active project");
-		return s_ActiveProject->GetConfig().ProjectDirectory / s_ActiveProject->GetConfig().ScriptModulePath;
-	}
-
 	std::filesystem::path Project::GetScriptModuleFilePath()
 	{
 		HZ_CORE_ASSERT(s_ActiveProject, "No active project");
-		return GetScriptModulePath() / (s_ActiveProject->GetConfig().Name + ".dll");
+		return s_ActiveProject->GetScriptModulePath() / (s_ActiveProject->GetConfig().Name + ".dll");
 	}
 
 	const ProjectConfig* Project::GetActiveConfig()

@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Hazel/Core/Core.h"
+#include "Hazel/Core/Log.h"
+
 #include <Coral/ManagedObject.hpp>
 
 namespace Hazel {

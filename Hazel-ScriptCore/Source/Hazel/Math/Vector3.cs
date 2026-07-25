@@ -17,7 +17,10 @@ namespace Hazel
 			Z = z;
 		}
 
+		public static Vector3 Zero => new(0, 0, 0);
+
 		public static Vector3 operator +(Vector3 a, Vector3 b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+		public static Vector3 operator *(Vector3 v, float s) => new(v.X * s, v.Y * s, v.Z * s);
 
 		public bool Equals(Vector3 other) => X == other.X && Y == other.Y && Z == other.Z;
 		public override bool Equals(object? obj) => obj is Vector3 other && Equals(other);

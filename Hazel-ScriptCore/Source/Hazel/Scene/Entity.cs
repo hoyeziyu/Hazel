@@ -12,6 +12,19 @@ namespace Hazel
 
 		public readonly ulong ID;
 
+		public string Tag
+		{
+			get
+			{
+				unsafe
+				{
+					string? tag = InternalCalls.TagComponent_GetTag(ID);
+					return tag ?? string.Empty;
+				}
+			}
+			set { unsafe { InternalCalls.TagComponent_SetTag(ID, value); } }
+		}
+
 		public Vector3 Translation
 		{
 			get
@@ -37,6 +50,20 @@ namespace Hazel
 			set
 			{
 				unsafe { InternalCalls.TransformComponent_SetRotation(ID, &value); }
+			}
+		}
+
+		public Vector3 Scale
+		{
+			get
+			{
+				Vector3 result;
+				unsafe { InternalCalls.TransformComponent_GetScale(ID, &result); }
+				return result;
+			}
+			set
+			{
+				unsafe { InternalCalls.TransformComponent_SetScale(ID, &value); }
 			}
 		}
 

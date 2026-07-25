@@ -72,6 +72,8 @@ namespace Hazel {
 		void SaveProject();
 		void CloseProject();
 		void BuildAssetPack();
+		void BuildCSharpScripts();
+		void ReloadCSharp();
 		void TryOpenStartupProject();
 
 		std::string m_AssetPackStatus;

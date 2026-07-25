@@ -446,14 +446,20 @@ namespace Hazel {
 				uint64_t scriptID = scriptComponent["ScriptID"].as<uint64_t>(0);
 				const auto& scriptEngine = ScriptEngine::GetInstance();
 
+				if ((scriptID == 0 || !scriptEngine.IsValidScript(scriptID)) && scriptComponent["ScriptName"])
+				{
+					const std::string scriptName = scriptComponent["ScriptName"].as<std::string>();
+					scriptID = scriptEngine.GetScriptIDByFullName(scriptName);
+				}
+
 				if (scriptID != 0 && scriptEngine.IsValidScript(scriptID))
 				{
 					auto& sc = deserializedEntity.AddComponent<ScriptComponent>();
 					sc.ScriptID = scriptID;
 				}
-				else if (scriptID != 0)
+				else if (scriptID != 0 || scriptComponent["ScriptName"])
 				{
-					HZ_CORE_WARN("[Scripting] Skipping unknown script id {} on entity {}", scriptID, uuid);
+					HZ_CORE_WARN("[Scripting] Skipping unknown script on entity {} (id={})", uuid, scriptID);
 				}
 			}
 		}

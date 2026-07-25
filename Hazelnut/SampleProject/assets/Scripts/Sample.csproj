@@ -12,6 +12,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Source\Rotator.cs" />
+    <Compile Include="Source\Mover.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\Hazel-ScriptCore\Hazel-ScriptCore.csproj" />

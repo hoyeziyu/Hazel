@@ -23,22 +23,28 @@
 ## C++ 核心
 
 - `ScriptEngine` — Coral Host、加载 ScriptCore / 项目 DLL、实例化脚本
-- `ScriptGlue` — InternalCalls（Transform、Scene 校验、Log）
+- `ScriptGlue` — InternalCalls（Transform、Tag、Input、Log）
+- `ScriptBuilder` — `dotnet build` 活动项目的 `{Name}.csproj`
 - `ScriptComponent` — `ScriptID`（FNV 类名哈希）+ 运行时 `CSharpObject`
 - `Project::GetScriptModuleFilePath()` — `{ProjectDir}/{ScriptModulePath}/{Name}.dll`
 
 ## C# API（精简版 `Hazel-ScriptCore`）
 
-- `Entity` — `Translation` / `Rotation`、`OnCreate` / `OnUpdate` / `OnDestroy`
+- `Entity` — `Tag`、`Translation` / `Rotation` / `Scale`
+- `Input.IsKeyPressed` / `IsMouseButtonPressed` / `GetMousePosition`
 - `Log.Info/Warn/Error`
-- 示例：`Sample.Rotator` — Play 时绕 Y 轴旋转
+- 示例脚本：
+  - `Sample.Rotator` — 绕 Y 轴旋转
+  - `Sample.Mover` — WASD 平移
 
 ## 编辑器用法
 
 1. 打开 `SampleProject`
 2. 选中实体 → Add Component → **Script**
-3. Script Class 下拉选择 `Sample.Rotator`
-4. Play — 控制台应出现 `Rotator attached to entity ...`
+3. Script Class 下拉选择 `Sample.Rotator` 或 `Sample.Mover`
+4. **Build → Build C# Scripts**（修改 `.cs` 后）
+5. **Build → Reload C# Assembly**（或 Stop Play 后自动 reload）
+6. Play 验证行为
 
 ## 自测清单
 
@@ -50,11 +56,12 @@ ctest --preset=debug
 ```
 
 - [ ] 启动日志：`Coral host initialized`、`Loaded Hazel-ScriptCore`、`Loaded game scripts`
-- [ ] Hierarchy 中 Script 下拉可见 `Sample.Rotator`
-- [ ] Play 后实体旋转，Stop 后脚本销毁无崩溃
+- [ ] Hierarchy 中 Script 下拉可见 `Sample.Rotator` / `Sample.Mover`
+- [ ] Play 后 Rotator 旋转、Mover 响应 WASD
+- [ ] 场景 YAML 含 `ScriptID` + `ScriptName`，按名称可反查脚本
 
 ## 后续扩展
 
 - ScriptStorage / 序列化脚本字段
-- 更多 InternalCalls（Input、Physics2D、Scene API）
-- ScriptBuilder 热重载、`Reload C# Assembly` 菜单
+- Physics2D、Scene API 等 InternalCalls
+- 脚本 DLL 文件监视热重载

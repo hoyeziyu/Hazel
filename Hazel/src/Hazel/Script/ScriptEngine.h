@@ -42,6 +42,7 @@ namespace Hazel {
 		Ref<Scene> GetCurrentScene() const { return m_CurrentScene; }
 
 		bool IsValidScript(UUID scriptID) const;
+		UUID GetScriptIDByFullName(const std::string& fullName) const;
 		const ScriptMetadata* GetScriptMetadata(UUID scriptID) const;
 		const std::unordered_map<UUID, ScriptMetadata>& GetAllScripts() const { return m_ScriptMetadata; }
 

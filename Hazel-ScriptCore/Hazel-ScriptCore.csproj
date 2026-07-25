@@ -12,8 +12,10 @@
   <ItemGroup>
     <Compile Include="Source\Hazel\Attributes\EditorAssignableAttribute.cs" />
     <Compile Include="Source\Hazel\Core\FormatUtils.cs" />
+    <Compile Include="Source\Hazel\Core\Input.cs" />
     <Compile Include="Source\Hazel\Core\InternalCalls.cs" />
     <Compile Include="Source\Hazel\Core\Log.cs" />
+    <Compile Include="Source\Hazel\Math\Vector2.cs" />
     <Compile Include="Source\Hazel\Math\Vector3.cs" />
     <Compile Include="Source\Hazel\Scene\Entity.cs" />
   </ItemGroup>
