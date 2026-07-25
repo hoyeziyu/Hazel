@@ -4,7 +4,7 @@ namespace Sample
 {
 	public class Rotator : Entity
 	{
-		private float m_Speed = 1.5f;
+		public float Speed = 1.5f;
 
 		protected override void OnCreate()
 		{
@@ -13,7 +13,7 @@ namespace Sample
 
 		protected override void OnUpdate(float ts)
 		{
-			Rotation += new Vector3(0.0f, m_Speed * ts, 0.0f);
+			Rotation += new Vector3(0.0f, Speed * ts, 0.0f);
 		}
 	}
 }

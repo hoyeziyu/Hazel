@@ -4,6 +4,8 @@
 #include "Entity.h"
 #include "Components.h"
 #include "Hazel/Script/ScriptEngine.h"
+#include "Hazel/Script/ScriptEntityStorage.hpp"
+#include "Hazel/Core/Hash.h"
 
 #include <fstream>
 
@@ -310,11 +312,75 @@ namespace Hazel {
 			out << YAML::BeginMap;
 
 			const auto& sc = entity.GetComponent<ScriptComponent>();
-			out << YAML::Key << "ScriptID" << YAML::Value << (uint64_t)sc.ScriptID;
+			const auto& scriptEngine = ScriptEngine::GetInstance();
+			const bool scriptValid = scriptEngine.IsValidScript(sc.ScriptID);
+			const ScriptMetadata* scriptMetadata = scriptValid ? scriptEngine.GetScriptMetadata(sc.ScriptID) : nullptr;
 
-			const auto* metadata = ScriptEngine::GetInstance().GetScriptMetadata(sc.ScriptID);
-			if (metadata)
-				out << YAML::Key << "ScriptName" << YAML::Value << metadata->FullName;
+			out << YAML::Key << "ScriptID" << YAML::Value << (uint64_t)sc.ScriptID;
+			if (scriptMetadata)
+				out << YAML::Key << "ScriptName" << YAML::Value << scriptMetadata->FullName;
+
+			if (entity.GetScene() && entity.GetScene()->GetScriptStorage().EntityStorage.contains(entity.GetUUID()))
+			{
+				const auto& entityStorage = entity.GetScene()->GetScriptStorage().EntityStorage.at(entity.GetUUID());
+				if (!entityStorage.Fields.empty())
+				{
+					out << YAML::Key << "Fields" << YAML::Value << YAML::BeginSeq;
+
+					for (const auto& [fieldID, fieldStorage] : entityStorage.Fields)
+					{
+						DataType fieldType = fieldStorage.GetType();
+						std::string fieldName(fieldStorage.GetName());
+						if (scriptMetadata && scriptMetadata->Fields.contains(fieldID))
+						{
+							fieldType = scriptMetadata->Fields.at(fieldID).Type;
+							fieldName = scriptMetadata->Fields.at(fieldID).Name;
+						}
+
+						out << YAML::BeginMap;
+						out << YAML::Key << "ID" << YAML::Value << fieldID;
+						out << YAML::Key << "Name" << YAML::Value << fieldName;
+						out << YAML::Key << "Type" << YAML::Value << std::string(DataTypeToString(fieldType));
+						out << YAML::Key << "Value" << YAML::Value;
+
+						if (fieldStorage.IsArray())
+						{
+							out << YAML::BeginSeq;
+							for (uint64_t i = 0; i < fieldStorage.GetLength(); i++)
+							{
+								switch (fieldType)
+								{
+								case DataType::Float: out << fieldStorage.GetValue<float>((uint32_t)i); break;
+								case DataType::Int: out << fieldStorage.GetValue<int32_t>((uint32_t)i); break;
+								case DataType::Bool: out << (bool)fieldStorage.GetValue<Coral::Bool32>((uint32_t)i); break;
+								case DataType::Vector2: out << fieldStorage.GetValue<glm::vec2>((uint32_t)i); break;
+								case DataType::Vector3: out << fieldStorage.GetValue<glm::vec3>((uint32_t)i); break;
+								case DataType::Entity: out << (uint64_t)fieldStorage.GetValue<UUID>((uint32_t)i); break;
+								default: break;
+								}
+							}
+							out << YAML::EndSeq;
+						}
+						else
+						{
+							switch (fieldType)
+							{
+							case DataType::Float: out << fieldStorage.GetValue<float>(); break;
+							case DataType::Int: out << fieldStorage.GetValue<int32_t>(); break;
+							case DataType::Bool: out << (bool)fieldStorage.GetValue<Coral::Bool32>(); break;
+							case DataType::Vector2: out << fieldStorage.GetValue<glm::vec2>(); break;
+							case DataType::Vector3: out << fieldStorage.GetValue<glm::vec3>(); break;
+							case DataType::Entity: out << (uint64_t)fieldStorage.GetValue<UUID>(); break;
+							default: break;
+							}
+						}
+
+						out << YAML::EndMap;
+					}
+
+					out << YAML::EndSeq;
+				}
+			}
 
 			out << YAML::EndMap;
 		}
@@ -456,6 +522,65 @@ namespace Hazel {
 				{
 					auto& sc = deserializedEntity.AddComponent<ScriptComponent>();
 					sc.ScriptID = scriptID;
+
+					scene->GetScriptStorage().InitializeEntityStorage(scriptID, deserializedEntity.GetUUID());
+
+					auto fieldsArray = scriptComponent["Fields"];
+					if (fieldsArray)
+					{
+						const auto* scriptMetadata = scriptEngine.GetScriptMetadata(scriptID);
+						for (auto field : fieldsArray)
+						{
+							uint32_t fieldID = field["ID"].as<uint32_t>(0);
+							if (fieldID == 0 && field["Name"])
+							{
+								const std::string fieldName = field["Name"].as<std::string>();
+								if (scriptMetadata)
+								{
+									const auto fullFieldName = std::format("{}.{}", scriptMetadata->FullName, fieldName);
+									fieldID = Hash::GenerateFNVHash(fullFieldName);
+								}
+							}
+
+							if (!scriptMetadata || !scriptMetadata->Fields.contains(fieldID))
+								continue;
+
+							const auto& fieldMetadata = scriptMetadata->Fields.at(fieldID);
+							auto& fieldStorage = scene->GetScriptStorage().EntityStorage.at(deserializedEntity.GetUUID()).Fields[fieldID];
+							auto valueNode = field["Value"];
+
+							if (fieldStorage.IsArray() && valueNode && valueNode.IsSequence())
+							{
+								fieldStorage.Resize(valueNode.size());
+								for (int32_t i = 0; i < (int32_t)valueNode.size(); i++)
+								{
+									switch (fieldMetadata.Type)
+									{
+									case DataType::Float: fieldStorage.SetValue(valueNode[i].as<float>(), i); break;
+									case DataType::Int: fieldStorage.SetValue(valueNode[i].as<int32_t>(), i); break;
+									case DataType::Bool: fieldStorage.SetValue(Coral::Bool32(valueNode[i].as<bool>()), i); break;
+									case DataType::Vector2: fieldStorage.SetValue(valueNode[i].as<glm::vec2>(), i); break;
+									case DataType::Vector3: fieldStorage.SetValue(valueNode[i].as<glm::vec3>(), i); break;
+									case DataType::Entity: fieldStorage.SetValue(UUID(valueNode[i].as<uint64_t>()), i); break;
+									default: break;
+									}
+								}
+							}
+							else if (valueNode)
+							{
+								switch (fieldMetadata.Type)
+								{
+								case DataType::Float: fieldStorage.SetValue(valueNode.as<float>()); break;
+								case DataType::Int: fieldStorage.SetValue(valueNode.as<int32_t>()); break;
+								case DataType::Bool: fieldStorage.SetValue(Coral::Bool32(valueNode.as<bool>())); break;
+								case DataType::Vector2: fieldStorage.SetValue(valueNode.as<glm::vec2>()); break;
+								case DataType::Vector3: fieldStorage.SetValue(valueNode.as<glm::vec3>()); break;
+								case DataType::Entity: fieldStorage.SetValue(UUID(valueNode.as<uint64_t>())); break;
+								default: break;
+								}
+							}
+						}
+					}
 				}
 				else if (scriptID != 0 || scriptComponent["ScriptName"])
 				{

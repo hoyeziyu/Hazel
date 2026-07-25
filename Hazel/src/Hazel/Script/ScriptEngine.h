@@ -1,8 +1,10 @@
 #pragma once
 
 #include "CSharpObject.h"
+#include "ScriptEntityStorage.hpp"
 
 #include "Hazel/Core/Core.h"
+#include "Hazel/Core/Buffer.h"
 #include "Hazel/Core/UUID.h"
 
 #include <Coral/Assembly.hpp>
@@ -20,9 +22,38 @@ namespace Hazel {
 	class Scene;
 	class Project;
 
+	struct FieldMetadata
+	{
+		std::string Name;
+		DataType Type{};
+		Coral::Type* ManagedType = nullptr;
+		Buffer DefaultValue;
+
+	private:
+		template<typename T>
+		void SetDefaultValue(Coral::ManagedObject& temp)
+		{
+			if (ManagedType->IsSZArray())
+			{
+				auto value = temp.GetFieldValue<Coral::Array<T>>(Name);
+				DefaultValue = Buffer::Copy(value.Data(), value.ByteLength());
+				Coral::Array<T>::Free(value);
+			}
+			else
+			{
+				DefaultValue.Allocate(sizeof(T));
+				auto value = temp.GetFieldValue<T>(Name);
+				DefaultValue.Write(&value, sizeof(T));
+			}
+		}
+
+		friend class ScriptEngine;
+	};
+
 	struct ScriptMetadata
 	{
 		std::string FullName;
+		std::unordered_map<uint32_t, FieldMetadata> Fields;
 	};
 
 	class ScriptEngine
@@ -46,8 +77,8 @@ namespace Hazel {
 		const ScriptMetadata* GetScriptMetadata(UUID scriptID) const;
 		const std::unordered_map<UUID, ScriptMetadata>& GetAllScripts() const { return m_ScriptMetadata; }
 
-		CSharpObject Instantiate(UUID scriptID, uint64_t entityUUID);
-		void DestroyInstance(CSharpObject& instance);
+		CSharpObject Instantiate(UUID entityUUID, ScriptStorage& storage, uint64_t scriptEntityID);
+		void DestroyInstance(UUID entityUUID, ScriptStorage& storage);
 
 	private:
 		struct AssemblyData
@@ -57,6 +88,7 @@ namespace Hazel {
 		};
 
 		void BuildAssemblyCache(AssemblyData* assemblyData);
+		void ClearScriptMetadata();
 
 	private:
 		std::unique_ptr<Coral::HostInstance> m_Host;
@@ -71,6 +103,7 @@ namespace Hazel {
 		friend class Project;
 		friend class Scene;
 		friend class SceneHierarchyPanel;
+		friend class SceneSerializer;
 	};
 
 }

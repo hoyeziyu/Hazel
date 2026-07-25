@@ -4,6 +4,7 @@ set(HAZELNUT_SOURCES
     src/HazelnutApp.cpp
     src/EditorLayer.cpp
     src/Panels/SceneHierarchyPanel.cpp
+    src/Panels/ScriptFieldDrawer.cpp
     src/Panels/ContentBrowserPanel.cpp
 )
 

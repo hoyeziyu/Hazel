@@ -155,6 +155,9 @@ namespace Hazel {
 			UpdateRuntimeCameraControls(ts);
 		}
 
+		if (m_SceneState == SceneState::Edit)
+			CheckScriptAssemblyHotReload();
+
 		Renderer2D::ResetStats();
 		{
 			HZ_PROFILE_SCOPE("Renderer Prep");
@@ -477,6 +480,7 @@ namespace Hazel {
 		m_SceneState = SceneState::Edit;
 		m_RuntimeScene = nullptr;
 		Project::ReloadScriptEngine();
+		SyncScriptStorageAfterReload();
 		HZ_CORE_INFO("Stopped Play mode");
 	}
 
@@ -725,7 +729,48 @@ namespace Hazel {
 		}
 
 		if (ScriptBuilder::BuildScriptAssembly(project))
+		{
 			ScriptEngine::GetMutable().LoadProjectAssembly();
+			SyncScriptStorageAfterReload();
+		}
+	}
+
+	void EditorLayer::SyncScriptStorageAfterReload()
+	{
+		if (m_EditorScene)
+			m_EditorScene->GetScriptStorage().SynchronizeStorage();
+	}
+
+	void EditorLayer::CheckScriptAssemblyHotReload()
+	{
+		if (!Project::GetActive() || m_SceneState == SceneState::Play)
+			return;
+
+		const auto dllPath = Project::GetScriptModuleFilePath();
+		if (!std::filesystem::exists(dllPath))
+		{
+			m_ScriptDllWriteTime.reset();
+			return;
+		}
+
+		std::error_code ec;
+		const auto writeTime = std::filesystem::last_write_time(dllPath, ec);
+		if (ec)
+			return;
+
+		if (!m_ScriptDllWriteTime.has_value())
+		{
+			m_ScriptDllWriteTime = writeTime;
+			return;
+		}
+
+		if (writeTime == m_ScriptDllWriteTime.value())
+			return;
+
+		m_ScriptDllWriteTime = writeTime;
+		ScriptEngine::GetMutable().LoadProjectAssembly();
+		SyncScriptStorageAfterReload();
+		HZ_CORE_INFO("[Scripting] Hot-reloaded game script assembly");
 	}
 
 	void EditorLayer::ReloadCSharp()
@@ -737,6 +782,18 @@ namespace Hazel {
 		}
 
 		Project::ReloadScriptEngine();
+		SyncScriptStorageAfterReload();
+
+		if (Project::GetActive())
+		{
+			const auto dllPath = Project::GetScriptModuleFilePath();
+			if (std::filesystem::exists(dllPath))
+			{
+				std::error_code ec;
+				m_ScriptDllWriteTime = std::filesystem::last_write_time(dllPath, ec);
+			}
+		}
+
 		HZ_CORE_INFO("Reloaded C# script assemblies.");
 	}
 

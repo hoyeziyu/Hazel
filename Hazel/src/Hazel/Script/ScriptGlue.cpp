@@ -5,11 +5,16 @@
 #include "Hazel/Core/Log.h"
 #include "Hazel/Scene/Components.h"
 #include "Hazel/Scene/Entity.h"
+#include "Hazel/Physics2D/Physics2DScene.h"
+#include "Hazel/Scene/Scene.h"
 #include "Hazel/Script/ScriptEngine.h"
 
+#include <Coral/Array.hpp>
 #include <Coral/Assembly.hpp>
 #include <Coral/String.hpp>
+#include <box2d/box2d.h>
 #include <glm/glm.hpp>
+#include <cstring>
 
 namespace Hazel {
 
@@ -26,6 +31,14 @@ namespace Hazel {
 	};
 
 	namespace InternalCalls {
+
+		static b2BodyId DecodeBody(uint64_t handle)
+		{
+			b2BodyId body = b2_nullBodyId;
+			if (handle != 0)
+				std::memcpy(&body, &handle, sizeof(b2BodyId));
+			return body;
+		}
 
 		static Entity GetEntity(uint64_t entityID)
 		{
@@ -144,11 +157,165 @@ namespace Hazel {
 			}
 			Coral::String::Free(message);
 		}
+
+		uint64_t Scene_FindEntityByTag(Coral::String tag)
+		{
+			Ref<Scene> scene = ScriptEngine::GetInstance().GetCurrentScene();
+			if (!scene)
+			{
+				Coral::String::Free(tag);
+				return 0;
+			}
+
+			Entity entity = scene->TryGetEntityWithTag(tag);
+			Coral::String::Free(tag);
+			return entity ? entity.GetUUID() : UUID(0);
+		}
+
+		uint64_t Scene_CreateEntity(Coral::String tag)
+		{
+			Ref<Scene> scene = ScriptEngine::GetInstance().GetCurrentScene();
+			if (!scene)
+			{
+				Coral::String::Free(tag);
+				return 0;
+			}
+
+			Entity entity = scene->CreateEntity(tag);
+			Coral::String::Free(tag);
+			return entity.GetUUID();
+		}
+
+		void Scene_DestroyEntity(uint64_t entityID)
+		{
+			Ref<Scene> scene = ScriptEngine::GetInstance().GetCurrentScene();
+			if (!scene)
+				return;
+
+			Entity entity = scene->GetEntityWithUUID(entityID);
+			if (entity)
+				scene->DestroyEntity(entity);
+		}
+
+		Coral::Array<uint64_t> Scene_GetEntities()
+		{
+			Ref<Scene> scene = ScriptEngine::GetInstance().GetCurrentScene();
+			if (!scene)
+				return Coral::Array<uint64_t>::New(0);
+
+			const auto ids = scene->GetAllEntityUUIDs();
+			auto result = Coral::Array<uint64_t>::New((int32_t)ids.size());
+			for (int32_t i = 0; i < (int32_t)ids.size(); i++)
+				result[i] = ids[i];
+			return result;
+		}
+
+		int32_t RigidBody2DComponent_GetBodyType(uint64_t entityID)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<RigidBody2DComponent>())
+				return 0;
+			return (int32_t)entity.GetComponent<RigidBody2DComponent>().BodyType;
+		}
+
+		void RigidBody2DComponent_SetBodyType(uint64_t entityID, int32_t bodyType)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<RigidBody2DComponent>())
+				return;
+			entity.GetComponent<RigidBody2DComponent>().BodyType = (RigidBody2DComponent::Type)bodyType;
+		}
+
+		void RigidBody2DComponent_GetLinearVelocity(uint64_t entityID, glm::vec2* outVelocity)
+		{
+			if (!outVelocity)
+				return;
+
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<RigidBody2DComponent>())
+			{
+				*outVelocity = {};
+				return;
+			}
+
+			b2BodyId bodyId = DecodeBody(entity.GetComponent<RigidBody2DComponent>().RuntimeBodyHandle);
+			if (B2_IS_NULL(bodyId))
+			{
+				*outVelocity = {};
+				return;
+			}
+
+			const b2Vec2 velocity = b2Body_GetLinearVelocity(bodyId);
+			*outVelocity = { velocity.x, velocity.y };
+		}
+
+		void RigidBody2DComponent_SetLinearVelocity(uint64_t entityID, glm::vec2* inVelocity)
+		{
+			if (!inVelocity)
+				return;
+
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<RigidBody2DComponent>())
+				return;
+
+			b2BodyId bodyId = DecodeBody(entity.GetComponent<RigidBody2DComponent>().RuntimeBodyHandle);
+			if (B2_IS_NULL(bodyId))
+				return;
+
+			b2Body_SetLinearVelocity(bodyId, { inVelocity->x, inVelocity->y });
+		}
+
+		float RigidBody2DComponent_GetGravityScale(uint64_t entityID)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<RigidBody2DComponent>())
+				return 0.0f;
+			return entity.GetComponent<RigidBody2DComponent>().GravityScale;
+		}
+
+		void RigidBody2DComponent_SetGravityScale(uint64_t entityID, float gravityScale)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<RigidBody2DComponent>())
+				return;
+
+			auto& rb = entity.GetComponent<RigidBody2DComponent>();
+			rb.GravityScale = gravityScale;
+
+			b2BodyId bodyId = DecodeBody(rb.RuntimeBodyHandle);
+			if (!B2_IS_NULL(bodyId))
+				b2Body_SetGravityScale(bodyId, gravityScale);
+		}
+
+		void RigidBody2DComponent_ApplyLinearImpulse(uint64_t entityID, glm::vec2* impulse, glm::vec2* offset, bool wake)
+		{
+			(void)offset;
+			(void)wake;
+			if (!impulse)
+				return;
+
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<RigidBody2DComponent>())
+				return;
+
+			Physics2DScene::ApplyLinearImpulse(entity.GetComponent<RigidBody2DComponent>(), *impulse);
+		}
 	}
 
 	void ScriptGlue::RegisterGlue(Coral::ManagedAssembly& coreAssembly)
 	{
 		HZ_ADD_INTERNAL_CALL(Scene_IsEntityValid);
+		HZ_ADD_INTERNAL_CALL(Scene_FindEntityByTag);
+		HZ_ADD_INTERNAL_CALL(Scene_CreateEntity);
+		HZ_ADD_INTERNAL_CALL(Scene_DestroyEntity);
+		HZ_ADD_INTERNAL_CALL(Scene_GetEntities);
+		HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_GetBodyType);
+		HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_SetBodyType);
+		HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_GetLinearVelocity);
+		HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_SetLinearVelocity);
+		HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_GetGravityScale);
+		HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_SetGravityScale);
+		HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_ApplyLinearImpulse);
 		HZ_ADD_INTERNAL_CALL(TagComponent_GetTag);
 		HZ_ADD_INTERNAL_CALL(TagComponent_SetTag);
 		HZ_ADD_INTERNAL_CALL(TransformComponent_GetTranslation);

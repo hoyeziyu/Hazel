@@ -12,6 +12,8 @@
 #include "Hazel/Script/NativeScriptFactory.h"
 #include "Hazel/Script/NativeScriptRegistry.h"
 #include "Hazel/Script/ScriptEngine.h"
+#include "Hazel/Script/ScriptEntityStorage.hpp"
+#include "ScriptFieldDrawer.h"
 #include <glm/gtc/type_ptr.hpp>
 namespace Hazel {
 
@@ -567,7 +569,7 @@ namespace Hazel {
 			});
 
 		
-		DrawComponent<ScriptComponent>("Script", entity, [](auto& component) {
+		DrawComponent<ScriptComponent>("Script", entity, [this](auto& component) {
 			const auto& scripts = ScriptEngine::GetInstance().GetAllScripts();
 			if (scripts.empty())
 			{
@@ -591,6 +593,7 @@ namespace Hazel {
 				index++;
 			}
 
+			const UUID oldScriptID = component.ScriptID;
 			const char* preview = currentIndex >= 0 ? scriptNames[currentIndex].c_str() : "Select script...";
 			if (ImGui::BeginCombo("Script Class", preview))
 			{
@@ -603,6 +606,27 @@ namespace Hazel {
 						ImGui::SetItemDefaultFocus();
 				}
 				ImGui::EndCombo();
+			}
+
+			if (component.ScriptID != oldScriptID && m_Context)
+			{
+				if (oldScriptID && m_Context->GetScriptStorage().EntityStorage.contains(m_SelectionContext.GetUUID()))
+					m_Context->GetScriptStorage().ShutdownEntityStorage(oldScriptID, m_SelectionContext.GetUUID());
+
+				if (component.ScriptID && ScriptEngine::GetInstance().IsValidScript(component.ScriptID))
+					m_Context->GetScriptStorage().InitializeEntityStorage(component.ScriptID, m_SelectionContext.GetUUID());
+			}
+
+			if (component.ScriptID && m_Context && ScriptEngine::GetInstance().IsValidScript(component.ScriptID))
+			{
+				auto& scriptStorage = m_Context->GetScriptStorage();
+				if (scriptStorage.EntityStorage.contains(m_SelectionContext.GetUUID()))
+				{
+					ImGui::Separator();
+					auto& entityStorage = scriptStorage.EntityStorage.at(m_SelectionContext.GetUUID());
+					for (auto& [fieldID, fieldStorage] : entityStorage.Fields)
+						DrawScriptFieldValue(m_Context, fieldStorage);
+				}
 			}
 			});
 		

@@ -74,8 +74,11 @@ namespace Hazel {
 		void BuildAssetPack();
 		void BuildCSharpScripts();
 		void ReloadCSharp();
+		void SyncScriptStorageAfterReload();
+		void CheckScriptAssemblyHotReload();
 		void TryOpenStartupProject();
 
 		std::string m_AssetPackStatus;
+		std::optional<std::filesystem::file_time_type> m_ScriptDllWriteTime;
 	};
 }

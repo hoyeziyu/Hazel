@@ -5,7 +5,9 @@
 #include "Hazel/Core/Core.h"
 #include "Hazel/Core/UUID.h"
 #include "Hazel/Asset/Asset.h"
+#include "Hazel/Script/ScriptEntityStorage.hpp"
 #include <glm/glm.hpp>
+#include <vector>
 #include <string>
 #include <unordered_set>
 
@@ -26,6 +28,8 @@ namespace Hazel {
 		Entity CreateEntity(const std::string& name = std::string());
 		Entity CreateEntityWithID(UUID uuid, const std::string& name = std::string());
 		Entity GetEntityWithUUID(UUID uuid);
+		Entity TryGetEntityWithTag(const std::string& tag);
+		std::vector<UUID> GetAllEntityUUIDs() const;
 		void DestroyEntity(Entity entity);
 
 		Entity DuplicateEntity(Entity entity);
@@ -45,6 +49,9 @@ namespace Hazel {
 		void OnRuntimeStop();
 
 		void CopyTo(const Ref<Scene>& target);
+
+		ScriptStorage& GetScriptStorage() { return m_ScriptStorage; }
+		const ScriptStorage& GetScriptStorage() const { return m_ScriptStorage; }
 
 		void OnViewportResize(uint32_t width, uint32_t height);
 		Entity GetPrimaryCameraEntity();
@@ -68,6 +75,7 @@ namespace Hazel {
 		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 		uint64_t m_PhysicsWorldHandle = 0;
 		bool m_Physics2DActive = false;
+		ScriptStorage m_ScriptStorage;
 
 		friend class Entity;
 		friend class SceneHierarchyPanel;
@@ -76,6 +84,7 @@ namespace Hazel {
 		friend class PrefabSerializer;
 		friend class Physics2DScene;
 		friend class NativeScriptFactory;
+		friend class ScriptEngine;
 	};
 
 }

@@ -61,6 +61,7 @@ namespace Hazel {
 
 	Scene::~Scene()
 	{
+		m_ScriptStorage.Clear();
 	}
 
 	Entity Scene::CreateEntity(const std::string& name)
@@ -94,8 +95,37 @@ namespace Hazel {
 		return CreateRef<Scene>();
 	}
 
+	Entity Scene::TryGetEntityWithTag(const std::string& tag)
+	{
+		auto view = m_Registry.view<TagComponent>();
+		for (auto entity : view)
+		{
+			const auto& tagComponent = view.get<TagComponent>(entity);
+			if (tagComponent.Tag == tag)
+				return { entity, this };
+		}
+		return {};
+	}
+
+	std::vector<UUID> Scene::GetAllEntityUUIDs() const
+	{
+		std::vector<UUID> result;
+		auto view = m_Registry.view<IDComponent>();
+		result.reserve(view.size());
+		for (auto entity : view)
+			result.push_back(view.get<IDComponent>(entity).ID);
+		return result;
+	}
+
 	void Scene::DestroyEntity(Entity entity)
 	{
+		if (entity.HasComponent<ScriptComponent>())
+		{
+			const auto& sc = entity.GetComponent<ScriptComponent>();
+			if (sc.ScriptID && m_ScriptStorage.EntityStorage.contains(entity.GetUUID()))
+				m_ScriptStorage.ShutdownEntityStorage(sc.ScriptID, entity.GetUUID());
+		}
+
 		m_Registry.destroy(entity);
 	}
 
@@ -329,7 +359,10 @@ namespace Hazel {
 				continue;
 			}
 
-			scriptComponent.Instance = scriptEngine.Instantiate(scriptComponent.ScriptID, (uint64_t)idComponent.ID);
+			if (!m_ScriptStorage.EntityStorage.contains(idComponent.ID))
+				m_ScriptStorage.InitializeEntityStorage(scriptComponent.ScriptID, idComponent.ID);
+
+			scriptComponent.Instance = scriptEngine.Instantiate(idComponent.ID, m_ScriptStorage, (uint64_t)idComponent.ID);
 		}
 
 		for (auto entityID : view)
@@ -355,11 +388,12 @@ namespace Hazel {
 		});
 
 		auto& scriptEngine = ScriptEngine::GetMutable();
-		m_Registry.view<ScriptComponent>().each([&](auto, ScriptComponent& sc) {
+		m_Registry.view<IDComponent, ScriptComponent>().each([&](auto entityID, IDComponent& idComponent, ScriptComponent& sc) {
 			if (sc.Instance.IsValid())
 			{
 				sc.Instance.Invoke("OnDestroy");
-				scriptEngine.DestroyInstance(sc.Instance);
+				scriptEngine.DestroyInstance(idComponent.ID, m_ScriptStorage);
+				sc.Instance = {};
 			}
 		});
 	}
@@ -426,6 +460,8 @@ namespace Hazel {
 		target->m_Registry.view<BoxCollider2DComponent>().each([](auto, auto& box) {
 			box.RuntimeShapeHandle = 0;
 		});
+
+		m_ScriptStorage.CopyTo(target->m_ScriptStorage);
 	}
 
 	void Scene::OnViewportResize(uint32_t width, uint32_t height)
@@ -527,6 +563,19 @@ namespace Hazel {
 		CopyComponentIfExists<RigidBody2DComponent>(newEntity, entity);
 		CopyComponentIfExists<BoxCollider2DComponent>(newEntity, entity);
 		CopyComponentIfExists<CameraComponent>(newEntity, entity);
+		CopyComponentIfExists<NativeScriptComponent>(newEntity, entity);
+
+		if (entity.HasComponent<ScriptComponent>())
+		{
+			const auto& srcScript = entity.GetComponent<ScriptComponent>();
+			if (srcScript.ScriptID)
+			{
+				newEntity.AddComponent<ScriptComponent>().ScriptID = srcScript.ScriptID;
+				m_ScriptStorage.InitializeEntityStorage(srcScript.ScriptID, newEntity.GetUUID());
+				m_ScriptStorage.CopyEntityStorage(entity.GetUUID(), newEntity.GetUUID(), m_ScriptStorage);
+			}
+		}
+
 		return newEntity;
 	}
 
@@ -624,8 +673,13 @@ namespace Hazel {
 	{
 	}
 	template<>
-	void Scene::OnComponentAdded<ScriptComponent>(Entity, ScriptComponent&)
+	void Scene::OnComponentAdded<ScriptComponent>(Entity entity, ScriptComponent& component)
 	{
+		if (component.ScriptID && ScriptEngine::GetInstance().IsValidScript(component.ScriptID))
+		{
+			if (!m_ScriptStorage.EntityStorage.contains(entity.GetUUID()))
+				m_ScriptStorage.InitializeEntityStorage(component.ScriptID, entity.GetUUID());
+		}
 	}
 
 }
