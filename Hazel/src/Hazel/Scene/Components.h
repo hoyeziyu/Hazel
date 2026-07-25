@@ -95,6 +95,17 @@ namespace Hazel {
 			: StaticMesh(staticMesh) {}
 	};
 
+	struct DirectionalLightComponent
+	{
+		glm::vec3 Radiance{ 1.0f, 1.0f, 1.0f };
+		float Intensity = 1.0f;
+
+		DirectionalLightComponent() = default;
+		DirectionalLightComponent(const DirectionalLightComponent&) = default;
+		DirectionalLightComponent(const glm::vec3& radiance, float intensity = 1.0f)
+			: Radiance(radiance), Intensity(intensity) {}
+	};
+
 
 	struct CameraComponent
 	{

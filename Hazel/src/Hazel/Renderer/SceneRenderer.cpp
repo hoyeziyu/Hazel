@@ -1,6 +1,7 @@
 #include "hzpch.h"
 #include "SceneRenderer.h"
 
+#include "Hazel/Asset/MeshSource.h"
 #include "Hazel/Editor/EditorCamera.h"
 #include "Hazel/Renderer/Buffer.h"
 #include "Hazel/Renderer/RenderCommand.h"
@@ -14,41 +15,25 @@ namespace Hazel {
 
 		Ref<VertexArray> CreateCubeVertexArray()
 		{
-			// 24 vertices (4 per face) with UVs for textured materials
-			float cubeVertices[] = {
-				// Front (+Z)
-				-0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
-				 0.5f, -0.5f,  0.5f, 1.0f, 0.0f,
-				 0.5f,  0.5f,  0.5f, 1.0f, 1.0f,
-				-0.5f,  0.5f,  0.5f, 0.0f, 1.0f,
-				// Back (-Z)
-				 0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-				-0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-				-0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
-				 0.5f,  0.5f, -0.5f, 0.0f, 1.0f,
-				// Top (+Y)
-				-0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
-				 0.5f,  0.5f,  0.5f, 1.0f, 0.0f,
-				 0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
-				-0.5f,  0.5f, -0.5f, 0.0f, 1.0f,
-				// Bottom (-Y)
-				-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-				 0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-				 0.5f, -0.5f,  0.5f, 1.0f, 1.0f,
-				-0.5f, -0.5f,  0.5f, 0.0f, 1.0f,
-				// Right (+X)
-				 0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
-				 0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-				 0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
-				 0.5f,  0.5f,  0.5f, 0.0f, 1.0f,
-				// Left (-X)
-				-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-				-0.5f, -0.5f,  0.5f, 1.0f, 0.0f,
-				-0.5f,  0.5f,  0.5f, 1.0f, 1.0f,
-				-0.5f,  0.5f, -0.5f, 0.0f, 1.0f,
+			std::vector<glm::vec3> positions = {
+				{ -0.5f, -0.5f,  0.5f }, { 0.5f, -0.5f,  0.5f }, { 0.5f,  0.5f,  0.5f }, { -0.5f,  0.5f,  0.5f },
+				{  0.5f, -0.5f, -0.5f }, { -0.5f, -0.5f, -0.5f }, { -0.5f,  0.5f, -0.5f }, {  0.5f,  0.5f, -0.5f },
+				{ -0.5f,  0.5f,  0.5f }, { 0.5f,  0.5f,  0.5f }, { 0.5f,  0.5f, -0.5f }, { -0.5f,  0.5f, -0.5f },
+				{ -0.5f, -0.5f, -0.5f }, { 0.5f, -0.5f, -0.5f }, { 0.5f, -0.5f,  0.5f }, { -0.5f, -0.5f,  0.5f },
+				{  0.5f, -0.5f,  0.5f }, { 0.5f, -0.5f, -0.5f }, { 0.5f,  0.5f, -0.5f }, {  0.5f,  0.5f,  0.5f },
+				{ -0.5f, -0.5f, -0.5f }, { -0.5f, -0.5f,  0.5f }, { -0.5f,  0.5f,  0.5f }, { -0.5f,  0.5f, -0.5f },
 			};
 
-			uint32_t cubeIndices[] = {
+			std::vector<glm::vec2> texCoords(positions.size());
+			for (size_t face = 0; face < 6; face++)
+			{
+				texCoords[face * 4 + 0] = { 0.0f, 0.0f };
+				texCoords[face * 4 + 1] = { 1.0f, 0.0f };
+				texCoords[face * 4 + 2] = { 1.0f, 1.0f };
+				texCoords[face * 4 + 3] = { 0.0f, 1.0f };
+			}
+
+			std::vector<uint32_t> indices = {
 				0, 1, 2, 2, 3, 0,
 				4, 5, 6, 6, 7, 4,
 				8, 9, 10, 10, 11, 8,
@@ -57,13 +42,30 @@ namespace Hazel {
 				20, 21, 22, 22, 23, 20
 			};
 
-			Ref<VertexBuffer> cubeVB = VertexBuffer::Create(cubeVertices, (uint32_t)sizeof(cubeVertices));
+			std::vector<glm::vec3> normals = MeshSource::GenerateSmoothNormals(positions, indices);
+
+			std::vector<float> flatVertices;
+			flatVertices.reserve(positions.size() * 8);
+			for (size_t i = 0; i < positions.size(); i++)
+			{
+				flatVertices.push_back(positions[i].x);
+				flatVertices.push_back(positions[i].y);
+				flatVertices.push_back(positions[i].z);
+				flatVertices.push_back(normals[i].x);
+				flatVertices.push_back(normals[i].y);
+				flatVertices.push_back(normals[i].z);
+				flatVertices.push_back(texCoords[i].x);
+				flatVertices.push_back(texCoords[i].y);
+			}
+
+			Ref<VertexBuffer> cubeVB = VertexBuffer::Create(flatVertices.data(), (uint32_t)(flatVertices.size() * sizeof(float)));
 			cubeVB->SetLayout({
 				{ ShaderDataType::Float3, "a_Position" },
+				{ ShaderDataType::Float3, "a_Normal" },
 				{ ShaderDataType::Float2, "a_TexCoord" }
 			});
 
-			Ref<IndexBuffer> cubeIB = IndexBuffer::Create(cubeIndices, (uint32_t)(sizeof(cubeIndices) / sizeof(uint32_t)));
+			Ref<IndexBuffer> cubeIB = IndexBuffer::Create(indices.data(), (uint32_t)indices.size());
 
 			Ref<VertexArray> vertexArray = VertexArray::Create();
 			vertexArray->AddVertexBuffer(cubeVB);
@@ -107,20 +109,31 @@ namespace Hazel {
 		m_GridVertexArray->SetIndexBuffer(gridIB);
 	}
 
-	void SceneRenderer::BeginScene(const EditorCamera& camera)
+	void SceneRenderer::BeginScene(const EditorCamera& camera, const SceneEnvironmentData& environment)
 	{
-		BeginScene(camera.GetViewProjection());
+		BeginScene(camera.GetViewProjection(), environment);
 	}
 
-	void SceneRenderer::BeginScene(const glm::mat4& viewProjection)
+	void SceneRenderer::BeginScene(const glm::mat4& viewProjection, const SceneEnvironmentData& environment)
 	{
 		m_ViewProjection = viewProjection;
+		m_Environment = environment;
+		m_Stats.Reset();
 		glEnable(GL_DEPTH_TEST);
 		glDepthMask(GL_TRUE);
 	}
 
 	void SceneRenderer::EndScene()
 	{
+	}
+
+	void SceneRenderer::ApplyEnvironmentUniforms()
+	{
+		m_MeshShader->SetFloat3("u_CameraPosition", m_Environment.CameraPosition);
+		m_MeshShader->SetFloat3("u_LightDirection", m_Environment.LightDirection);
+		m_MeshShader->SetFloat3("u_LightRadiance", m_Environment.LightRadiance);
+		m_MeshShader->SetFloat("u_LightIntensity", m_Environment.LightIntensity);
+		m_MeshShader->SetInt("u_HasDirectionalLight", m_Environment.HasDirectionalLight ? 1 : 0);
 	}
 
 	void SceneRenderer::SubmitMesh(const glm::mat4& transform, const glm::vec4& color)
@@ -147,6 +160,7 @@ namespace Hazel {
 		m_MeshShader->SetMat4("u_Transform", transform);
 		m_MeshShader->SetFloat4("u_Color", material.ColorTint);
 		m_MeshShader->SetFloat3("u_AlbedoColor", material.AlbedoColor);
+		ApplyEnvironmentUniforms();
 
 		const bool useAlbedoMap = material.AlbedoTexture != nullptr;
 		m_MeshShader->SetInt("u_UseAlbedoMap", useAlbedoMap ? 1 : 0);
@@ -158,6 +172,10 @@ namespace Hazel {
 
 		vertexArray->Bind();
 		RenderCommand::DrawIndexed(vertexArray);
+
+		m_Stats.DrawCalls++;
+		if (vertexArray->GetIndexBuffer())
+			m_Stats.TriangleCount += vertexArray->GetIndexBuffer()->GetCount() / 3;
 	}
 
 	void SceneRenderer::RenderGrid()
@@ -165,7 +183,6 @@ namespace Hazel {
 		if (!m_GridEnabled)
 			return;
 
-		// Grid is a translucent overlay; must not write depth or 2D sprites z-fight / stripe.
 		glDepthMask(GL_FALSE);
 
 		m_GridShader->Bind();

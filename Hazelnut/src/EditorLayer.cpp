@@ -313,6 +313,15 @@ namespace Hazel {
 		ImGui::Text("Quads: %d", stats.QuadCount);
 		ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 		ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
+
+		if (m_SceneRenderer)
+		{
+			const auto& sceneStats = m_SceneRenderer->GetStats();
+			ImGui::Separator();
+			ImGui::Text("SceneRenderer Stats:");
+			ImGui::Text("Draw Calls: %d", sceneStats.DrawCalls);
+			ImGui::Text("Triangles: %d", sceneStats.TriangleCount);
+		}
 		ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });

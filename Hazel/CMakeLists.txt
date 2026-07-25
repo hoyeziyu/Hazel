@@ -20,6 +20,8 @@ find_package(EnTT CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(Stb REQUIRED)
 find_package(yaml-cpp CONFIG REQUIRED)
+find_package(assimp CONFIG REQUIRED)
+find_package(box2d CONFIG REQUIRED)
 
 add_library(${PROJECT_NAME} ${HAZEL_SOURCES})
 add_library(Hazel::Engine ALIAS ${PROJECT_NAME})
@@ -43,6 +45,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     imgui::imgui
     yaml-cpp::yaml-cpp
     imguizmo::imguizmo
+    assimp::assimp
+    box2d::box2d
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${Stb_INCLUDE_DIR})

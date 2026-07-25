@@ -315,6 +315,12 @@ namespace Hazel {
 				ImGui::CloseCurrentPopup();
 			}
 
+			if (ImGui::MenuItem("Directional Light"))
+			{
+				m_SelectionContext.AddComponent<DirectionalLightComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
 			ImGui::EndPopup();
 		}
 
@@ -470,6 +476,11 @@ namespace Hazel {
 
 			ImGui::ColorEdit4("Color Tint", glm::value_ptr(component.Color));
 			ImGui::Checkbox("Visible", &component.Visible);
+			});
+
+		DrawComponent<DirectionalLightComponent>("Directional Light", entity, [](auto& component) {
+			ImGui::ColorEdit3("Radiance", glm::value_ptr(component.Radiance));
+			ImGui::DragFloat("Intensity", &component.Intensity, 0.05f, 0.0f, 100.0f);
 			});
 		
 	}

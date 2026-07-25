@@ -15,6 +15,7 @@ namespace Hazel {
 	class EditorCamera;
 	class Prefab;
 	class SceneRenderer;
+	struct SceneEnvironmentData;
 
 	class Scene
 	{
@@ -52,7 +53,8 @@ namespace Hazel {
 		void RenderScene();
 		void RenderSprites();
 		void RenderMeshes(SceneRenderer& renderer);
-		void RenderScene3D(SceneRenderer& renderer, const glm::mat4& viewProjection, bool showGrid);
+		void RenderScene3D(SceneRenderer& renderer, const glm::mat4& viewProjection, const glm::vec3& cameraPosition, bool showGrid);
+		SceneEnvironmentData BuildSceneEnvironment();
 		Entity CreatePrefabEntity(Entity entity, const glm::vec3* translation, const glm::vec3* rotation, const glm::vec3* scale);
 
 		template<typename T>

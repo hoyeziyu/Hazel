@@ -30,6 +30,16 @@ Entities:
       Material: 19402389245123987103
       Color: [1, 1, 1, 1]
       Visible: true
+  - Entity: 5
+    TagComponent:
+      Tag: Directional Light
+    TransformComponent:
+      Translation: [0, 2, 0]
+      Rotation: [0.6, 0.8, 0]
+      Scale: [1, 1, 1]
+    DirectionalLightComponent:
+      Radiance: [1, 0.97, 0.92]
+      Intensity: 2.5
   - Entity: 4
     TagComponent:
       Tag: Camera Entity

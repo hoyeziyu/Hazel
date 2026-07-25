@@ -220,6 +220,19 @@ namespace Hazel {
 			out << YAML::EndMap;
 		}
 
+		if (entity.HasComponent<DirectionalLightComponent>())
+		{
+			out << YAML::Key << "DirectionalLightComponent";
+			out << YAML::BeginMap;
+
+			auto& light = entity.GetComponent<DirectionalLightComponent>();
+			out << YAML::Key << "Radiance" << YAML::Value << YAML::Flow << YAML::BeginSeq
+				<< light.Radiance.x << light.Radiance.y << light.Radiance.z << YAML::EndSeq;
+			out << YAML::Key << "Intensity" << YAML::Value << light.Intensity;
+
+			out << YAML::EndMap;
+		}
+
 		out << YAML::EndMap;
 	}
 
@@ -302,6 +315,14 @@ namespace Hazel {
 				src.Color = staticMeshComponent["Color"].as<glm::vec4>(glm::vec4(0.8f, 0.3f, 0.2f, 1.0f));
 				if (staticMeshComponent["Visible"])
 					src.Visible = staticMeshComponent["Visible"].as<bool>();
+			}
+
+			auto directionalLightComponent = entity["DirectionalLightComponent"];
+			if (directionalLightComponent)
+			{
+				auto& src = deserializedEntity.AddComponent<DirectionalLightComponent>();
+				src.Radiance = directionalLightComponent["Radiance"].as<glm::vec3>(glm::vec3(1.0f));
+				src.Intensity = directionalLightComponent["Intensity"].as<float>(1.0f);
 			}
 		}
 	}

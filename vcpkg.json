@@ -8,6 +8,8 @@
     "glm",
     "stb",
     "yaml-cpp",
-    "gtest"
+    "gtest",
+    "assimp",
+    "box2d"
   ]
 }

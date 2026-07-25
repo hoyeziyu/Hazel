@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include "Hazel/Renderer/Renderer2D.h"
 #include "Hazel/Renderer/SceneRenderer.h"
+#include "Hazel/Renderer/SceneEnvironment.h"
 #include "Hazel/Editor/EditorCamera.h"
 #include "Hazel/Asset/AssetManager.h"
 #include "Hazel/Asset/TextureAsset.h"
@@ -190,18 +191,39 @@ namespace Hazel {
 		}
 	}
 
-	void Scene::RenderScene3D(SceneRenderer& renderer, const glm::mat4& viewProjection, bool showGrid)
+	void Scene::RenderScene3D(SceneRenderer& renderer, const glm::mat4& viewProjection, const glm::vec3& cameraPosition, bool showGrid)
 	{
+		SceneEnvironmentData environment = BuildSceneEnvironment();
+		environment.CameraPosition = cameraPosition;
+
 		renderer.SetGridEnabled(showGrid);
-		renderer.BeginScene(viewProjection);
+		renderer.BeginScene(viewProjection, environment);
 		RenderMeshes(renderer);
 		renderer.RenderGrid();
 		renderer.EndScene();
 	}
 
+	SceneEnvironmentData Scene::BuildSceneEnvironment()
+	{
+		SceneEnvironmentData environment;
+
+		auto view = m_Registry.view<TransformComponent, DirectionalLightComponent>();
+		for (auto entity : view)
+		{
+			auto [transform, light] = view.get<TransformComponent, DirectionalLightComponent>(entity);
+			environment.LightDirection = -glm::normalize(glm::mat3(transform.GetTransform()) * glm::vec3(1.0f));
+			environment.LightRadiance = light.Radiance;
+			environment.LightIntensity = light.Intensity;
+			environment.HasDirectionalLight = true;
+			break;
+		}
+
+		return environment;
+	}
+
 	void Scene::OnRenderEditor(SceneRenderer& renderer, const EditorCamera& camera, bool showGrid)
 	{
-		RenderScene3D(renderer, camera.GetViewProjection(), showGrid);
+		RenderScene3D(renderer, camera.GetViewProjection(), camera.GetPosition(), showGrid);
 
 		renderer.Prepare2DOverlay();
 		Renderer2D::BeginScene(camera.GetViewProjection());
@@ -233,7 +255,8 @@ namespace Hazel {
 			return;
 
 		glm::mat4 viewProjection = mainCamera->GetProjection() * glm::inverse(cameraTransform);
-		RenderScene3D(renderer, viewProjection, showGrid);
+		glm::vec3 cameraPosition = glm::vec3(cameraTransform[3]);
+		RenderScene3D(renderer, viewProjection, cameraPosition, showGrid);
 
 		renderer.Prepare2DOverlay();
 		Renderer2D::BeginScene(*mainCamera, cameraTransform);
@@ -323,6 +346,7 @@ namespace Hazel {
 		CopyComponent<SpriteRendererComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<MeshRendererComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<StaticMeshComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<DirectionalLightComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<PrefabComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<NativeScriptComponent>(target->m_Registry, m_Registry, enttMap);
 
@@ -381,6 +405,7 @@ namespace Hazel {
 		CopyComponentIfExists<SpriteRendererComponent>(newEntity, entity);
 		CopyComponentIfExists<MeshRendererComponent>(newEntity, entity);
 		CopyComponentIfExists<StaticMeshComponent>(newEntity, entity);
+		CopyComponentIfExists<DirectionalLightComponent>(newEntity, entity);
 		CopyComponentIfExists<CameraComponent>(newEntity, entity);
 
 		if (translation)
@@ -423,6 +448,7 @@ namespace Hazel {
 		CopyComponentIfExists<SpriteRendererComponent>(newEntity, entity);
 		CopyComponentIfExists<MeshRendererComponent>(newEntity, entity);
 		CopyComponentIfExists<StaticMeshComponent>(newEntity, entity);
+		CopyComponentIfExists<DirectionalLightComponent>(newEntity, entity);
 		CopyComponentIfExists<CameraComponent>(newEntity, entity);
 		return newEntity;
 	}
@@ -498,6 +524,10 @@ namespace Hazel {
 	}
 	template<>
 	void Scene::OnComponentAdded<StaticMeshComponent>(Entity, StaticMeshComponent&)
+	{
+	}
+	template<>
+	void Scene::OnComponentAdded<DirectionalLightComponent>(Entity, DirectionalLightComponent&)
 	{
 	}
 	template<>

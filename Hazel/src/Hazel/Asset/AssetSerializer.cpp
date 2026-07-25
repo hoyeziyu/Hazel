@@ -411,7 +411,14 @@ namespace Hazel {
 				texCoords.push_back(texCoordNode.as<glm::vec2>());
 		}
 
-		target = CreateRef<MeshSource>(positions, indices, texCoords);
+		std::vector<glm::vec3> normals;
+		if (rootNode["Normals"])
+		{
+			for (const auto& normalNode : rootNode["Normals"])
+				normals.push_back(normalNode.as<glm::vec3>());
+		}
+
+		target = CreateRef<MeshSource>(positions, indices, texCoords, normals);
 		return true;
 	}
 
