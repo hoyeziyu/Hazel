@@ -16,6 +16,8 @@
 #include "Hazel/Script/NativeScriptFactory.h"
 #include "Hazel/Script/NativeScriptRegistry.h"
 #include "Hazel/Script/ScriptEngine.h"
+#include "Hazel/Audio/AudioEngine.h"
+#include "Hazel/Project/Project.h"
 #include "Entity.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -119,6 +121,16 @@ namespace Hazel {
 
 	void Scene::DestroyEntity(Entity entity)
 	{
+		if (entity.HasComponent<AudioComponent>())
+		{
+			auto& audio = entity.GetComponent<AudioComponent>();
+			if (audio.RuntimeHandle != 0)
+			{
+				AudioEngine::Get().StopSound(audio.RuntimeHandle);
+				audio.RuntimeHandle = 0;
+			}
+		}
+
 		if (entity.HasComponent<ScriptComponent>())
 		{
 			const auto& sc = entity.GetComponent<ScriptComponent>();
@@ -345,6 +357,20 @@ namespace Hazel {
 		NativeScriptFactory::BindSceneScripts(*this);
 		Physics2DScene::Init(*this);
 
+		auto& audioEngine = AudioEngine::Get();
+		auto project = Project::GetActive();
+
+		m_Registry.view<AudioComponent>().each([&](auto, AudioComponent& ac) {
+			if (!ac.PlayOnAwake || ac.FilePath.empty())
+				return;
+
+			std::filesystem::path path = ac.FilePath;
+			if (project)
+				path = project->GetAssetPath(ac.FilePath);
+
+			ac.RuntimeHandle = audioEngine.PlaySound(path, ac.Volume, ac.Loop);
+		});
+
 		auto& scriptEngine = ScriptEngine::GetMutable();
 
 		auto view = m_Registry.view<IDComponent, ScriptComponent>();
@@ -378,6 +404,14 @@ namespace Hazel {
 	void Scene::OnRuntimeStop()
 	{
 		Physics2DScene::Shutdown(*this);
+
+		m_Registry.view<AudioComponent>().each([](auto, AudioComponent& ac) {
+			if (ac.RuntimeHandle != 0)
+			{
+				AudioEngine::Get().StopSound(ac.RuntimeHandle);
+				ac.RuntimeHandle = 0;
+			}
+		});
 
 		m_Registry.view<NativeScriptComponent>().each([](auto, auto& nsc) {
 			if (nsc.Instance && nsc.DestroyScript)
@@ -440,9 +474,14 @@ namespace Hazel {
 		CopyComponent<DirectionalLightComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<RigidBody2DComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<BoxCollider2DComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<AudioComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<PrefabComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<NativeScriptComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<ScriptComponent>(target->m_Registry, m_Registry, enttMap);
+
+		target->m_Registry.view<AudioComponent>().each([](auto, auto& ac) {
+			ac.RuntimeHandle = 0;
+		});
 
 		target->m_Registry.view<NativeScriptComponent>().each([](auto, auto& nsc) {
 			nsc.Instance = nullptr;
@@ -563,6 +602,7 @@ namespace Hazel {
 		CopyComponentIfExists<RigidBody2DComponent>(newEntity, entity);
 		CopyComponentIfExists<BoxCollider2DComponent>(newEntity, entity);
 		CopyComponentIfExists<CameraComponent>(newEntity, entity);
+		CopyComponentIfExists<AudioComponent>(newEntity, entity);
 		CopyComponentIfExists<NativeScriptComponent>(newEntity, entity);
 
 		if (entity.HasComponent<ScriptComponent>())
@@ -672,6 +712,11 @@ namespace Hazel {
 	void Scene::OnComponentAdded<NativeScriptComponent>(Entity, NativeScriptComponent&)
 	{
 	}
+	template<>
+	void Scene::OnComponentAdded<AudioComponent>(Entity, AudioComponent&)
+	{
+	}
+
 	template<>
 	void Scene::OnComponentAdded<ScriptComponent>(Entity entity, ScriptComponent& component)
 	{

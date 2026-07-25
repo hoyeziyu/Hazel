@@ -169,4 +169,17 @@ namespace Hazel {
 		UUID ScriptID = 0;
 		CSharpObject Instance;
 	};
+
+	struct AudioComponent
+	{
+		std::string FilePath;
+		float Volume = 1.0f;
+		bool PlayOnAwake = true;
+		bool Loop = false;
+
+		uint32_t RuntimeHandle = 0;
+
+		AudioComponent() = default;
+		AudioComponent(const AudioComponent& other) = default;
+	};
 }

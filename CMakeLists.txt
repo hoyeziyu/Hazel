@@ -27,6 +27,7 @@ option(HAZEL_BUILD_HAZELNUT "Build Hazelnut editor application" ON)
 option(HAZEL_BUILD_TESTS "Build Google Test unit tests" ON)
 option(HAZEL_BUILD_BENCHMARKS "Build Google Benchmark performance tests" ON)
 option(HZ_SCRIPTING "Enable C# scripting via Coral" ON)
+option(HZ_AUDIO "Enable miniaudio audio playback" ON)
 
 if(HZ_SCRIPTING)
     include(HazelCoral)

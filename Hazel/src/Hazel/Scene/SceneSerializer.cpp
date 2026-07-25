@@ -294,6 +294,20 @@ namespace Hazel {
 			out << YAML::EndMap;
 		}
 
+		if (entity.HasComponent<AudioComponent>())
+		{
+			out << YAML::Key << "AudioComponent";
+			out << YAML::BeginMap;
+
+			const auto& audio = entity.GetComponent<AudioComponent>();
+			out << YAML::Key << "FilePath" << YAML::Value << audio.FilePath;
+			out << YAML::Key << "Volume" << YAML::Value << audio.Volume;
+			out << YAML::Key << "PlayOnAwake" << YAML::Value << audio.PlayOnAwake;
+			out << YAML::Key << "Loop" << YAML::Value << audio.Loop;
+
+			out << YAML::EndMap;
+		}
+
 		if (entity.HasComponent<NativeScriptComponent>())
 		{
 			out << YAML::Key << "NativeScriptComponent";
@@ -496,6 +510,16 @@ namespace Hazel {
 				box.Size = boxCollider2DComponent["Size"].as<glm::vec2>(glm::vec2(0.5f));
 				box.Density = boxCollider2DComponent["Density"].as<float>(1.0f);
 				box.Friction = boxCollider2DComponent["Friction"].as<float>(0.5f);
+			}
+
+			auto audioComponent = entity["AudioComponent"];
+			if (audioComponent)
+			{
+				auto& ac = deserializedEntity.AddComponent<AudioComponent>();
+				ac.FilePath = audioComponent["FilePath"].as<std::string>("");
+				ac.Volume = audioComponent["Volume"].as<float>(1.0f);
+				ac.PlayOnAwake = audioComponent["PlayOnAwake"].as<bool>(true);
+				ac.Loop = audioComponent["Loop"].as<bool>(false);
 			}
 
 			auto nativeScriptComponent = entity["NativeScriptComponent"];

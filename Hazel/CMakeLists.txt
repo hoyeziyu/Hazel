@@ -23,6 +23,10 @@ find_package(yaml-cpp CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
 
+if(HZ_AUDIO)
+    find_path(MINIAUDIO_INCLUDE_DIR miniaudio.h REQUIRED)
+endif()
+
 add_library(${PROJECT_NAME} ${HAZEL_SOURCES})
 add_library(Hazel::Engine ALIAS ${PROJECT_NAME})
 hazel_set_output_dirs(${PROJECT_NAME} NAME Hazel)
@@ -58,6 +62,11 @@ endif()
 if(HZ_SCRIPTING)
     target_compile_definitions(${PROJECT_NAME} PUBLIC HZ_SCRIPTING)
     target_link_libraries(${PROJECT_NAME} PUBLIC Coral::Native)
+endif()
+
+if(HZ_AUDIO)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC HZ_AUDIO)
+    target_include_directories(${PROJECT_NAME} PUBLIC ${MINIAUDIO_INCLUDE_DIR})
 endif()
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE "src/hzpch.h")

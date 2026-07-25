@@ -38,9 +38,9 @@
 
 ## 阶段 C — 音频、动画、运行时
 
-| 模块 | HazelEngine 对照 |
-|------|------------------|
-| M17 | miniaudio 基础 | LD50/LD51 音效 |
+| 模块 | HazelEngine 对照 | 说明 | 状态 | 笔记 |
+|------|------------------|------|------|------|
+| M17 | miniaudio 基础 | LD50/LD51 音效 | ✅ | [module-17-miniaudio.md](./module-17-miniaudio.md) |
 | M18 | AnimationGraph 缩小版 | LD51 玩家动画 |
 | M19 | Hazel-Runtime + Launcher | 打包运行 |
 | M20 | SoundGraph / SoundBank | LD51 SoundBank |

@@ -3,6 +3,7 @@
 #include "Hazel/Renderer/Renderer.h"
 #include "Hazel/Renderer/Buffer.h"
 #include "Hazel/Script/ScriptEngine.h"
+#include "Hazel/Audio/AudioEngine.h"
 #include <GLFW/glfw3.h>
 
 namespace Hazel {
@@ -26,6 +27,7 @@ namespace Hazel {
 		PushOverlay(m_ImGuiLayer);
 
 		ScriptEngine::GetMutable().InitializeHost();
+		AudioEngine::Get().Init();
 		
 	}
 
@@ -33,6 +35,7 @@ namespace Hazel {
 	{
 		HZ_PROFILE_FUNCTION();
 		ScriptEngine::GetMutable().ShutdownHost();
+		AudioEngine::Get().Shutdown();
 		Renderer::Shutdown();
 	}
 
@@ -83,6 +86,8 @@ namespace Hazel {
 					for (Layer* layer : m_LayerStack)
 						layer->OnUpdate(timestep);
 				}
+
+				AudioEngine::Get().Update();
 
 				m_ImGuiLayer->Begin();
 

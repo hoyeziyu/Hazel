@@ -340,6 +340,13 @@ namespace Hazel {
 				ImGui::CloseCurrentPopup();
 			}
 
+			if (ImGui::MenuItem("Audio"))
+			{
+				if (!m_SelectionContext.HasComponent<AudioComponent>())
+					m_SelectionContext.AddComponent<AudioComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
 			if (ImGui::MenuItem("Native Script"))
 			{
 				if (!m_SelectionContext.HasComponent<NativeScriptComponent>())
@@ -532,6 +539,17 @@ namespace Hazel {
 			ImGui::DragFloat2("Size", glm::value_ptr(component.Size), 0.05f, 0.01f);
 			ImGui::DragFloat("Density", &component.Density, 0.05f, 0.0f, 100.0f);
 			ImGui::DragFloat("Friction", &component.Friction, 0.05f, 0.0f, 2.0f);
+			});
+
+		DrawComponent<AudioComponent>("Audio", entity, [](auto& component) {
+			char buffer[256];
+			memset(buffer, 0, sizeof(buffer));
+			strncpy_s(buffer, component.FilePath.c_str(), sizeof(buffer) - 1);
+			if (ImGui::InputText("File Path", buffer, sizeof(buffer)))
+				component.FilePath = buffer;
+			ImGui::DragFloat("Volume", &component.Volume, 0.01f, 0.0f, 1.0f);
+			ImGui::Checkbox("Play On Awake", &component.PlayOnAwake);
+			ImGui::Checkbox("Loop", &component.Loop);
 			});
 
 		DrawComponent<NativeScriptComponent>("Native Script", entity, [](auto& component) {
