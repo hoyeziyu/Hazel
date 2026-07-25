@@ -12,6 +12,7 @@
 #include "Hazel/Asset/StaticMesh.h"
 #include "Hazel/Asset/MaterialAsset.h"
 #include "Hazel/Scene/Prefab.h"
+#include "Hazel/Physics2D/Physics2DScene.h"
 #include "Entity.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -267,6 +268,8 @@ namespace Hazel {
 
 	void Scene::OnUpdateRuntime(Timestep ts)
 	{
+		Physics2DScene::Step(*this, ts);
+
 		// update scripts
 		{
 			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc) {
@@ -294,10 +297,13 @@ namespace Hazel {
 
 	void Scene::OnRuntimeStart()
 	{
+		Physics2DScene::Init(*this);
 	}
 
 	void Scene::OnRuntimeStop()
 	{
+		Physics2DScene::Shutdown(*this);
+
 		m_Registry.view<NativeScriptComponent>().each([](auto, auto& nsc) {
 			if (nsc.Instance && nsc.DestroyScript)
 			{
@@ -347,11 +353,20 @@ namespace Hazel {
 		CopyComponent<MeshRendererComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<StaticMeshComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<DirectionalLightComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<RigidBody2DComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<BoxCollider2DComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<PrefabComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<NativeScriptComponent>(target->m_Registry, m_Registry, enttMap);
 
 		target->m_Registry.view<NativeScriptComponent>().each([](auto, auto& nsc) {
 			nsc.Instance = nullptr;
+		});
+
+		target->m_Registry.view<RigidBody2DComponent>().each([](auto, auto& rb) {
+			rb.RuntimeBodyHandle = 0;
+		});
+		target->m_Registry.view<BoxCollider2DComponent>().each([](auto, auto& box) {
+			box.RuntimeShapeHandle = 0;
 		});
 	}
 
@@ -406,6 +421,8 @@ namespace Hazel {
 		CopyComponentIfExists<MeshRendererComponent>(newEntity, entity);
 		CopyComponentIfExists<StaticMeshComponent>(newEntity, entity);
 		CopyComponentIfExists<DirectionalLightComponent>(newEntity, entity);
+		CopyComponentIfExists<RigidBody2DComponent>(newEntity, entity);
+		CopyComponentIfExists<BoxCollider2DComponent>(newEntity, entity);
 		CopyComponentIfExists<CameraComponent>(newEntity, entity);
 
 		if (translation)
@@ -449,6 +466,8 @@ namespace Hazel {
 		CopyComponentIfExists<MeshRendererComponent>(newEntity, entity);
 		CopyComponentIfExists<StaticMeshComponent>(newEntity, entity);
 		CopyComponentIfExists<DirectionalLightComponent>(newEntity, entity);
+		CopyComponentIfExists<RigidBody2DComponent>(newEntity, entity);
+		CopyComponentIfExists<BoxCollider2DComponent>(newEntity, entity);
 		CopyComponentIfExists<CameraComponent>(newEntity, entity);
 		return newEntity;
 	}
@@ -528,6 +547,14 @@ namespace Hazel {
 	}
 	template<>
 	void Scene::OnComponentAdded<DirectionalLightComponent>(Entity, DirectionalLightComponent&)
+	{
+	}
+	template<>
+	void Scene::OnComponentAdded<RigidBody2DComponent>(Entity, RigidBody2DComponent&)
+	{
+	}
+	template<>
+	void Scene::OnComponentAdded<BoxCollider2DComponent>(Entity, BoxCollider2DComponent&)
 	{
 	}
 	template<>

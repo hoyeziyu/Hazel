@@ -17,7 +17,8 @@ namespace Hazel {
 
 		AssetType GetAssetType() const override { return AssetType::MeshSource; }
 
-		const Ref<VertexArray>& GetVertexArray() const { return m_VertexArray; }
+		const Ref<VertexArray>& GetVertexArray();
+		const Ref<VertexArray>& GetVertexArray() const { return const_cast<MeshSource*>(this)->GetVertexArray(); }
 		const std::vector<glm::vec3>& GetPositions() const { return m_Positions; }
 		const std::vector<glm::vec2>& GetTexCoords() const { return m_TexCoords; }
 		const std::vector<glm::vec3>& GetNormals() const { return m_Normals; }

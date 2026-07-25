@@ -19,17 +19,17 @@
 | M7 | SceneRenderer 3D | ✅ | [module-07-scene-renderer.md](./module-07-scene-renderer.md) |
 | M8 | StaticMesh | ✅ | [module-08-staticmesh.md](./module-08-staticmesh.md) |
 | M9 | Material（Albedo 纹理） | ✅ | [module-09-material.md](./module-09-material.md) |
-| M10 | 方向光 + 简单光照 | 🔲 | — |
-| M11 | SceneRenderer Stats / DrawCall | 🔲 | — |
-| M12 | Assimp 模型导入 | 🔲 | — |
+| M10 | 方向光 + 简单光照 | ✅ | [module-10-11-lighting-stats.md](./module-10-11-lighting-stats.md) |
+| M11 | SceneRenderer Stats / DrawCall | ✅ | [module-10-11-lighting-stats.md](./module-10-11-lighting-stats.md) |
+| M12 | Assimp 模型导入 | ✅ | [module-12-assimp-import.md](./module-12-assimp-import.md) |
 
 ---
 
 ## 阶段 B — 物理与脚本
 
-| 模块 | HazelEngine 对照 | 说明 |
-|------|------------------|------|
-| M13 | Box2D / Physics2D | Sandbox2D、LD50 Physics2D 场景 |
+| 模块 | HazelEngine 对照 | 说明 | 状态 | 笔记 |
+|------|------------------|------|------|------|
+| M13 | Box2D / Physics2D | Sandbox2D、LD50 Physics2D 场景 | ✅ | [module-13-physics2d.md](./module-13-physics2d.md) |
 | M14 | Jolt 3D 物理（可选） | Fragile、Forest 射击/碰撞 |
 | M15 | C# Script（Coral） | **工作量大**；需 .NET 8 + ScriptCore |
 | M16 | NativeScript 增强 | 无 C# 时的 C++ 脚本替代 |

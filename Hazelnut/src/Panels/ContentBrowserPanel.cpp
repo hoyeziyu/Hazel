@@ -3,8 +3,10 @@
 #include "Hazel/Asset/AssetExtensions.h"
 #include "Hazel/Asset/AssetManager.h"
 #include "Hazel/Asset/AssetTypes.h"
+#include "Hazel/Asset/MeshImportService.h"
 #include "Hazel/Core/Log.h"
 #include "Hazel/ImGui/ImGuiUtilities.h"
+#include "Hazel/Utils/PlatformUtils.h"
 
 #include <imgui.h>
 
@@ -136,6 +138,17 @@ namespace Hazel {
 		UI::SetTooltip("Refresh current directory listing");
 
 		ImGui::SameLine();
+		if (ImGui::Button("Import Model"))
+		{
+			if (auto selectedFile = FileDialogs::OpenFile("Model Files (*.obj;*.fbx;*.gltf;*.glb)\0*.obj;*.fbx;*.gltf;*.glb\0"))
+			{
+				if (MeshImportService::ImportModelAsMeshSource(*selectedFile))
+					RefreshDirectoryListing();
+			}
+		}
+		UI::SetTooltip("Import 3D model (Assimp) as .hmesh under assets/meshes/");
+
+		ImGui::SameLine();
 		const std::string pathLabel = m_CurrentRelativePath.empty()
 			? "assets/"
 			: ("assets/" + m_CurrentRelativePath.generic_string());
@@ -226,6 +239,19 @@ namespace Hazel {
 				if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 					ActivateItem(item);
 
+				if (!item.IsDirectory && MeshImportService::IsModelExtension(item.AbsolutePath))
+				{
+					if (ImGui::BeginPopupContextItem())
+					{
+						if (ImGui::MenuItem("Import as MeshSource (.hmesh)"))
+						{
+							MeshImportService::ImportModelAsMeshSource(item.AbsolutePath);
+							RefreshDirectoryListing();
+						}
+						ImGui::EndPopup();
+					}
+				}
+
 				ImGui::TableNextColumn();
 				if (item.IsDirectory)
 				{
@@ -298,8 +324,14 @@ namespace Hazel {
 			return "Texture";
 		if (ext == ".glsl")
 			return "Shader";
-		if (ext == ".ttf")
-			return "Font";
+		if (ext == ".hmesh")
+			return "MeshSource";
+		if (ext == ".hsm")
+			return "StaticMesh";
+		if (ext == ".hmaterial")
+			return "Material";
+		if (Hazel::MeshImportService::IsModelExtension(path))
+			return "Model (importable)";
 		return "File";
 	}
 

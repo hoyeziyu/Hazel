@@ -14,8 +14,13 @@ namespace Hazel {
 
 		if (m_TexCoords.empty() && !m_Positions.empty())
 			m_TexCoords.assign(m_Positions.size(), glm::vec2(0.0f));
+	}
 
-		CreateGPUResources();
+	const Ref<VertexArray>& MeshSource::GetVertexArray()
+	{
+		if (!m_VertexArray)
+			CreateGPUResources();
+		return m_VertexArray;
 	}
 
 	std::vector<glm::vec3> MeshSource::GenerateSmoothNormals(const std::vector<glm::vec3>& positions, const std::vector<uint32_t>& indices)

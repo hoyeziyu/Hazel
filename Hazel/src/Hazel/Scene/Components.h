@@ -106,6 +106,36 @@ namespace Hazel {
 			: Radiance(radiance), Intensity(intensity) {}
 	};
 
+	struct RigidBody2DComponent
+	{
+		enum class Type { Static = 0, Dynamic, Kinematic };
+
+		Type BodyType = Type::Static;
+		bool FixedRotation = false;
+		float GravityScale = 1.0f;
+		float LinearDamping = 0.01f;
+		float AngularDamping = 0.05f;
+
+		// Runtime only (Box2D 3 body id bit pattern)
+		uint64_t RuntimeBodyHandle = 0;
+
+		RigidBody2DComponent() = default;
+		RigidBody2DComponent(const RigidBody2DComponent& other) = default;
+	};
+
+	struct BoxCollider2DComponent
+	{
+		glm::vec2 Offset{ 0.0f, 0.0f };
+		glm::vec2 Size{ 0.5f, 0.5f };
+		float Density = 1.0f;
+		float Friction = 0.5f;
+
+		uint64_t RuntimeShapeHandle = 0;
+
+		BoxCollider2DComponent() = default;
+		BoxCollider2DComponent(const BoxCollider2DComponent& other) = default;
+	};
+
 
 	struct CameraComponent
 	{

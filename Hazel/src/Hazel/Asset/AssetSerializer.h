@@ -75,7 +75,6 @@ namespace Hazel {
 		bool SerializeToAssetPack(AssetHandle handle, FileStreamWriter& stream, AssetSerializationInfo& outInfo) const override;
 		Ref<Asset> DeserializeFromAssetPack(FileStreamReader& stream, const AssetPackFile::AssetInfo& assetInfo) const override;
 
-	private:
 		std::string SerializeToYAML(const Ref<MeshSource>& meshSource) const;
 		bool DeserializeFromYAML(const std::string& yamlString, Ref<MeshSource>& target) const;
 	};

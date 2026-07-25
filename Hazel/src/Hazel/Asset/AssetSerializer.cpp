@@ -381,6 +381,15 @@ namespace Hazel {
 			}
 			out << YAML::EndSeq;
 		}
+		if (!meshSource->GetNormals().empty())
+		{
+			out << YAML::Key << "Normals" << YAML::Value << YAML::BeginSeq;
+			for (const auto& normal : meshSource->GetNormals())
+			{
+				out << YAML::Flow << YAML::BeginSeq << normal.x << normal.y << normal.z << YAML::EndSeq;
+			}
+			out << YAML::EndSeq;
+		}
 		out << YAML::EndMap;
 		out << YAML::EndMap;
 		return std::string(out.c_str());

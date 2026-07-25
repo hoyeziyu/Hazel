@@ -9,7 +9,10 @@
     "stb",
     "yaml-cpp",
     "gtest",
-    "assimp",
-    "box2d"
+    "box2d",
+    {
+      "name": "assimp",
+      "default-features": false
+    }
   ]
 }

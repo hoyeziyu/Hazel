@@ -22,6 +22,9 @@
 | M7 | SceneRenderer（3D 视口） | ✅ 完成 | [module-07-scene-renderer.md](./module-07-scene-renderer.md) |
 | M8 | StaticMesh 资产 | ✅ 完成 | [module-08-staticmesh.md](./module-08-staticmesh.md) |
 | M9 | Material 资产（Albedo 纹理） | ✅ 完成 | [module-09-material.md](./module-09-material.md) |
+| M10–M11 | 方向光 + SceneRenderer Stats | ✅ 完成 | [module-10-11-lighting-stats.md](./module-10-11-lighting-stats.md) |
+| M12 | Assimp 模型导入 | ✅ 完成 | [module-12-assimp-import.md](./module-12-assimp-import.md) |
+| M13 | Box2D Physics2D | ✅ 完成 | [module-13-physics2d.md](./module-13-physics2d.md) |
 
 完整路线见 [ROADMAP.md](./ROADMAP.md)。
 

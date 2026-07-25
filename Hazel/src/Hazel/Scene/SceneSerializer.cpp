@@ -61,9 +61,38 @@ namespace YAML {
 		}
 	};
 
+	template<>
+	struct convert<glm::vec2>
+	{
+		static Node encode(const glm::vec2& rhs)
+		{
+			Node node;
+			node.push_back(rhs.x);
+			node.push_back(rhs.y);
+			return node;
+		}
+
+		static bool decode(const Node& node, glm::vec2& rhs)
+		{
+			if (!node.IsSequence() || node.size() != 2)
+				return false;
+
+			rhs.x = node[0].as<float>();
+			rhs.y = node[1].as<float>();
+			return true;
+		}
+	};
+
 }
 
 namespace Hazel {
+	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec2& v)
+	{
+		out << YAML::Flow;
+		out << YAML::BeginSeq << v.x << v.y << YAML::EndSeq;
+		return out;
+	}
+
 	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& v)
 	{
 		out << YAML::Flow;
@@ -233,6 +262,35 @@ namespace Hazel {
 			out << YAML::EndMap;
 		}
 
+		if (entity.HasComponent<RigidBody2DComponent>())
+		{
+			out << YAML::Key << "RigidBody2DComponent";
+			out << YAML::BeginMap;
+
+			auto& rb = entity.GetComponent<RigidBody2DComponent>();
+			out << YAML::Key << "BodyType" << YAML::Value << (int)rb.BodyType;
+			out << YAML::Key << "FixedRotation" << YAML::Value << rb.FixedRotation;
+			out << YAML::Key << "GravityScale" << YAML::Value << rb.GravityScale;
+			out << YAML::Key << "LinearDamping" << YAML::Value << rb.LinearDamping;
+			out << YAML::Key << "AngularDamping" << YAML::Value << rb.AngularDamping;
+
+			out << YAML::EndMap;
+		}
+
+		if (entity.HasComponent<BoxCollider2DComponent>())
+		{
+			out << YAML::Key << "BoxCollider2DComponent";
+			out << YAML::BeginMap;
+
+			auto& box = entity.GetComponent<BoxCollider2DComponent>();
+			out << YAML::Key << "Offset" << YAML::Value << box.Offset;
+			out << YAML::Key << "Size" << YAML::Value << box.Size;
+			out << YAML::Key << "Density" << YAML::Value << box.Density;
+			out << YAML::Key << "Friction" << YAML::Value << box.Friction;
+
+			out << YAML::EndMap;
+		}
+
 		out << YAML::EndMap;
 	}
 
@@ -323,6 +381,27 @@ namespace Hazel {
 				auto& src = deserializedEntity.AddComponent<DirectionalLightComponent>();
 				src.Radiance = directionalLightComponent["Radiance"].as<glm::vec3>(glm::vec3(1.0f));
 				src.Intensity = directionalLightComponent["Intensity"].as<float>(1.0f);
+			}
+
+			auto rigidBody2DComponent = entity["RigidBody2DComponent"];
+			if (rigidBody2DComponent)
+			{
+				auto& rb = deserializedEntity.AddComponent<RigidBody2DComponent>();
+				rb.BodyType = (RigidBody2DComponent::Type)rigidBody2DComponent["BodyType"].as<int>(0);
+				rb.FixedRotation = rigidBody2DComponent["FixedRotation"].as<bool>(false);
+				rb.GravityScale = rigidBody2DComponent["GravityScale"].as<float>(1.0f);
+				rb.LinearDamping = rigidBody2DComponent["LinearDamping"].as<float>(0.01f);
+				rb.AngularDamping = rigidBody2DComponent["AngularDamping"].as<float>(0.05f);
+			}
+
+			auto boxCollider2DComponent = entity["BoxCollider2DComponent"];
+			if (boxCollider2DComponent)
+			{
+				auto& box = deserializedEntity.AddComponent<BoxCollider2DComponent>();
+				box.Offset = boxCollider2DComponent["Offset"].as<glm::vec2>(glm::vec2(0.0f));
+				box.Size = boxCollider2DComponent["Size"].as<glm::vec2>(glm::vec2(0.5f));
+				box.Density = boxCollider2DComponent["Density"].as<float>(1.0f);
+				box.Friction = boxCollider2DComponent["Friction"].as<float>(0.5f);
 			}
 		}
 	}

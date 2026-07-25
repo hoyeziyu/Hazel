@@ -321,6 +321,20 @@ namespace Hazel {
 				ImGui::CloseCurrentPopup();
 			}
 
+			if (ImGui::MenuItem("Rigid Body 2D"))
+			{
+				if (!m_SelectionContext.HasComponent<RigidBody2DComponent>())
+					m_SelectionContext.AddComponent<RigidBody2DComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
+			if (ImGui::MenuItem("Box Collider 2D"))
+			{
+				if (!m_SelectionContext.HasComponent<BoxCollider2DComponent>())
+					m_SelectionContext.AddComponent<BoxCollider2DComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
 			ImGui::EndPopup();
 		}
 
@@ -481,6 +495,24 @@ namespace Hazel {
 		DrawComponent<DirectionalLightComponent>("Directional Light", entity, [](auto& component) {
 			ImGui::ColorEdit3("Radiance", glm::value_ptr(component.Radiance));
 			ImGui::DragFloat("Intensity", &component.Intensity, 0.05f, 0.0f, 100.0f);
+			});
+
+		DrawComponent<RigidBody2DComponent>("Rigid Body 2D", entity, [](auto& component) {
+			const char* bodyTypes[] = { "Static", "Dynamic", "Kinematic" };
+			int bodyType = (int)component.BodyType;
+			if (ImGui::Combo("Body Type", &bodyType, bodyTypes, IM_ARRAYSIZE(bodyTypes)))
+				component.BodyType = (RigidBody2DComponent::Type)bodyType;
+			ImGui::Checkbox("Fixed Rotation", &component.FixedRotation);
+			ImGui::DragFloat("Gravity Scale", &component.GravityScale, 0.05f, 0.0f, 100.0f);
+			ImGui::DragFloat("Linear Damping", &component.LinearDamping, 0.001f, 0.0f, 1.0f);
+			ImGui::DragFloat("Angular Damping", &component.AngularDamping, 0.001f, 0.0f, 1.0f);
+			});
+
+		DrawComponent<BoxCollider2DComponent>("Box Collider 2D", entity, [](auto& component) {
+			ImGui::DragFloat2("Offset", glm::value_ptr(component.Offset), 0.05f);
+			ImGui::DragFloat2("Size", glm::value_ptr(component.Size), 0.05f, 0.01f);
+			ImGui::DragFloat("Density", &component.Density, 0.05f, 0.0f, 100.0f);
+			ImGui::DragFloat("Friction", &component.Friction, 0.05f, 0.0f, 2.0f);
 			});
 		
 	}
