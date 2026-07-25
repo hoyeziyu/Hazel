@@ -1,8 +1,9 @@
 #pragma once
+
 #include "Entity.h"
+#include "Hazel/Core/Timestep.h"
 
 namespace Hazel {
-
 
 	class ScriptableEntity
 	{
@@ -15,6 +16,14 @@ namespace Hazel {
 			return m_Entity.GetComponent<T>();
 		}
 
+		template<typename T>
+		bool HasComponent() const
+		{
+			return m_Entity.HasComponent<T>();
+		}
+
+		Entity GetEntity() const { return m_Entity; }
+
 	protected:
 		virtual void OnCreate() {}
 		virtual void OnDestroy() {}
@@ -24,7 +33,6 @@ namespace Hazel {
 		Entity m_Entity;
 
 		friend class Scene;
-	
 	};
-	
+
 }

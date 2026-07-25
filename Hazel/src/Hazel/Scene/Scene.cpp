@@ -13,6 +13,8 @@
 #include "Hazel/Asset/MaterialAsset.h"
 #include "Hazel/Scene/Prefab.h"
 #include "Hazel/Physics2D/Physics2DScene.h"
+#include "Hazel/Script/NativeScriptFactory.h"
+#include "Hazel/Script/NativeScriptRegistry.h"
 #include "Entity.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -297,6 +299,8 @@ namespace Hazel {
 
 	void Scene::OnRuntimeStart()
 	{
+		RegisterBuiltInNativeScripts();
+		NativeScriptFactory::BindSceneScripts(*this);
 		Physics2DScene::Init(*this);
 	}
 
@@ -360,6 +364,8 @@ namespace Hazel {
 
 		target->m_Registry.view<NativeScriptComponent>().each([](auto, auto& nsc) {
 			nsc.Instance = nullptr;
+			nsc.InstantiateScript = nullptr;
+			nsc.DestroyScript = nullptr;
 		});
 
 		target->m_Registry.view<RigidBody2DComponent>().each([](auto, auto& rb) {

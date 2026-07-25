@@ -8,6 +8,7 @@ add_executable(HazelTests
     LightTests.cpp
     MeshImportTests.cpp
     Physics2DTests.cpp
+    NativeScriptTests.cpp
 )
 
 target_link_libraries(HazelTests PRIVATE Hazel::Engine GTest::gtest)

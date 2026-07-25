@@ -9,6 +9,8 @@
 #include "Hazel/Scene/Components.h"
 #include "Hazel/Project/Project.h"
 #include "Hazel/Scene/Prefab.h"
+#include "Hazel/Script/NativeScriptFactory.h"
+#include "Hazel/Script/NativeScriptRegistry.h"
 #include <glm/gtc/type_ptr.hpp>
 namespace Hazel {
 
@@ -335,6 +337,13 @@ namespace Hazel {
 				ImGui::CloseCurrentPopup();
 			}
 
+			if (ImGui::MenuItem("Native Script"))
+			{
+				if (!m_SelectionContext.HasComponent<NativeScriptComponent>())
+					m_SelectionContext.AddComponent<NativeScriptComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
 			ImGui::EndPopup();
 		}
 
@@ -513,6 +522,40 @@ namespace Hazel {
 			ImGui::DragFloat2("Size", glm::value_ptr(component.Size), 0.05f, 0.01f);
 			ImGui::DragFloat("Density", &component.Density, 0.05f, 0.0f, 100.0f);
 			ImGui::DragFloat("Friction", &component.Friction, 0.05f, 0.0f, 2.0f);
+			});
+
+		DrawComponent<NativeScriptComponent>("Native Script", entity, [](auto& component) {
+			Hazel::RegisterBuiltInNativeScripts();
+			const auto& names = NativeScriptFactory::GetRegisteredNames();
+			if (names.empty())
+			{
+				ImGui::TextUnformatted("No scripts registered");
+				return;
+			}
+
+			int currentIndex = -1;
+			for (int i = 0; i < (int)names.size(); i++)
+			{
+				if (names[i] == component.ClassName)
+				{
+					currentIndex = i;
+					break;
+				}
+			}
+
+			const char* preview = currentIndex >= 0 ? names[currentIndex].c_str() : "Select script...";
+			if (ImGui::BeginCombo("Class", preview))
+			{
+				for (int i = 0; i < (int)names.size(); i++)
+				{
+					const bool selected = currentIndex == i;
+					if (ImGui::Selectable(names[i].c_str(), selected))
+						component.ClassName = names[i];
+					if (selected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
+			}
 			});
 		
 	}

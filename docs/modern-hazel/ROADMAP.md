@@ -32,7 +32,7 @@
 | M13 | Box2D / Physics2D | Sandbox2D、LD50 Physics2D 场景 | ✅ | [module-13-physics2d.md](./module-13-physics2d.md) |
 | M14 | Jolt 3D 物理（可选） | Fragile、Forest 射击/碰撞 |
 | M15 | C# Script（Coral） | **工作量大**；需 .NET 8 + ScriptCore |
-| M16 | NativeScript 增强 | 无 C# 时的 C++ 脚本替代 |
+| M16 | NativeScript 增强 | 无 C# 时的 C++ 脚本替代 | ✅ | [module-16-nativescript.md](./module-16-nativescript.md) |
 
 ---
 

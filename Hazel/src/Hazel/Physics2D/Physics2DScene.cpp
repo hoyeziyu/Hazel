@@ -195,4 +195,13 @@ namespace Hazel {
 		});
 	}
 
+	void Physics2DScene::ApplyLinearImpulse(RigidBody2DComponent& rigidBody, const glm::vec2& impulse)
+	{
+		b2BodyId bodyId = DecodeBody(rigidBody.RuntimeBodyHandle);
+		if (B2_IS_NULL(bodyId))
+			return;
+
+		b2Body_ApplyLinearImpulseToCenter(bodyId, { impulse.x, impulse.y }, true);
+	}
+
 }

@@ -25,6 +25,7 @@
 | M10–M11 | 方向光 + SceneRenderer Stats | ✅ 完成 | [module-10-11-lighting-stats.md](./module-10-11-lighting-stats.md) |
 | M12 | Assimp 模型导入 | ✅ 完成 | [module-12-assimp-import.md](./module-12-assimp-import.md) |
 | M13 | Box2D Physics2D | ✅ 完成 | [module-13-physics2d.md](./module-13-physics2d.md) |
+| M16 | NativeScript 增强 | ✅ 完成 | [module-16-nativescript.md](./module-16-nativescript.md) |
 
 完整路线见 [ROADMAP.md](./ROADMAP.md)。
 

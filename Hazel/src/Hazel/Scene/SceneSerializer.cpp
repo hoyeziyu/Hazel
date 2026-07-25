@@ -291,6 +291,18 @@ namespace Hazel {
 			out << YAML::EndMap;
 		}
 
+		if (entity.HasComponent<NativeScriptComponent>())
+		{
+			out << YAML::Key << "NativeScriptComponent";
+			out << YAML::BeginMap;
+
+			const auto& script = entity.GetComponent<NativeScriptComponent>();
+			if (!script.ClassName.empty())
+				out << YAML::Key << "ClassName" << YAML::Value << script.ClassName;
+
+			out << YAML::EndMap;
+		}
+
 		out << YAML::EndMap;
 	}
 
@@ -402,6 +414,14 @@ namespace Hazel {
 				box.Size = boxCollider2DComponent["Size"].as<glm::vec2>(glm::vec2(0.5f));
 				box.Density = boxCollider2DComponent["Density"].as<float>(1.0f);
 				box.Friction = boxCollider2DComponent["Friction"].as<float>(0.5f);
+			}
+
+			auto nativeScriptComponent = entity["NativeScriptComponent"];
+			if (nativeScriptComponent)
+			{
+				auto& script = deserializedEntity.AddComponent<NativeScriptComponent>();
+				if (nativeScriptComponent["ClassName"])
+					script.ClassName = nativeScriptComponent["ClassName"].as<std::string>();
 			}
 		}
 	}

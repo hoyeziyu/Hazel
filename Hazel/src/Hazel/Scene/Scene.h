@@ -75,6 +75,7 @@ namespace Hazel {
 		friend class Prefab;
 		friend class PrefabSerializer;
 		friend class Physics2DScene;
+		friend class NativeScriptFactory;
 	};
 
 }

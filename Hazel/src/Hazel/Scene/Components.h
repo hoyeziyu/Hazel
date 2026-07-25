@@ -151,6 +151,7 @@ namespace Hazel {
 
 	struct NativeScriptComponent
 	{
+		std::string ClassName;
 		ScriptableEntity* Instance = nullptr;
 		ScriptableEntity* (*InstantiateScript)();
 		void (*DestroyScript)(NativeScriptComponent*);
