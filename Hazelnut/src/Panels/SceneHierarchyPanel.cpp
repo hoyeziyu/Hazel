@@ -11,6 +11,7 @@
 #include "Hazel/Scene/Prefab.h"
 #include "Hazel/Script/NativeScriptFactory.h"
 #include "Hazel/Script/NativeScriptRegistry.h"
+#include "Hazel/Script/ScriptEngine.h"
 #include <glm/gtc/type_ptr.hpp>
 namespace Hazel {
 
@@ -344,6 +345,13 @@ namespace Hazel {
 				ImGui::CloseCurrentPopup();
 			}
 
+			if (ImGui::MenuItem("Script"))
+			{
+				if (!m_SelectionContext.HasComponent<ScriptComponent>())
+					m_SelectionContext.AddComponent<ScriptComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
 			ImGui::EndPopup();
 		}
 
@@ -551,6 +559,46 @@ namespace Hazel {
 					const bool selected = currentIndex == i;
 					if (ImGui::Selectable(names[i].c_str(), selected))
 						component.ClassName = names[i];
+					if (selected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
+			}
+			});
+
+		
+		DrawComponent<ScriptComponent>("Script", entity, [](auto& component) {
+			const auto& scripts = ScriptEngine::GetInstance().GetAllScripts();
+			if (scripts.empty())
+			{
+				ImGui::TextUnformatted("No C# scripts loaded");
+				return;
+			}
+
+			std::vector<UUID> scriptIDs;
+			std::vector<std::string> scriptNames;
+			scriptIDs.reserve(scripts.size());
+			scriptNames.reserve(scripts.size());
+
+			int currentIndex = -1;
+			int index = 0;
+			for (const auto& [scriptID, metadata] : scripts)
+			{
+				scriptIDs.push_back(scriptID);
+				scriptNames.push_back(metadata.FullName);
+				if (component.ScriptID == scriptID)
+					currentIndex = index;
+				index++;
+			}
+
+			const char* preview = currentIndex >= 0 ? scriptNames[currentIndex].c_str() : "Select script...";
+			if (ImGui::BeginCombo("Script Class", preview))
+			{
+				for (int i = 0; i < (int)scriptNames.size(); i++)
+				{
+					const bool selected = currentIndex == i;
+					if (ImGui::Selectable(scriptNames[i].c_str(), selected))
+						component.ScriptID = scriptIDs[i];
 					if (selected)
 						ImGui::SetItemDefaultFocus();
 				}

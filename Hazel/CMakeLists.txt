@@ -54,6 +54,12 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${Stb_INCLUDE_DIR})
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} PUBLIC opengl32)
 endif()
+
+if(HZ_SCRIPTING)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC HZ_SCRIPTING)
+    target_link_libraries(${PROJECT_NAME} PUBLIC Coral::Native)
+endif()
+
 target_precompile_headers(${PROJECT_NAME} PRIVATE "src/hzpch.h")
 
 # Compiler warnings

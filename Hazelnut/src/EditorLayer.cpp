@@ -17,6 +17,7 @@
 #include "Hazel/Math/Math.h"
 #include "Hazel/Project/Project.h"
 #include "Hazel/Project/ProjectSerializer.h"
+#include "Hazel/Script/ScriptEngine.h"
 #include "Hazel/Asset/AssetManager.h"
 #include "Hazel/Serialization/AssetPack.h"
 #include "Hazel/Scene/Prefab.h"
@@ -450,6 +451,7 @@ namespace Hazel {
 		if (m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f)
 			m_RuntimeScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 
+		ScriptEngine::GetMutable().SetCurrentScene(m_RuntimeScene);
 		m_RuntimeScene->OnRuntimeStart();
 		HZ_CORE_INFO("Entered Play mode");
 	}
@@ -460,6 +462,7 @@ namespace Hazel {
 			return;
 
 		m_RuntimeScene->OnRuntimeStop();
+		ScriptEngine::GetMutable().SetCurrentScene(nullptr);
 		m_SceneState = SceneState::Edit;
 		m_RuntimeScene = nullptr;
 		HZ_CORE_INFO("Stopped Play mode");
@@ -659,6 +662,7 @@ namespace Hazel {
 			return;
 
 		Project::SetActive(project);
+		ScriptEngine::GetMutable().LoadProjectAssembly();
 		m_ContentBrowserPanel.OnProjectChanged(project);
 		HZ_CORE_INFO("Opened project '{0}'", project->GetConfig().Name);
 

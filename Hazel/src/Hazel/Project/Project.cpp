@@ -4,6 +4,7 @@
 #include "Hazel/Asset/AssetManager/EditorAssetManager.h"
 #include "Hazel/Asset/AssetManager/RuntimeAssetManager.h"
 #include "Hazel/Serialization/AssetPack.h"
+#include "Hazel/Script/ScriptEngine.h"
 
 #ifdef HZ_PLATFORM_WINDOWS
 #include <Windows.h>
@@ -41,10 +42,16 @@ namespace Hazel {
 		s_RuntimeActive = false;
 		s_RuntimeAssetManager.reset();
 		s_RuntimeAssetPack.reset();
+
+		ScriptEngine::GetMutable().Shutdown();
+
 		s_ActiveProject = project;
 
 		if (s_ActiveProject)
+		{
 			s_ActiveProject->m_AssetManager = CreateRef<EditorAssetManager>();
+			ScriptEngine::GetMutable().Initialize(s_ActiveProject);
+		}
 	}
 
 	void Project::SetActiveRuntime(const Ref<Project>& project, const Ref<AssetPack>& assetPack)
@@ -61,7 +68,31 @@ namespace Hazel {
 		s_RuntimeActive = false;
 		s_RuntimeAssetManager.reset();
 		s_RuntimeAssetPack.reset();
+		ScriptEngine::GetMutable().Shutdown();
 		s_ActiveProject.reset();
+	}
+
+	void Project::ReloadScriptEngine()
+	{
+		if (!s_ActiveProject)
+			return;
+
+		auto& scriptEngine = ScriptEngine::GetMutable();
+		scriptEngine.Shutdown();
+		scriptEngine.Initialize(s_ActiveProject);
+		scriptEngine.LoadProjectAssembly();
+	}
+
+	std::filesystem::path Project::GetScriptModulePath()
+	{
+		HZ_CORE_ASSERT(s_ActiveProject, "No active project");
+		return s_ActiveProject->GetConfig().ProjectDirectory / s_ActiveProject->GetConfig().ScriptModulePath;
+	}
+
+	std::filesystem::path Project::GetScriptModuleFilePath()
+	{
+		HZ_CORE_ASSERT(s_ActiveProject, "No active project");
+		return GetScriptModulePath() / (s_ActiveProject->GetConfig().Name + ".dll");
 	}
 
 	const ProjectConfig* Project::GetActiveConfig()

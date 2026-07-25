@@ -26,6 +26,12 @@ option(HAZEL_BUILD_SANDBOX "Build sandbox application" ON)
 option(HAZEL_BUILD_HAZELNUT "Build Hazelnut editor application" ON)
 option(HAZEL_BUILD_TESTS "Build Google Test unit tests" ON)
 option(HAZEL_BUILD_BENCHMARKS "Build Google Benchmark performance tests" ON)
+option(HZ_SCRIPTING "Enable C# scripting via Coral" ON)
+
+if(HZ_SCRIPTING)
+    include(HazelCoral)
+    include(HazelScripting)
+endif()
 
 # Sandbox application
 if(HAZEL_BUILD_SANDBOX)

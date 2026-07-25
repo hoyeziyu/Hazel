@@ -15,6 +15,7 @@
 #include "Hazel/Physics2D/Physics2DScene.h"
 #include "Hazel/Script/NativeScriptFactory.h"
 #include "Hazel/Script/NativeScriptRegistry.h"
+#include "Hazel/Script/ScriptEngine.h"
 #include "Entity.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -272,7 +273,7 @@ namespace Hazel {
 	{
 		Physics2DScene::Step(*this, ts);
 
-		// update scripts
+		// Native scripts
 		{
 			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc) {
 				if (!nsc.Instance) {
@@ -283,6 +284,17 @@ namespace Hazel {
 				}
 
 				nsc.Instance->OnUpdate(ts);
+			});
+		}
+
+		// C# scripts
+		{
+			const auto& scriptEngine = ScriptEngine::GetInstance();
+			m_Registry.view<ScriptComponent>().each([&](auto, ScriptComponent& sc) {
+				if (!scriptEngine.IsValidScript(sc.ScriptID) || !sc.Instance.IsValid())
+					return;
+
+				sc.Instance.Invoke<float>("OnUpdate", (float)ts);
 			});
 		}
 	}
@@ -302,6 +314,32 @@ namespace Hazel {
 		RegisterBuiltInNativeScripts();
 		NativeScriptFactory::BindSceneScripts(*this);
 		Physics2DScene::Init(*this);
+
+		auto& scriptEngine = ScriptEngine::GetMutable();
+
+		auto view = m_Registry.view<IDComponent, ScriptComponent>();
+		for (auto entityID : view)
+		{
+			const auto& idComponent = view.get<IDComponent>(entityID);
+			auto& scriptComponent = view.get<ScriptComponent>(entityID);
+
+			if (!scriptEngine.IsValidScript(scriptComponent.ScriptID))
+			{
+				HZ_CORE_WARN("[Scripting] Entity has invalid script id {}", (uint64_t)scriptComponent.ScriptID);
+				continue;
+			}
+
+			scriptComponent.Instance = scriptEngine.Instantiate(scriptComponent.ScriptID, (uint64_t)idComponent.ID);
+		}
+
+		for (auto entityID : view)
+		{
+			auto& scriptComponent = view.get<ScriptComponent>(entityID);
+			if (!scriptEngine.IsValidScript(scriptComponent.ScriptID) || !scriptComponent.Instance.IsValid())
+				continue;
+
+			scriptComponent.Instance.Invoke("OnCreate");
+		}
 	}
 
 	void Scene::OnRuntimeStop()
@@ -313,6 +351,15 @@ namespace Hazel {
 			{
 				nsc.DestroyScript(&nsc);
 				nsc.Instance = nullptr;
+			}
+		});
+
+		auto& scriptEngine = ScriptEngine::GetMutable();
+		m_Registry.view<ScriptComponent>().each([&](auto, ScriptComponent& sc) {
+			if (sc.Instance.IsValid())
+			{
+				sc.Instance.Invoke("OnDestroy");
+				scriptEngine.DestroyInstance(sc.Instance);
 			}
 		});
 	}
@@ -361,11 +408,16 @@ namespace Hazel {
 		CopyComponent<BoxCollider2DComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<PrefabComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<NativeScriptComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<ScriptComponent>(target->m_Registry, m_Registry, enttMap);
 
 		target->m_Registry.view<NativeScriptComponent>().each([](auto, auto& nsc) {
 			nsc.Instance = nullptr;
 			nsc.InstantiateScript = nullptr;
 			nsc.DestroyScript = nullptr;
+		});
+
+		target->m_Registry.view<ScriptComponent>().each([](auto, ScriptComponent& sc) {
+			sc.Instance = {};
 		});
 
 		target->m_Registry.view<RigidBody2DComponent>().each([](auto, auto& rb) {
@@ -569,6 +621,10 @@ namespace Hazel {
 	}
 	template<>
 	void Scene::OnComponentAdded<NativeScriptComponent>(Entity, NativeScriptComponent&)
+	{
+	}
+	template<>
+	void Scene::OnComponentAdded<ScriptComponent>(Entity, ScriptComponent&)
 	{
 	}
 

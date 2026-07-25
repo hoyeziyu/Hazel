@@ -2,6 +2,7 @@
 #include "Application.h"
 #include "Hazel/Renderer/Renderer.h"
 #include "Hazel/Renderer/Buffer.h"
+#include "Hazel/Script/ScriptEngine.h"
 #include <GLFW/glfw3.h>
 
 namespace Hazel {
@@ -23,12 +24,15 @@ namespace Hazel {
 
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
+
+		ScriptEngine::GetMutable().InitializeHost();
 		
 	}
 
 	Application::~Application()
 	{
 		HZ_PROFILE_FUNCTION();
+		ScriptEngine::GetMutable().ShutdownHost();
 		Renderer::Shutdown();
 	}
 

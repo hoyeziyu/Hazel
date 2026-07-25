@@ -8,3 +8,6 @@
 [submodule "vendor/ImGuizmo"]
 	path = vendor/ImGuizmo
 	url = https://github.com/CedricGuillemet/ImGuizmo
+[submodule "vendor/Coral"]
+	path = vendor/Coral
+	url = https://github.com/StudioCherno/Coral

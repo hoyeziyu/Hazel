@@ -1,4 +1,5 @@
 Project:
   Name: Sample
   AssetDirectory: assets
+  ScriptModulePath: assets/Scripts/Binaries
   StartScene: scenes/Main.hazel

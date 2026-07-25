@@ -22,6 +22,7 @@ namespace Hazel {
 			out << YAML::BeginMap;
 			out << YAML::Key << "Name" << YAML::Value << config.Name;
 			out << YAML::Key << "AssetDirectory" << YAML::Value << config.AssetDirectory;
+			out << YAML::Key << "ScriptModulePath" << YAML::Value << config.ScriptModulePath;
 			out << YAML::Key << "StartScene" << YAML::Value << config.StartScene;
 			out << YAML::EndMap;
 		}
@@ -62,6 +63,7 @@ namespace Hazel {
 		auto& config = m_Project->GetConfig();
 		config.Name = root["Name"].as<std::string>(config.Name);
 		config.AssetDirectory = root["AssetDirectory"].as<std::string>(config.AssetDirectory);
+		config.ScriptModulePath = root["ScriptModulePath"].as<std::string>(config.ScriptModulePath);
 		config.StartScene = root["StartScene"].as<std::string>(config.StartScene);
 		config.ProjectFilePath = std::filesystem::absolute(filepath);
 		config.ProjectDirectory = config.ProjectFilePath.parent_path();

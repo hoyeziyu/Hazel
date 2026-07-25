@@ -11,6 +11,7 @@
 #include "Hazel/Asset/Asset.h"
 #include "SceneCamera.h"
 #include "ScriptableEntity.h"
+#include "Hazel/Script/CSharpObject.h"
 
 namespace Hazel {
 
@@ -161,5 +162,11 @@ namespace Hazel {
 			InstantiateScript = []() { return static_cast<ScriptableEntity*>(new T()); };
 			DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
 		}
+	};
+
+	struct ScriptComponent
+	{
+		UUID ScriptID = 0;
+		CSharpObject Instance;
 	};
 }

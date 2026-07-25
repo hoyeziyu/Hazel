@@ -14,6 +14,7 @@ namespace Hazel {
 		std::string Name = "Untitled";
 		std::string AssetDirectory = "assets";
 		std::string AssetRegistryPath = "AssetRegistry.hzr";
+		std::string ScriptModulePath = "assets/Scripts/Binaries";
 		std::string StartScene = "scenes/Main.hazel";
 
 		// Filled by serializer (not written to .hzproj)
@@ -38,6 +39,10 @@ namespace Hazel {
 		static void SetActive(const Ref<Project>& project);
 		static void SetActiveRuntime(const Ref<Project>& project, const Ref<class AssetPack>& assetPack);
 		static void ClearActive();
+		static void ReloadScriptEngine();
+
+		static std::filesystem::path GetScriptModulePath();
+		static std::filesystem::path GetScriptModuleFilePath();
 
 		static Ref<EditorAssetManager> GetActiveAssetManager();
 		static Ref<RuntimeAssetManager> GetRuntimeAssetManager();

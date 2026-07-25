@@ -1,0 +1,14 @@
+--- a/Coral.Native/Source/Coral/HostInstance.cpp
++++ b/Coral.Native/Source/Coral/HostInstance.cpp
+@@ -371,7 +371,11 @@
+ 
+ 		int status = s_CoreCLRFunctions.GetManagedFunctionPtr(InAssemblyPath.c_str(), InTypeName, InMethodName, InDelegateType, nullptr, &funcPtr);
+ 		if(status != StatusCode::Success || !funcPtr) {
++#ifdef CORAL_WINDOWS
++			std::wcerr << L"Failed to retrieve managed function pointer `" << InTypeName << L"`::`" << InMethodName << L"` from `" << InAssemblyPath.c_str() << L"`" << std::endl;
++#else
+ 			std::cerr << "Failed to retrieve managed function pointer `" << InTypeName << "`::`" << InMethodName << "` from `" << InAssemblyPath << "`" << std::endl;
++#endif
+ 			CORAL_VERIFY(false);
+ 		}
+ 

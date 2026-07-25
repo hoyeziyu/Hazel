@@ -31,7 +31,7 @@
 |------|------------------|------|------|------|
 | M13 | Box2D / Physics2D | Sandbox2D、LD50 Physics2D 场景 | ✅ | [module-13-physics2d.md](./module-13-physics2d.md) |
 | M14 | Jolt 3D 物理（可选） | Fragile、Forest 射击/碰撞 |
-| M15 | C# Script（Coral） | **工作量大**；需 .NET 8 + ScriptCore |
+| M15 | C# Script（Coral） | .NET 9 + ScriptCore + Sample.dll | ✅ | [module-15-csharp-scripting.md](./module-15-csharp-scripting.md) |
 | M16 | NativeScript 增强 | 无 C# 时的 C++ 脚本替代 | ✅ | [module-16-nativescript.md](./module-16-nativescript.md) |
 
 ---
@@ -66,7 +66,7 @@
 | 渲染 API | Vulkan 延迟管线 | OpenGL 前向 |
 | 构建 | Premake5 | CMake + vcpkg |
 | C++ | C++20 | C++17 |
-| 脚本 | C# / Coral | 暂无（计划 M15） |
+| 脚本 | C# / Coral | C# / Coral（M15 精简版） |
 
 ---
 

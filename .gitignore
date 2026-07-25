@@ -14,7 +14,12 @@ Sandbox/assets/test_assets
 compile_flags.txt
 compile_commands.json
 
-# Files
+# C# / dotnet build artifacts
+Hazel-ScriptCore/obj/
+Hazelnut/SampleProject/assets/Scripts/Binaries/
+Hazelnut/SampleProject/assets/Scripts/Intermediates/
+Hazelnut/SampleProject/assets/Scripts/obj/
+build/dotnet/
 *.user
 Sandbox/assets/textures/text*.jpg
 Sandbox/assets/textures/text*.png

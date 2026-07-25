@@ -3,6 +3,7 @@
 
 #include "Entity.h"
 #include "Components.h"
+#include "Hazel/Script/ScriptEngine.h"
 
 #include <fstream>
 
@@ -303,6 +304,21 @@ namespace Hazel {
 			out << YAML::EndMap;
 		}
 
+		if (entity.HasComponent<ScriptComponent>())
+		{
+			out << YAML::Key << "ScriptComponent";
+			out << YAML::BeginMap;
+
+			const auto& sc = entity.GetComponent<ScriptComponent>();
+			out << YAML::Key << "ScriptID" << YAML::Value << (uint64_t)sc.ScriptID;
+
+			const auto* metadata = ScriptEngine::GetInstance().GetScriptMetadata(sc.ScriptID);
+			if (metadata)
+				out << YAML::Key << "ScriptName" << YAML::Value << metadata->FullName;
+
+			out << YAML::EndMap;
+		}
+
 		out << YAML::EndMap;
 	}
 
@@ -422,6 +438,23 @@ namespace Hazel {
 				auto& script = deserializedEntity.AddComponent<NativeScriptComponent>();
 				if (nativeScriptComponent["ClassName"])
 					script.ClassName = nativeScriptComponent["ClassName"].as<std::string>();
+			}
+
+			auto scriptComponent = entity["ScriptComponent"];
+			if (scriptComponent)
+			{
+				uint64_t scriptID = scriptComponent["ScriptID"].as<uint64_t>(0);
+				const auto& scriptEngine = ScriptEngine::GetInstance();
+
+				if (scriptID != 0 && scriptEngine.IsValidScript(scriptID))
+				{
+					auto& sc = deserializedEntity.AddComponent<ScriptComponent>();
+					sc.ScriptID = scriptID;
+				}
+				else if (scriptID != 0)
+				{
+					HZ_CORE_WARN("[Scripting] Skipping unknown script id {} on entity {}", scriptID, uuid);
+				}
 			}
 		}
 	}
