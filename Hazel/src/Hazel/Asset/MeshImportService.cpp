@@ -69,6 +69,8 @@ namespace Hazel {
 		if (!meshSource)
 			return 0;
 
+		meshSource->SetSourceModelPath(std::filesystem::relative(fullSourcePath, project->GetAssetDirectory()).generic_string());
+
 		const auto outputPath = GetDefaultOutputPath(fullSourcePath);
 		std::filesystem::create_directories(outputPath.parent_path(), ec);
 

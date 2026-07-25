@@ -93,7 +93,7 @@ namespace Hazel {
 		const ma_result result = ma_sound_init_from_file(
 			(ma_engine*)m_Engine,
 			filepath.string().c_str(),
-			MA_SOUND_FLAG_NONE,
+			0,
 			nullptr,
 			nullptr,
 			&instance->Sound);

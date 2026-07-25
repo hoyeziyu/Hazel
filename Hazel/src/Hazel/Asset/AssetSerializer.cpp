@@ -5,6 +5,9 @@
 #include "MeshSource.h"
 #include "StaticMesh.h"
 #include "MaterialAsset.h"
+#include "SkeletonAsset.h"
+#include "AnimationAsset.h"
+#include "AnimationControllerAsset.h"
 #include "Hazel/Project/Project.h"
 #include "Hazel/Asset/AssetManager.h"
 #include "Hazel/Scene/Prefab.h"
@@ -390,6 +393,8 @@ namespace Hazel {
 			}
 			out << YAML::EndSeq;
 		}
+		if (!meshSource->GetSourceModelPath().empty())
+			out << YAML::Key << "SourceModel" << YAML::Value << meshSource->GetSourceModelPath();
 		out << YAML::EndMap;
 		out << YAML::EndMap;
 		return std::string(out.c_str());
@@ -428,6 +433,9 @@ namespace Hazel {
 		}
 
 		target = CreateRef<MeshSource>(positions, indices, texCoords, normals);
+		if (rootNode["SourceModel"])
+			target->SetSourceModelPath(rootNode["SourceModel"].as<std::string>());
+		target->EnsureRigDataFromSource();
 		return true;
 	}
 
@@ -604,6 +612,254 @@ namespace Hazel {
 		AssetHandle meshSource = rootNode["MeshSource"].as<uint64_t>();
 		target = StaticMesh::Create(meshSource);
 		return true;
+	}
+
+	void SkeletonAssetSerializer::Serialize(const AssetMetadata& metadata, const Ref<Asset>& asset) const
+	{
+		Ref<SkeletonAsset> skeletonAsset = std::dynamic_pointer_cast<SkeletonAsset>(asset);
+		if (!skeletonAsset)
+			return;
+
+		YAML::Emitter out;
+		out << YAML::BeginMap;
+		out << YAML::Key << "Skeleton";
+		out << YAML::BeginMap;
+		out << YAML::Key << "MeshSource" << YAML::Value << (uint64_t)skeletonAsset->GetMeshSource();
+		out << YAML::EndMap;
+		out << YAML::EndMap;
+
+		std::ofstream fout(Project::GetActiveAssetManager()->GetFileSystemPath(metadata));
+		fout << out.c_str();
+	}
+
+	bool SkeletonAssetSerializer::TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const
+	{
+		std::ifstream stream(Project::GetActiveAssetManager()->GetFileSystemPath(metadata));
+		if (!stream.is_open())
+			return false;
+
+		YAML::Node data = YAML::Load(stream);
+		if (!data["Skeleton"] || !data["Skeleton"]["MeshSource"])
+			return false;
+
+		auto skeletonAsset = CreateRef<SkeletonAsset>(data["Skeleton"]["MeshSource"].as<uint64_t>());
+		asset = skeletonAsset;
+		asset->Handle = metadata.Handle;
+		return true;
+	}
+
+	bool SkeletonAssetSerializer::SerializeToAssetPack(AssetHandle handle, FileStreamWriter& stream, AssetSerializationInfo& outInfo) const
+	{
+		const auto& metadata = Project::GetActiveAssetManager()->GetMetadata(handle);
+		std::ifstream in(Project::GetActiveAssetManager()->GetFileSystemPath(metadata));
+		if (!in)
+			return false;
+		std::stringstream buffer;
+		buffer << in.rdbuf();
+		outInfo.Offset = stream.GetStreamPosition();
+		stream.WriteString(buffer.str());
+		outInfo.Size = stream.GetStreamPosition() - outInfo.Offset;
+		return true;
+	}
+
+	Ref<Asset> SkeletonAssetSerializer::DeserializeFromAssetPack(FileStreamReader& stream, const AssetPackFile::AssetInfo& assetInfo) const
+	{
+		stream.SetStreamPosition(assetInfo.PackedOffset);
+		std::string yamlString;
+		stream.ReadString(yamlString);
+		YAML::Node data = YAML::Load(yamlString);
+		if (!data["Skeleton"] || !data["Skeleton"]["MeshSource"])
+			return nullptr;
+		return CreateRef<SkeletonAsset>(data["Skeleton"]["MeshSource"].as<uint64_t>());
+	}
+
+	void AnimationAssetSerializer::Serialize(const AssetMetadata& metadata, const Ref<Asset>& asset) const
+	{
+		Ref<AnimationAsset> animationAsset = std::dynamic_pointer_cast<AnimationAsset>(asset);
+		if (!animationAsset)
+			return;
+
+		YAML::Emitter out;
+		out << YAML::BeginMap;
+		out << YAML::Key << "Animation";
+		out << YAML::BeginMap;
+		out << YAML::Key << "AnimationSource" << YAML::Value << (uint64_t)animationAsset->GetAnimationSource();
+		out << YAML::Key << "SkeletonSource" << YAML::Value << (uint64_t)animationAsset->GetSkeletonSource();
+		out << YAML::Key << "AnimationIndex" << YAML::Value << animationAsset->GetAnimationIndex();
+		if (!animationAsset->GetAnimationName().empty())
+			out << YAML::Key << "AnimationName" << YAML::Value << animationAsset->GetAnimationName();
+		out << YAML::EndMap;
+		out << YAML::EndMap;
+
+		std::ofstream fout(Project::GetActiveAssetManager()->GetFileSystemPath(metadata));
+		fout << out.c_str();
+	}
+
+	bool AnimationAssetSerializer::TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const
+	{
+		std::ifstream stream(Project::GetActiveAssetManager()->GetFileSystemPath(metadata));
+		if (!stream.is_open())
+			return false;
+
+		YAML::Node data = YAML::Load(stream);
+		if (!data["Animation"])
+			return false;
+
+		YAML::Node root = data["Animation"];
+		auto animationAsset = CreateRef<AnimationAsset>(
+			root["AnimationSource"].as<uint64_t>(),
+			root["SkeletonSource"].as<uint64_t>(root["AnimationSource"].as<uint64_t>()),
+			root["AnimationIndex"].as<uint32_t>(0),
+			root["AnimationName"] ? root["AnimationName"].as<std::string>() : std::string{});
+
+		asset = animationAsset;
+		asset->Handle = metadata.Handle;
+		return true;
+	}
+
+	bool AnimationAssetSerializer::SerializeToAssetPack(AssetHandle handle, FileStreamWriter& stream, AssetSerializationInfo& outInfo) const
+	{
+		const auto& metadata = Project::GetActiveAssetManager()->GetMetadata(handle);
+		std::ifstream in(Project::GetActiveAssetManager()->GetFileSystemPath(metadata));
+		if (!in)
+			return false;
+		std::stringstream buffer;
+		buffer << in.rdbuf();
+		outInfo.Offset = stream.GetStreamPosition();
+		stream.WriteString(buffer.str());
+		outInfo.Size = stream.GetStreamPosition() - outInfo.Offset;
+		return true;
+	}
+
+	Ref<Asset> AnimationAssetSerializer::DeserializeFromAssetPack(FileStreamReader& stream, const AssetPackFile::AssetInfo& assetInfo) const
+	{
+		stream.SetStreamPosition(assetInfo.PackedOffset);
+		std::string yamlString;
+		stream.ReadString(yamlString);
+		YAML::Node data = YAML::Load(yamlString);
+		if (!data["Animation"])
+			return nullptr;
+		YAML::Node root = data["Animation"];
+		return CreateRef<AnimationAsset>(
+			root["AnimationSource"].as<uint64_t>(),
+			root["SkeletonSource"].as<uint64_t>(root["AnimationSource"].as<uint64_t>()),
+			root["AnimationIndex"].as<uint32_t>(0),
+			root["AnimationName"] ? root["AnimationName"].as<std::string>() : std::string{});
+	}
+
+	void AnimationControllerAssetSerializer::Serialize(const AssetMetadata& metadata, const Ref<Asset>& asset) const
+	{
+		Ref<AnimationControllerAsset> controller = std::dynamic_pointer_cast<AnimationControllerAsset>(asset);
+		if (!controller)
+			return;
+
+		YAML::Emitter out;
+		out << YAML::BeginMap;
+		out << YAML::Key << "AnimationController";
+		out << YAML::BeginMap;
+		out << YAML::Key << "SkeletonAsset" << YAML::Value << (uint64_t)controller->GetSkeletonAsset();
+		out << YAML::Key << "States" << YAML::Value << YAML::BeginSeq;
+		for (const auto& state : controller->GetStates())
+		{
+			out << YAML::BeginMap;
+			out << YAML::Key << "Name" << YAML::Value << state.Name;
+			out << YAML::Key << "AnimationAsset" << YAML::Value << (uint64_t)state.AnimationAsset;
+			out << YAML::Key << "AnimationIndex" << YAML::Value << state.AnimationIndex;
+			out << YAML::Key << "Loop" << YAML::Value << state.Loop;
+			out << YAML::Key << "RootTranslationMask" << YAML::Value << YAML::Flow << YAML::BeginSeq
+				<< state.RootTranslationMask.x << state.RootTranslationMask.y << state.RootTranslationMask.z << YAML::EndSeq;
+			out << YAML::Key << "RootRotationMask" << YAML::Value << state.RootRotationMask;
+			out << YAML::EndMap;
+		}
+		out << YAML::EndSeq;
+		out << YAML::EndMap;
+		out << YAML::EndMap;
+
+		std::ofstream fout(Project::GetActiveAssetManager()->GetFileSystemPath(metadata));
+		fout << out.c_str();
+	}
+
+	bool AnimationControllerAssetSerializer::TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const
+	{
+		std::ifstream stream(Project::GetActiveAssetManager()->GetFileSystemPath(metadata));
+		if (!stream.is_open())
+			return false;
+
+		YAML::Node data = YAML::Load(stream);
+		if (!data["AnimationController"])
+			return false;
+
+		auto controller = CreateRef<AnimationControllerAsset>();
+		YAML::Node root = data["AnimationController"];
+		controller->SetSkeletonAsset(root["SkeletonAsset"].as<uint64_t>());
+
+		if (root["States"])
+		{
+			for (const auto& stateNode : root["States"])
+			{
+				AnimationControllerState state;
+				if (stateNode["Name"])
+					state.Name = stateNode["Name"].as<std::string>();
+				if (stateNode["AnimationAsset"])
+					state.AnimationAsset = stateNode["AnimationAsset"].as<uint64_t>();
+				if (stateNode["AnimationIndex"])
+					state.AnimationIndex = stateNode["AnimationIndex"].as<uint32_t>();
+				if (stateNode["Loop"])
+					state.Loop = stateNode["Loop"].as<bool>();
+				if (stateNode["RootTranslationMask"])
+					state.RootTranslationMask = stateNode["RootTranslationMask"].as<glm::vec3>();
+				if (stateNode["RootRotationMask"])
+					state.RootRotationMask = stateNode["RootRotationMask"].as<float>();
+				controller->GetStates().push_back(state);
+			}
+		}
+
+		asset = controller;
+		asset->Handle = metadata.Handle;
+		return true;
+	}
+
+	bool AnimationControllerAssetSerializer::SerializeToAssetPack(AssetHandle handle, FileStreamWriter& stream, AssetSerializationInfo& outInfo) const
+	{
+		const auto& metadata = Project::GetActiveAssetManager()->GetMetadata(handle);
+		std::ifstream in(Project::GetActiveAssetManager()->GetFileSystemPath(metadata));
+		if (!in)
+			return false;
+		std::stringstream buffer;
+		buffer << in.rdbuf();
+		outInfo.Offset = stream.GetStreamPosition();
+		stream.WriteString(buffer.str());
+		outInfo.Size = stream.GetStreamPosition() - outInfo.Offset;
+		return true;
+	}
+
+	Ref<Asset> AnimationControllerAssetSerializer::DeserializeFromAssetPack(FileStreamReader& stream, const AssetPackFile::AssetInfo& assetInfo) const
+	{
+		stream.SetStreamPosition(assetInfo.PackedOffset);
+		std::string yamlString;
+		stream.ReadString(yamlString);
+		YAML::Node data = YAML::Load(yamlString);
+		if (!data["AnimationController"])
+			return nullptr;
+
+		auto controller = CreateRef<AnimationControllerAsset>();
+		YAML::Node root = data["AnimationController"];
+		controller->SetSkeletonAsset(root["SkeletonAsset"].as<uint64_t>());
+		if (root["States"])
+		{
+			for (const auto& stateNode : root["States"])
+			{
+				AnimationControllerState state;
+				if (stateNode["AnimationAsset"])
+					state.AnimationAsset = stateNode["AnimationAsset"].as<uint64_t>();
+				if (stateNode["AnimationIndex"])
+					state.AnimationIndex = stateNode["AnimationIndex"].as<uint32_t>();
+				if (stateNode["Loop"])
+					state.Loop = stateNode["Loop"].as<bool>();
+				controller->GetStates().push_back(state);
+			}
+		}
+		return controller;
 	}
 
 }

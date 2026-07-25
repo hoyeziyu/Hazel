@@ -21,6 +21,9 @@ namespace Hazel {
 			{ ".jpeg",  AssetType::Texture },
 			{ ".ttf",   AssetType::Font },
 			{ ".glsl",  AssetType::Shader },
+			{ ".hskel", AssetType::Skeleton },
+			{ ".hanim", AssetType::Animation },
+			{ ".hanimc", AssetType::AnimationController },
 		};
 
 		std::string ext = extension;

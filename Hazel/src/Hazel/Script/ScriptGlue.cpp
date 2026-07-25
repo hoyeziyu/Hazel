@@ -300,6 +300,54 @@ namespace Hazel {
 
 			Physics2DScene::ApplyLinearImpulse(entity.GetComponent<RigidBody2DComponent>(), *impulse);
 		}
+
+		uint32_t AnimationComponent_GetStateIndex(uint64_t entityID)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<AnimationComponent>())
+				return 0;
+			return entity.GetComponent<AnimationComponent>().StateIndex;
+		}
+
+		void AnimationComponent_SetStateIndex(uint64_t entityID, uint32_t stateIndex)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<AnimationComponent>())
+				return;
+			entity.GetComponent<AnimationComponent>().StateIndex = stateIndex;
+		}
+
+		float AnimationComponent_GetAnimationTime(uint64_t entityID)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<AnimationComponent>())
+				return 0.0f;
+			return entity.GetComponent<AnimationComponent>().AnimationTime;
+		}
+
+		void AnimationComponent_SetAnimationTime(uint64_t entityID, float animationTime)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<AnimationComponent>())
+				return;
+			entity.GetComponent<AnimationComponent>().AnimationTime = animationTime;
+		}
+
+		bool AnimationComponent_GetIsAnimationPlaying(uint64_t entityID)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<AnimationComponent>())
+				return false;
+			return entity.GetComponent<AnimationComponent>().IsAnimationPlaying;
+		}
+
+		void AnimationComponent_SetIsAnimationPlaying(uint64_t entityID, bool isPlaying)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<AnimationComponent>())
+				return;
+			entity.GetComponent<AnimationComponent>().IsAnimationPlaying = isPlaying;
+		}
 	}
 
 	void ScriptGlue::RegisterGlue(Coral::ManagedAssembly& coreAssembly)
@@ -328,6 +376,12 @@ namespace Hazel {
 		HZ_ADD_INTERNAL_CALL(Input_IsMouseButtonPressed);
 		HZ_ADD_INTERNAL_CALL(Input_GetMousePosition);
 		HZ_ADD_INTERNAL_CALL(Log_LogMessage);
+		HZ_ADD_INTERNAL_CALL(AnimationComponent_GetStateIndex);
+		HZ_ADD_INTERNAL_CALL(AnimationComponent_SetStateIndex);
+		HZ_ADD_INTERNAL_CALL(AnimationComponent_GetAnimationTime);
+		HZ_ADD_INTERNAL_CALL(AnimationComponent_SetAnimationTime);
+		HZ_ADD_INTERNAL_CALL(AnimationComponent_GetIsAnimationPlaying);
+		HZ_ADD_INTERNAL_CALL(AnimationComponent_SetIsAnimationPlaying);
 		coreAssembly.UploadInternalCalls();
 	}
 

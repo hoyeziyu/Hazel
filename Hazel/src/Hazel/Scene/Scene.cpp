@@ -17,6 +17,7 @@
 #include "Hazel/Script/NativeScriptRegistry.h"
 #include "Hazel/Script/ScriptEngine.h"
 #include "Hazel/Audio/AudioEngine.h"
+#include "Hazel/Animation/AnimationSystem.h"
 #include "Hazel/Project/Project.h"
 #include "Entity.h"
 
@@ -226,6 +227,41 @@ namespace Hazel {
 			renderer.SubmitMesh(vertexArray, transform.GetTransform(), materialData);
 		}
 
+		auto skinnedView = m_Registry.view<TransformComponent, SkinnedMeshComponent>();
+		for (auto entity : skinnedView)
+		{
+			auto [transform, mesh] = skinnedView.get<TransformComponent, SkinnedMeshComponent>(entity);
+			if (!mesh.Visible || !mesh.StaticMesh || !AssetManager::IsAssetHandleValid(mesh.StaticMesh))
+				continue;
+
+			auto staticMesh = AssetManager::GetAsset<StaticMesh>(mesh.StaticMesh);
+			if (!staticMesh)
+				continue;
+
+			auto meshSource = AssetManager::GetAsset<MeshSource>(staticMesh->GetMeshSource());
+			if (!meshSource || !meshSource->IsRigged())
+				continue;
+
+			const Ref<VertexArray>& vertexArray = meshSource->GetSkinnedVertexArray();
+			if (!vertexArray)
+				continue;
+
+			MeshMaterialData materialData;
+			materialData.ColorTint = mesh.Color;
+			materialData.AlbedoColor = glm::vec3(1.0f);
+			if (mesh.Material && AssetManager::IsAssetHandleValid(mesh.Material))
+			{
+				if (auto materialAsset = AssetManager::GetAsset<MaterialAsset>(mesh.Material))
+				{
+					materialData.AlbedoColor = materialAsset->AlbedoColor;
+					materialData.AlbedoTexture = materialAsset->GetAlbedoTexture();
+				}
+			}
+
+			std::vector<glm::mat4> boneMatrices = AnimationSystem::ComputeSkinnedBoneMatrices(*this, *meshSource, mesh.BoneEntities);
+			renderer.SubmitSkinnedMesh(vertexArray, transform.GetTransform(), materialData, boneMatrices);
+		}
+
 		auto legacyView = m_Registry.view<TransformComponent, MeshRendererComponent>();
 		for (auto entity : legacyView)
 		{
@@ -314,6 +350,7 @@ namespace Hazel {
 	void Scene::OnUpdateRuntime(Timestep ts)
 	{
 		Physics2DScene::Step(*this, ts);
+		AnimationSystem::Update(*this, ts);
 
 		// Native scripts
 		{
@@ -475,6 +512,8 @@ namespace Hazel {
 		CopyComponent<RigidBody2DComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<BoxCollider2DComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<AudioComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<AnimationComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<SkinnedMeshComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<PrefabComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<NativeScriptComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<ScriptComponent>(target->m_Registry, m_Registry, enttMap);
@@ -603,6 +642,8 @@ namespace Hazel {
 		CopyComponentIfExists<BoxCollider2DComponent>(newEntity, entity);
 		CopyComponentIfExists<CameraComponent>(newEntity, entity);
 		CopyComponentIfExists<AudioComponent>(newEntity, entity);
+		CopyComponentIfExists<AnimationComponent>(newEntity, entity);
+		CopyComponentIfExists<SkinnedMeshComponent>(newEntity, entity);
 		CopyComponentIfExists<NativeScriptComponent>(newEntity, entity);
 
 		if (entity.HasComponent<ScriptComponent>())
@@ -714,6 +755,16 @@ namespace Hazel {
 	}
 	template<>
 	void Scene::OnComponentAdded<AudioComponent>(Entity, AudioComponent&)
+	{
+	}
+
+	template<>
+	void Scene::OnComponentAdded<AnimationComponent>(Entity, AnimationComponent&)
+	{
+	}
+
+	template<>
+	void Scene::OnComponentAdded<SkinnedMeshComponent>(Entity, SkinnedMeshComponent&)
 	{
 	}
 

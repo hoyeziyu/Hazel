@@ -19,6 +19,9 @@ namespace Hazel {
 		Scope<MeshSourceSerializer> s_MeshSourceSerializer;
 		Scope<StaticMeshSerializer> s_StaticMeshSerializer;
 		Scope<MaterialAssetSerializer> s_MaterialAssetSerializer;
+		Scope<SkeletonAssetSerializer> s_SkeletonAssetSerializer;
+		Scope<AnimationAssetSerializer> s_AnimationAssetSerializer;
+		Scope<AnimationControllerAssetSerializer> s_AnimationControllerAssetSerializer;
 
 	}
 
@@ -32,6 +35,9 @@ namespace Hazel {
 			s_MeshSourceSerializer = CreateScope<MeshSourceSerializer>();
 			s_StaticMeshSerializer = CreateScope<StaticMeshSerializer>();
 			s_MaterialAssetSerializer = CreateScope<MaterialAssetSerializer>();
+			s_SkeletonAssetSerializer = CreateScope<SkeletonAssetSerializer>();
+			s_AnimationAssetSerializer = CreateScope<AnimationAssetSerializer>();
+			s_AnimationControllerAssetSerializer = CreateScope<AnimationControllerAssetSerializer>();
 		}
 	}
 
@@ -46,6 +52,9 @@ namespace Hazel {
 		case AssetType::MeshSource: return s_MeshSourceSerializer.get();
 		case AssetType::StaticMesh: return s_StaticMeshSerializer.get();
 		case AssetType::Material: return s_MaterialAssetSerializer.get();
+		case AssetType::Skeleton: return s_SkeletonAssetSerializer.get();
+		case AssetType::Animation: return s_AnimationAssetSerializer.get();
+		case AssetType::AnimationController: return s_AnimationControllerAssetSerializer.get();
 		default: return nullptr;
 		}
 	}

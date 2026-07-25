@@ -2,6 +2,7 @@
 #include "SceneRenderer.h"
 
 #include "Hazel/Asset/MeshSource.h"
+#include "Hazel/Animation/AnimationClip.h"
 #include "Hazel/Editor/EditorCamera.h"
 #include "Hazel/Renderer/Buffer.h"
 #include "Hazel/Renderer/RenderCommand.h"
@@ -78,6 +79,7 @@ namespace Hazel {
 	void SceneRenderer::Init()
 	{
 		m_MeshShader = Shader::Create("assets/shaders/Mesh.glsl");
+		m_SkinnedMeshShader = Shader::Create("assets/shaders/SkinnedMesh.glsl");
 		m_GridShader = Shader::Create("assets/shaders/Grid.glsl");
 
 		m_WhiteTexture = Texture2D::Create(1, 1);
@@ -169,6 +171,43 @@ namespace Hazel {
 		else
 			m_WhiteTexture->Bind(0);
 		m_MeshShader->SetInt("u_AlbedoTexture", 0);
+
+		vertexArray->Bind();
+		RenderCommand::DrawIndexed(vertexArray);
+
+		m_Stats.DrawCalls++;
+		if (vertexArray->GetIndexBuffer())
+			m_Stats.TriangleCount += vertexArray->GetIndexBuffer()->GetCount() / 3;
+	}
+
+	void SceneRenderer::SubmitSkinnedMesh(const Ref<VertexArray>& vertexArray, const glm::mat4& transform, const MeshMaterialData& material, const std::vector<glm::mat4>& boneMatrices)
+	{
+		if (!vertexArray || boneMatrices.empty())
+			return;
+
+		const uint32_t boneCount = glm::min((uint32_t)boneMatrices.size(), AnimationClip::MaxBones);
+
+		m_SkinnedMeshShader->Bind();
+		m_SkinnedMeshShader->SetMat4("u_ViewProjection", m_ViewProjection);
+		m_SkinnedMeshShader->SetMat4("u_Transform", transform);
+		m_SkinnedMeshShader->SetFloat4("u_Color", material.ColorTint);
+		m_SkinnedMeshShader->SetFloat3("u_AlbedoColor", material.AlbedoColor);
+		m_SkinnedMeshShader->SetInt("u_BoneCount", (int)boneCount);
+		m_SkinnedMeshShader->SetMat4Array("u_BoneTransforms", boneMatrices.data(), boneCount);
+
+		m_SkinnedMeshShader->SetFloat3("u_CameraPosition", m_Environment.CameraPosition);
+		m_SkinnedMeshShader->SetFloat3("u_LightDirection", m_Environment.LightDirection);
+		m_SkinnedMeshShader->SetFloat3("u_LightRadiance", m_Environment.LightRadiance);
+		m_SkinnedMeshShader->SetFloat("u_LightIntensity", m_Environment.LightIntensity);
+		m_SkinnedMeshShader->SetInt("u_HasDirectionalLight", m_Environment.HasDirectionalLight ? 1 : 0);
+
+		const bool useAlbedoMap = material.AlbedoTexture != nullptr;
+		m_SkinnedMeshShader->SetInt("u_UseAlbedoMap", useAlbedoMap ? 1 : 0);
+		if (useAlbedoMap)
+			material.AlbedoTexture->Bind(0);
+		else
+			m_WhiteTexture->Bind(0);
+		m_SkinnedMeshShader->SetInt("u_AlbedoTexture", 0);
 
 		vertexArray->Bind();
 		RenderCommand::DrawIndexed(vertexArray);

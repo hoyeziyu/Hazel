@@ -15,6 +15,9 @@ namespace Hazel {
 		Material,
 		Font,
 		Shader,
+		Skeleton,
+		Animation,
+		AnimationController,
 	};
 
 	inline std::string_view AssetTypeToString(AssetType type)
@@ -29,6 +32,9 @@ namespace Hazel {
 		case AssetType::Material: return "Material";
 		case AssetType::Font:    return "Font";
 		case AssetType::Shader:  return "Shader";
+		case AssetType::Skeleton: return "Skeleton";
+		case AssetType::Animation: return "Animation";
+		case AssetType::AnimationController: return "AnimationController";
 		default:                 return "None";
 		}
 	}
@@ -43,6 +49,9 @@ namespace Hazel {
 		if (type == "Material") return AssetType::Material;
 		if (type == "Font")    return AssetType::Font;
 		if (type == "Shader")  return AssetType::Shader;
+		if (type == "Skeleton") return AssetType::Skeleton;
+		if (type == "Animation") return AssetType::Animation;
+		if (type == "AnimationController") return AssetType::AnimationController;
 		return AssetType::None;
 	}
 

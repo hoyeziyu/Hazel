@@ -182,4 +182,32 @@ namespace Hazel {
 		AudioComponent() = default;
 		AudioComponent(const AudioComponent& other) = default;
 	};
+
+	struct AnimationComponent
+	{
+		AssetHandle AnimationController = 0;
+		std::vector<UUID> BoneEntities;
+		bool EnableAnimation = true;
+		float PlaybackSpeed = 1.0f;
+		uint32_t StateIndex = 0;
+		float AnimationTime = 0.0f;
+		bool IsAnimationPlaying = false;
+		bool EnableRootMotion = false;
+		AssetHandle RootMotionTarget = 0;
+
+		AnimationComponent() = default;
+		AnimationComponent(const AnimationComponent& other) = default;
+	};
+
+	struct SkinnedMeshComponent
+	{
+		AssetHandle StaticMesh = 0;
+		AssetHandle Material = 0;
+		glm::vec4 Color{ 0.8f, 0.3f, 0.2f, 1.0f };
+		bool Visible = true;
+		std::vector<UUID> BoneEntities;
+
+		SkinnedMeshComponent() = default;
+		SkinnedMeshComponent(const SkinnedMeshComponent& other) = default;
+	};
 }

@@ -239,6 +239,11 @@ namespace Hazel {
 		UploadUniformMat4(name, value);
 	}
 
+	void OpenGLShader::SetMat4Array(const std::string& name, const glm::mat4* values, uint32_t count)
+	{
+		UploadUniformMat4Array(name, values, count);
+	}
+
 	void OpenGLShader::UploadUniformInt(const std::string& name, int value)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
@@ -285,6 +290,12 @@ namespace Hazel {
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+	}
+
+	void OpenGLShader::UploadUniformMat4Array(const std::string& name, const glm::mat4* matrices, uint32_t count)
+	{
+		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		glUniformMatrix4fv(location, count, GL_FALSE, glm::value_ptr(matrices[0]));
 	}
 
 }

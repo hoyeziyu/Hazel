@@ -36,6 +36,13 @@ namespace Hazel
 
 		internal static delegate* unmanaged<Log.LogLevel, NativeString, void> Log_LogMessage;
 
+		internal static delegate* unmanaged<ulong, uint> AnimationComponent_GetStateIndex;
+		internal static delegate* unmanaged<ulong, uint, void> AnimationComponent_SetStateIndex;
+		internal static delegate* unmanaged<ulong, float> AnimationComponent_GetAnimationTime;
+		internal static delegate* unmanaged<ulong, float, void> AnimationComponent_SetAnimationTime;
+		internal static delegate* unmanaged<ulong, bool> AnimationComponent_GetIsAnimationPlaying;
+		internal static delegate* unmanaged<ulong, bool, void> AnimationComponent_SetIsAnimationPlaying;
+
 #pragma warning restore CS0649
 	}
 }

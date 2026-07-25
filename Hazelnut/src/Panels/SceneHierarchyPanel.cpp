@@ -347,6 +347,20 @@ namespace Hazel {
 				ImGui::CloseCurrentPopup();
 			}
 
+			if (ImGui::MenuItem("Animation"))
+			{
+				if (!m_SelectionContext.HasComponent<AnimationComponent>())
+					m_SelectionContext.AddComponent<AnimationComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
+			if (ImGui::MenuItem("Skinned Mesh"))
+			{
+				if (!m_SelectionContext.HasComponent<SkinnedMeshComponent>())
+					m_SelectionContext.AddComponent<SkinnedMeshComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
 			if (ImGui::MenuItem("Native Script"))
 			{
 				if (!m_SelectionContext.HasComponent<NativeScriptComponent>())
@@ -550,6 +564,24 @@ namespace Hazel {
 			ImGui::DragFloat("Volume", &component.Volume, 0.01f, 0.0f, 1.0f);
 			ImGui::Checkbox("Play On Awake", &component.PlayOnAwake);
 			ImGui::Checkbox("Loop", &component.Loop);
+			});
+
+		DrawComponent<AnimationComponent>("Animation", entity, [](auto& component) {
+			ImGui::DragScalar("Controller", ImGuiDataType_U64, &component.AnimationController, 1.0f, nullptr, nullptr, "%llu");
+			ImGui::Checkbox("Enable Animation", &component.EnableAnimation);
+			ImGui::DragFloat("Playback Speed", &component.PlaybackSpeed, 0.01f, 0.0f, 10.0f);
+			ImGui::DragScalar("State Index", ImGuiDataType_U32, &component.StateIndex, 0.05f);
+			ImGui::DragFloat("Animation Time", &component.AnimationTime, 0.01f, 0.0f, 1.0f);
+			ImGui::Checkbox("Is Playing", &component.IsAnimationPlaying);
+			ImGui::Text("Bone Entities: %zu", component.BoneEntities.size());
+			});
+
+		DrawComponent<SkinnedMeshComponent>("Skinned Mesh", entity, [](auto& component) {
+			ImGui::DragScalar("Static Mesh", ImGuiDataType_U64, &component.StaticMesh, 1.0f, nullptr, nullptr, "%llu");
+			ImGui::DragScalar("Material", ImGuiDataType_U64, &component.Material, 1.0f, nullptr, nullptr, "%llu");
+			ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
+			ImGui::Checkbox("Visible", &component.Visible);
+			ImGui::Text("Bone Entities: %zu", component.BoneEntities.size());
 			});
 
 		DrawComponent<NativeScriptComponent>("Native Script", entity, [](auto& component) {

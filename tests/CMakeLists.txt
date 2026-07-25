@@ -11,6 +11,7 @@ add_executable(HazelTests
     NativeScriptTests.cpp
     CSharpScriptTests.cpp
     AudioTests.cpp
+    AnimationTests.cpp
 )
 
 target_link_libraries(HazelTests PRIVATE Hazel::Engine GTest::gtest)

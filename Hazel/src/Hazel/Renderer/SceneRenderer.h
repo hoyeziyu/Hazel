@@ -36,6 +36,7 @@ namespace Hazel {
 		void SubmitMesh(const glm::mat4& transform, const glm::vec4& color);
 		void SubmitMesh(const Ref<VertexArray>& vertexArray, const glm::mat4& transform, const glm::vec4& color);
 		void SubmitMesh(const Ref<VertexArray>& vertexArray, const glm::mat4& transform, const MeshMaterialData& material);
+		void SubmitSkinnedMesh(const Ref<VertexArray>& vertexArray, const glm::mat4& transform, const MeshMaterialData& material, const std::vector<glm::mat4>& boneMatrices);
 
 		const Ref<VertexArray>& GetDefaultCubeMesh() const { return m_CubeVertexArray; }
 		const SceneRendererStats& GetStats() const { return m_Stats; }
@@ -48,6 +49,7 @@ namespace Hazel {
 		void ApplyEnvironmentUniforms();
 
 		Ref<Shader> m_MeshShader;
+		Ref<Shader> m_SkinnedMeshShader;
 		Ref<Shader> m_GridShader;
 		Ref<Texture2D> m_WhiteTexture;
 		Ref<VertexArray> m_CubeVertexArray;

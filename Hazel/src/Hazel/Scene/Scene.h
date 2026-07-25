@@ -53,6 +53,9 @@ namespace Hazel {
 		ScriptStorage& GetScriptStorage() { return m_ScriptStorage; }
 		const ScriptStorage& GetScriptStorage() const { return m_ScriptStorage; }
 
+		entt::registry& GetRegistry() { return m_Registry; }
+		const entt::registry& GetRegistry() const { return m_Registry; }
+
 		void OnViewportResize(uint32_t width, uint32_t height);
 		Entity GetPrimaryCameraEntity();
 

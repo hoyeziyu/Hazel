@@ -38,6 +38,27 @@ namespace Hazel
 		}
 	}
 
+	public class AnimationComponent : Component
+	{
+		public uint StateIndex
+		{
+			get { unsafe { return InternalCalls.AnimationComponent_GetStateIndex(Entity.ID); } }
+			set { unsafe { InternalCalls.AnimationComponent_SetStateIndex(Entity.ID, value); } }
+		}
+
+		public float AnimationTime
+		{
+			get { unsafe { return InternalCalls.AnimationComponent_GetAnimationTime(Entity.ID); } }
+			set { unsafe { InternalCalls.AnimationComponent_SetAnimationTime(Entity.ID, value); } }
+		}
+
+		public bool IsAnimationPlaying
+		{
+			get { unsafe { return InternalCalls.AnimationComponent_GetIsAnimationPlaying(Entity.ID); } }
+			set { unsafe { InternalCalls.AnimationComponent_SetIsAnimationPlaying(Entity.ID, value); } }
+		}
+	}
+
 	public abstract class Component
 	{
 		public Entity Entity { get; internal set; } = null!;

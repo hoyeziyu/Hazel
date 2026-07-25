@@ -28,6 +28,7 @@
 | M15 | C# Script（Coral） | ✅ 完成 | [module-15-csharp-scripting.md](./module-15-csharp-scripting.md) |
 | M16 | NativeScript 增强 | ✅ 完成 | [module-16-nativescript.md](./module-16-nativescript.md) |
 | M17 | miniaudio 基础 | ✅ 完成 | [module-17-miniaudio.md](./module-17-miniaudio.md) |
+| M18 | AnimationGraph 缩小版 | ✅ 完成 | [module-18-animation.md](./module-18-animation.md) |
 
 完整路线见 [ROADMAP.md](./ROADMAP.md)。
 

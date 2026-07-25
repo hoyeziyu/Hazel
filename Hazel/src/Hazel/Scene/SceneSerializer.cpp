@@ -308,6 +308,38 @@ namespace Hazel {
 			out << YAML::EndMap;
 		}
 
+		if (entity.HasComponent<AnimationComponent>())
+		{
+			out << YAML::Key << "AnimationComponent";
+			out << YAML::BeginMap;
+
+			const auto& anim = entity.GetComponent<AnimationComponent>();
+			out << YAML::Key << "AnimationController" << YAML::Value << (uint64_t)anim.AnimationController;
+			out << YAML::Key << "BoneEntities" << YAML::Value << anim.BoneEntities;
+			out << YAML::Key << "EnableAnimation" << YAML::Value << anim.EnableAnimation;
+			out << YAML::Key << "PlaybackSpeed" << YAML::Value << anim.PlaybackSpeed;
+			out << YAML::Key << "StateIndex" << YAML::Value << anim.StateIndex;
+			out << YAML::Key << "AnimationTime" << YAML::Value << anim.AnimationTime;
+			out << YAML::Key << "IsAnimationPlaying" << YAML::Value << anim.IsAnimationPlaying;
+
+			out << YAML::EndMap;
+		}
+
+		if (entity.HasComponent<SkinnedMeshComponent>())
+		{
+			out << YAML::Key << "SkinnedMeshComponent";
+			out << YAML::BeginMap;
+
+			const auto& mesh = entity.GetComponent<SkinnedMeshComponent>();
+			out << YAML::Key << "StaticMesh" << YAML::Value << (uint64_t)mesh.StaticMesh;
+			out << YAML::Key << "Material" << YAML::Value << (uint64_t)mesh.Material;
+			out << YAML::Key << "Color" << YAML::Value << mesh.Color;
+			out << YAML::Key << "Visible" << YAML::Value << mesh.Visible;
+			out << YAML::Key << "BoneEntities" << YAML::Value << mesh.BoneEntities;
+
+			out << YAML::EndMap;
+		}
+
 		if (entity.HasComponent<NativeScriptComponent>())
 		{
 			out << YAML::Key << "NativeScriptComponent";
@@ -520,6 +552,48 @@ namespace Hazel {
 				ac.Volume = audioComponent["Volume"].as<float>(1.0f);
 				ac.PlayOnAwake = audioComponent["PlayOnAwake"].as<bool>(true);
 				ac.Loop = audioComponent["Loop"].as<bool>(false);
+			}
+
+			auto animationComponent = entity["AnimationComponent"];
+			if (animationComponent)
+			{
+				auto& anim = deserializedEntity.AddComponent<AnimationComponent>();
+				if (animationComponent["AnimationController"])
+					anim.AnimationController = animationComponent["AnimationController"].as<uint64_t>();
+				if (animationComponent["BoneEntities"])
+				{
+					auto ids = animationComponent["BoneEntities"].as<std::vector<uint64_t>>();
+					anim.BoneEntities.assign(ids.begin(), ids.end());
+				}
+				if (animationComponent["EnableAnimation"])
+					anim.EnableAnimation = animationComponent["EnableAnimation"].as<bool>();
+				if (animationComponent["PlaybackSpeed"])
+					anim.PlaybackSpeed = animationComponent["PlaybackSpeed"].as<float>();
+				if (animationComponent["StateIndex"])
+					anim.StateIndex = animationComponent["StateIndex"].as<uint32_t>();
+				if (animationComponent["AnimationTime"])
+					anim.AnimationTime = animationComponent["AnimationTime"].as<float>();
+				if (animationComponent["IsAnimationPlaying"])
+					anim.IsAnimationPlaying = animationComponent["IsAnimationPlaying"].as<bool>();
+			}
+
+			auto skinnedMeshComponent = entity["SkinnedMeshComponent"];
+			if (skinnedMeshComponent)
+			{
+				auto& mesh = deserializedEntity.AddComponent<SkinnedMeshComponent>();
+				if (skinnedMeshComponent["StaticMesh"])
+					mesh.StaticMesh = skinnedMeshComponent["StaticMesh"].as<uint64_t>();
+				if (skinnedMeshComponent["Material"])
+					mesh.Material = skinnedMeshComponent["Material"].as<uint64_t>();
+				if (skinnedMeshComponent["Color"])
+					mesh.Color = skinnedMeshComponent["Color"].as<glm::vec4>(glm::vec4(0.8f, 0.3f, 0.2f, 1.0f));
+				if (skinnedMeshComponent["Visible"])
+					mesh.Visible = skinnedMeshComponent["Visible"].as<bool>(true);
+				if (skinnedMeshComponent["BoneEntities"])
+				{
+					auto ids = skinnedMeshComponent["BoneEntities"].as<std::vector<uint64_t>>();
+					mesh.BoneEntities.assign(ids.begin(), ids.end());
+				}
 			}
 
 			auto nativeScriptComponent = entity["NativeScriptComponent"];
