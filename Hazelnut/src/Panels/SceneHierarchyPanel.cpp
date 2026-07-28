@@ -556,10 +556,36 @@ namespace Hazel {
 			});
 
 		DrawComponent<AudioComponent>("Audio", entity, [](auto& component) {
+			const char* preview = "None";
+			std::string previewLabel;
+			if (component.SoundConfig && AssetManager::IsAssetHandleValid(component.SoundConfig))
+			{
+				previewLabel = AssetManager::GetMetadata(component.SoundConfig).FilePath.string();
+				preview = previewLabel.c_str();
+			}
+
+			if (ImGui::BeginCombo("Sound Config", preview))
+			{
+				const bool noneSelected = component.SoundConfig == AssetHandle(0);
+				if (ImGui::Selectable("None", noneSelected))
+					component.SoundConfig = 0;
+
+				for (AssetHandle handle : AssetManager::GetAllAssetsWithType(AssetType::SoundConfig))
+				{
+					const auto& metadata = AssetManager::GetMetadata(handle);
+					const std::string label = metadata.FilePath.string();
+					const bool selected = component.SoundConfig == handle;
+					if (ImGui::Selectable(label.c_str(), selected))
+						component.SoundConfig = handle;
+				}
+
+				ImGui::EndCombo();
+			}
+
 			char buffer[256];
 			memset(buffer, 0, sizeof(buffer));
 			strncpy_s(buffer, component.FilePath.c_str(), sizeof(buffer) - 1);
-			if (ImGui::InputText("File Path", buffer, sizeof(buffer)))
+			if (ImGui::InputText("File Path (legacy)", buffer, sizeof(buffer)))
 				component.FilePath = buffer;
 			ImGui::DragFloat("Volume", &component.Volume, 0.01f, 0.0f, 1.0f);
 			ImGui::Checkbox("Play On Awake", &component.PlayOnAwake);

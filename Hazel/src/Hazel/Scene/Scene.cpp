@@ -398,7 +398,16 @@ namespace Hazel {
 		auto project = Project::GetActive();
 
 		m_Registry.view<AudioComponent>().each([&](auto, AudioComponent& ac) {
-			if (!ac.PlayOnAwake || ac.FilePath.empty())
+			if (!ac.PlayOnAwake)
+				return;
+
+			if (ac.SoundConfig)
+			{
+				ac.RuntimeHandle = audioEngine.PlaySoundConfig(ac.SoundConfig);
+				return;
+			}
+
+			if (ac.FilePath.empty())
 				return;
 
 			std::filesystem::path path = ac.FilePath;

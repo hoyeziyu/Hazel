@@ -8,6 +8,8 @@
 #include "SkeletonAsset.h"
 #include "AnimationAsset.h"
 #include "AnimationControllerAsset.h"
+#include "AudioFile.h"
+#include "SoundConfigAsset.h"
 #include "Hazel/Project/Project.h"
 #include "Hazel/Asset/AssetManager.h"
 #include "Hazel/Scene/Prefab.h"
@@ -860,6 +862,153 @@ namespace Hazel {
 			}
 		}
 		return controller;
+	}
+
+	void AudioFileSerializer::Serialize(const AssetMetadata& metadata, const Ref<Asset>& asset) const
+	{
+		(void)metadata;
+		(void)asset;
+	}
+
+	bool AudioFileSerializer::TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const
+	{
+		const auto path = Project::GetActiveAssetManager()->GetFileSystemPath(metadata);
+		std::error_code ec;
+		if (!std::filesystem::exists(path, ec))
+			return false;
+
+		auto audioFile = CreateRef<AudioFile>();
+		audioFile->Handle = metadata.Handle;
+		audioFile->FileSize = std::filesystem::file_size(path, ec);
+		if (ec)
+			return false;
+
+		asset = audioFile;
+		return true;
+	}
+
+	bool AudioFileSerializer::SerializeToAssetPack(AssetHandle handle, FileStreamWriter& stream, AssetSerializationInfo& outInfo) const
+	{
+		const auto& metadata = Project::GetActiveAssetManager()->GetMetadata(handle);
+		Buffer fileData = ReadFileBytes(Project::GetActiveAssetManager()->GetFileSystemPath(metadata));
+
+		outInfo.Offset = stream.GetStreamPosition();
+		stream.WriteBuffer(fileData);
+		outInfo.Size = stream.GetStreamPosition() - outInfo.Offset;
+		fileData.Release();
+		return true;
+	}
+
+	Ref<Asset> AudioFileSerializer::DeserializeFromAssetPack(FileStreamReader& stream, const AssetPackFile::AssetInfo& assetInfo) const
+	{
+		stream.SetStreamPosition(assetInfo.PackedOffset);
+		Buffer buffer;
+		stream.ReadBuffer(buffer, assetInfo.PackedSize);
+
+		auto audioFile = CreateRef<AudioFile>();
+		audioFile->FileSize = buffer.Size;
+		buffer.Release();
+		return audioFile;
+	}
+
+	std::string SoundConfigAssetSerializer::SerializeToYAML(const Ref<SoundConfigAsset>& soundConfig) const
+	{
+		YAML::Emitter out;
+		out << YAML::BeginMap;
+
+		if (soundConfig->DataSourceAsset)
+			out << YAML::Key << "AssetID" << YAML::Value << (uint64_t)soundConfig->DataSourceAsset;
+
+		out << YAML::Key << "IsLooping" << YAML::Value << soundConfig->IsLooping;
+		out << YAML::Key << "VolumeMultiplier" << YAML::Value << soundConfig->VolumeMultiplier;
+		out << YAML::Key << "PitchMultiplier" << YAML::Value << soundConfig->PitchMultiplier;
+
+		out << YAML::EndMap;
+		return std::string(out.c_str());
+	}
+
+	bool SoundConfigAssetSerializer::DeserializeFromYAML(const std::string& yamlString, Ref<SoundConfigAsset>& target) const
+	{
+		YAML::Node data = YAML::Load(yamlString);
+		if (!data.IsMap())
+			return false;
+
+		if (data["AssetID"])
+			target->DataSourceAsset = data["AssetID"].as<uint64_t>();
+
+		if (data["IsLooping"])
+			target->IsLooping = data["IsLooping"].as<bool>();
+		if (data["VolumeMultiplier"])
+			target->VolumeMultiplier = data["VolumeMultiplier"].as<float>();
+		if (data["PitchMultiplier"])
+			target->PitchMultiplier = data["PitchMultiplier"].as<float>();
+
+		return true;
+	}
+
+	void SoundConfigAssetSerializer::Serialize(const AssetMetadata& metadata, const Ref<Asset>& asset) const
+	{
+		Ref<SoundConfigAsset> soundConfig = std::dynamic_pointer_cast<SoundConfigAsset>(asset);
+		if (!soundConfig)
+			return;
+
+		const std::string yamlString = SerializeToYAML(soundConfig);
+		std::ofstream fout(Project::GetActiveAssetManager()->GetFileSystemPath(metadata));
+		fout << yamlString;
+	}
+
+	bool SoundConfigAssetSerializer::TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const
+	{
+		std::ifstream stream(Project::GetActiveAssetManager()->GetFileSystemPath(metadata));
+		if (!stream.is_open())
+			return false;
+
+		std::stringstream strStream;
+		strStream << stream.rdbuf();
+
+		Ref<SoundConfigAsset> soundConfig;
+		if (Project::GetActiveAssetManager()->IsAssetValid(metadata.Handle))
+		{
+			auto existingAsset = Project::GetActiveAssetManager()->GetAsset(metadata.Handle);
+			if (existingAsset && existingAsset->GetAssetType() == AssetType::SoundConfig)
+				soundConfig = std::dynamic_pointer_cast<SoundConfigAsset>(existingAsset);
+		}
+
+		if (!soundConfig)
+			soundConfig = CreateRef<SoundConfigAsset>();
+
+		if (!DeserializeFromYAML(strStream.str(), soundConfig))
+			return false;
+
+		asset = soundConfig;
+		asset->Handle = metadata.Handle;
+		return true;
+	}
+
+	bool SoundConfigAssetSerializer::SerializeToAssetPack(AssetHandle handle, FileStreamWriter& stream, AssetSerializationInfo& outInfo) const
+	{
+		Ref<SoundConfigAsset> soundConfig = AssetManager::GetAsset<SoundConfigAsset>(handle);
+		if (!soundConfig)
+			return false;
+
+		const std::string yamlString = SerializeToYAML(soundConfig);
+		outInfo.Offset = stream.GetStreamPosition();
+		stream.WriteString(yamlString);
+		outInfo.Size = stream.GetStreamPosition() - outInfo.Offset;
+		return true;
+	}
+
+	Ref<Asset> SoundConfigAssetSerializer::DeserializeFromAssetPack(FileStreamReader& stream, const AssetPackFile::AssetInfo& assetInfo) const
+	{
+		stream.SetStreamPosition(assetInfo.PackedOffset);
+		std::string yamlString;
+		stream.ReadString(yamlString);
+
+		auto soundConfig = CreateRef<SoundConfigAsset>();
+		if (!DeserializeFromYAML(yamlString, soundConfig))
+			return nullptr;
+
+		return soundConfig;
 	}
 
 }

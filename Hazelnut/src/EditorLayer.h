@@ -72,6 +72,7 @@ namespace Hazel {
 		void SaveProject();
 		void CloseProject();
 		void BuildAssetPack();
+		void BuildSoundBank();
 		void BuildCSharpScripts();
 		void ReloadCSharp();
 		void SyncScriptStorageAfterReload();

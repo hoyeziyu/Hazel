@@ -136,4 +136,27 @@ namespace Hazel {
 		Ref<Asset> DeserializeFromAssetPack(FileStreamReader& stream, const AssetPackFile::AssetInfo& assetInfo) const override;
 	};
 
+	class AudioFileSerializer : public AssetSerializer
+	{
+	public:
+		void Serialize(const AssetMetadata& metadata, const Ref<Asset>& asset) const override;
+		bool TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const override;
+
+		bool SerializeToAssetPack(AssetHandle handle, FileStreamWriter& stream, AssetSerializationInfo& outInfo) const override;
+		Ref<Asset> DeserializeFromAssetPack(FileStreamReader& stream, const AssetPackFile::AssetInfo& assetInfo) const override;
+	};
+
+	class SoundConfigAssetSerializer : public AssetSerializer
+	{
+	public:
+		void Serialize(const AssetMetadata& metadata, const Ref<Asset>& asset) const override;
+		bool TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const override;
+
+		bool SerializeToAssetPack(AssetHandle handle, FileStreamWriter& stream, AssetSerializationInfo& outInfo) const override;
+		Ref<Asset> DeserializeFromAssetPack(FileStreamReader& stream, const AssetPackFile::AssetInfo& assetInfo) const override;
+
+		std::string SerializeToYAML(const Ref<class SoundConfigAsset>& soundConfig) const;
+		bool DeserializeFromYAML(const std::string& yamlString, Ref<class SoundConfigAsset>& target) const;
+	};
+
 }

@@ -22,6 +22,8 @@ namespace Hazel {
 		Scope<SkeletonAssetSerializer> s_SkeletonAssetSerializer;
 		Scope<AnimationAssetSerializer> s_AnimationAssetSerializer;
 		Scope<AnimationControllerAssetSerializer> s_AnimationControllerAssetSerializer;
+		Scope<AudioFileSerializer> s_AudioFileSerializer;
+		Scope<SoundConfigAssetSerializer> s_SoundConfigAssetSerializer;
 
 	}
 
@@ -38,6 +40,8 @@ namespace Hazel {
 			s_SkeletonAssetSerializer = CreateScope<SkeletonAssetSerializer>();
 			s_AnimationAssetSerializer = CreateScope<AnimationAssetSerializer>();
 			s_AnimationControllerAssetSerializer = CreateScope<AnimationControllerAssetSerializer>();
+			s_AudioFileSerializer = CreateScope<AudioFileSerializer>();
+			s_SoundConfigAssetSerializer = CreateScope<SoundConfigAssetSerializer>();
 		}
 	}
 
@@ -55,6 +59,8 @@ namespace Hazel {
 		case AssetType::Skeleton: return s_SkeletonAssetSerializer.get();
 		case AssetType::Animation: return s_AnimationAssetSerializer.get();
 		case AssetType::AnimationController: return s_AnimationControllerAssetSerializer.get();
+		case AssetType::Audio:        return s_AudioFileSerializer.get();
+		case AssetType::SoundConfig:  return s_SoundConfigAssetSerializer.get();
 		default: return nullptr;
 		}
 	}

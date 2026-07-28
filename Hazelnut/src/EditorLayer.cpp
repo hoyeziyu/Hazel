@@ -20,6 +20,7 @@
 #include "Hazel/Script/ScriptEngine.h"
 #include "Hazel/Script/ScriptBuilder.h"
 #include "Hazel/Asset/AssetManager.h"
+#include "Hazel/Audio/AudioEngine.h"
 #include "Hazel/Serialization/AssetPack.h"
 #include "Hazel/Scene/Prefab.h"
 #include "Hazel/ImGui/ImGuiUtilities.h"
@@ -241,6 +242,10 @@ namespace Hazel {
 					BuildAssetPack();
 				UI::SetTooltip("Bake scenes and dependencies to assets/AssetPack.hap");
 
+				if (ImGui::MenuItem("Build Sound Bank"))
+					BuildSoundBank();
+				UI::SetTooltip("Package referenced .wav files into assets/SoundBank.hsb");
+
 				ImGui::EndMenu();
 			}
 
@@ -457,6 +462,13 @@ namespace Hazel {
 	{
 		if (m_SceneState == SceneState::Play)
 			return;
+
+		if (auto project = Project::GetActive())
+		{
+			const auto bankPath = project->GetAssetDirectory() / "SoundBank.hsb";
+			AudioEngine::Get().BuildSoundBank(bankPath);
+			AudioEngine::Get().LoadSoundBank(bankPath);
+		}
 
 		m_SceneState = SceneState::Play;
 		m_RuntimeScene = CreateRef<Scene>();
@@ -828,6 +840,22 @@ namespace Hazel {
 			m_AssetPackStatus = "AssetPack: build failed";
 			HZ_CORE_ERROR("Failed to build AssetPack.");
 		}
+	}
+
+	void EditorLayer::BuildSoundBank()
+	{
+		auto project = Project::GetActive();
+		if (!project)
+		{
+			HZ_CORE_WARN("Cannot build SoundBank without an active project.");
+			return;
+		}
+
+		const auto outputPath = project->GetAssetDirectory() / "SoundBank.hsb";
+		if (AudioEngine::Get().BuildSoundBank(outputPath))
+			HZ_CORE_INFO("Built SoundBank at {}", outputPath.string());
+		else
+			HZ_CORE_ERROR("Failed to build SoundBank.");
 	}
 
 	void EditorLayer::CloseProject()

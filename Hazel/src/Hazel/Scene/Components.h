@@ -172,6 +172,7 @@ namespace Hazel {
 
 	struct AudioComponent
 	{
+		AssetHandle SoundConfig = 0;
 		std::string FilePath;
 		float Volume = 1.0f;
 		bool PlayOnAwake = true;

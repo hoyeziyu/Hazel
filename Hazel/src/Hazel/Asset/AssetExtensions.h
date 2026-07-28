@@ -24,6 +24,8 @@ namespace Hazel {
 			{ ".hskel", AssetType::Skeleton },
 			{ ".hanim", AssetType::Animation },
 			{ ".hanimc", AssetType::AnimationController },
+			{ ".wav",    AssetType::Audio },
+			{ ".hsoundc", AssetType::SoundConfig },
 		};
 
 		std::string ext = extension;

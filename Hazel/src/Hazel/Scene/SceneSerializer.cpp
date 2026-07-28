@@ -300,6 +300,7 @@ namespace Hazel {
 			out << YAML::BeginMap;
 
 			const auto& audio = entity.GetComponent<AudioComponent>();
+			out << YAML::Key << "SoundConfig" << YAML::Value << (uint64_t)audio.SoundConfig;
 			out << YAML::Key << "FilePath" << YAML::Value << audio.FilePath;
 			out << YAML::Key << "Volume" << YAML::Value << audio.Volume;
 			out << YAML::Key << "PlayOnAwake" << YAML::Value << audio.PlayOnAwake;
@@ -548,6 +549,8 @@ namespace Hazel {
 			if (audioComponent)
 			{
 				auto& ac = deserializedEntity.AddComponent<AudioComponent>();
+				if (audioComponent["SoundConfig"])
+					ac.SoundConfig = audioComponent["SoundConfig"].as<uint64_t>();
 				ac.FilePath = audioComponent["FilePath"].as<std::string>("");
 				ac.Volume = audioComponent["Volume"].as<float>(1.0f);
 				ac.PlayOnAwake = audioComponent["PlayOnAwake"].as<bool>(true);
