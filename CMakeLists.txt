@@ -24,6 +24,9 @@ add_subdirectory(Hazel)
 
 option(HAZEL_BUILD_SANDBOX "Build sandbox application" ON)
 option(HAZEL_BUILD_HAZELNUT "Build Hazelnut editor application" ON)
+option(HAZEL_BUILD_RUNTIME "Build Hazel-Runtime standalone player" ON)
+option(HAZEL_BUILD_LAUNCHER "Build Hazel-Launcher project picker" ON)
+option(HAZEL_BUILD_SAMPLE_PACK_TOOL "Build SampleProject AssetPack command-line tool" ON)
 option(HAZEL_BUILD_TESTS "Build Google Test unit tests" ON)
 option(HAZEL_BUILD_BENCHMARKS "Build Google Benchmark performance tests" ON)
 option(HZ_SCRIPTING "Enable C# scripting via Coral" ON)
@@ -41,6 +44,18 @@ endif()
 
 if(HAZEL_BUILD_HAZELNUT)
     add_subdirectory(Hazelnut)
+endif()
+
+if(HAZEL_BUILD_RUNTIME)
+    add_subdirectory(Hazel-Runtime)
+endif()
+
+if(HAZEL_BUILD_LAUNCHER)
+    add_subdirectory(Hazel-Launcher)
+endif()
+
+if(HAZEL_BUILD_SAMPLE_PACK_TOOL)
+    add_subdirectory(tools)
 endif()
 
 if(HAZEL_BUILD_TESTS)

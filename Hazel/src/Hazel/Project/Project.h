@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Hazel/Core/Core.h"
+#include "Hazel/Asset/Asset.h"
 #include <filesystem>
 #include <string>
 
@@ -16,6 +17,8 @@ namespace Hazel {
 		std::string AssetRegistryPath = "AssetRegistry.hzr";
 		std::string ScriptModulePath = "assets/Scripts/Binaries";
 		std::string StartScene = "scenes/Main.hazel";
+
+		AssetHandle StartSceneHandle = 0;
 
 		// Filled by serializer (not written to .hzproj)
 		std::filesystem::path ProjectDirectory;
@@ -39,6 +42,7 @@ namespace Hazel {
 
 		static Ref<Project> GetActive();
 		static void SetActive(const Ref<Project>& project);
+		static void SetActiveEditor(const Ref<Project>& project);
 		static void SetActiveRuntime(const Ref<Project>& project, const Ref<class AssetPack>& assetPack);
 		static void ClearActive();
 		static void ReloadScriptEngine();

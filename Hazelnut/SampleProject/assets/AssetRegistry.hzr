@@ -1,13 +1,7 @@
 Assets:
-  - Handle: 4890635141521051159
-    FilePath: textures/Checkerboard.png
-    Type: Texture
   - Handle: 11703174775267464727
     FilePath: scenes/Main.hazel
     Type: Scene
-  - Handle: 16310523295384921727
-    FilePath: prefabs/Red Square.hprefab
-    Type: Prefab
   - Handle: 17402389245123987101
     FilePath: meshes/Cube.hmesh
     Type: MeshSource

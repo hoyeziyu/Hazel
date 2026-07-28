@@ -14,7 +14,9 @@ public:
 	~Sandbox() = default;
 };
 
-Hazel::Application* Hazel::CreateApplication()
+Hazel::Application* Hazel::CreateApplication(int argc, char** argv)
 {
+	(void)argc;
+	(void)argv;
 	return new Sandbox();
 }

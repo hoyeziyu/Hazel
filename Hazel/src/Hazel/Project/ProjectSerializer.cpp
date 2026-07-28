@@ -1,6 +1,11 @@
 #include "hzpch.h"
 #include "ProjectSerializer.h"
 
+#include "ProjectRuntimeFormat.h"
+#include "Hazel/Asset/AssetManager/EditorAssetManager.h"
+#include "Hazel/Serialization/FileStream.h"
+
+#include <cstring>
 #include <fstream>
 #include <yaml-cpp/yaml.h>
 
@@ -68,6 +73,56 @@ namespace Hazel {
 		config.ProjectFilePath = std::filesystem::absolute(filepath);
 		config.ProjectDirectory = config.ProjectFilePath.parent_path();
 
+		return true;
+	}
+
+	bool ProjectSerializer::SerializeRuntime(const std::filesystem::path& filepath)
+	{
+		const auto& config = m_Project->GetConfig();
+		const auto& metadata = m_Project->GetAssetManager()->GetMetadata(config.StartScene);
+		if (!metadata.IsValid())
+		{
+			HZ_CORE_ERROR("Cannot serialize runtime project data — start scene not registered: {}", config.StartScene);
+			return false;
+		}
+
+		ProjectRuntimeInfo runtimeInfo;
+		runtimeInfo.StartScene = metadata.Handle;
+		m_Project->GetConfig().StartSceneHandle = metadata.Handle;
+
+		FileStreamWriter stream(filepath);
+		if (!stream)
+			return false;
+
+		stream.WriteRaw(runtimeInfo);
+		return stream.IsStreamGood();
+	}
+
+	bool ProjectSerializer::DeserializeRuntime(const std::filesystem::path& filepath)
+	{
+		FileStreamReader stream(filepath);
+		if (!stream)
+		{
+			HZ_CORE_ERROR("Could not open runtime project file: {}", filepath.string());
+			return false;
+		}
+
+		ProjectRuntimeInfo runtimeInfo;
+		stream.ReadRaw(runtimeInfo);
+
+		if (std::memcmp(runtimeInfo.Header.HEADER, "HDAT", 4) != 0)
+		{
+			HZ_CORE_ERROR("Invalid runtime project header in {}", filepath.string());
+			return false;
+		}
+
+		if (runtimeInfo.Header.Version != ProjectRuntimeInfo{}.Header.Version)
+		{
+			HZ_CORE_ERROR("Unsupported runtime project version {}", runtimeInfo.Header.Version);
+			return false;
+		}
+
+		m_Project->GetConfig().StartSceneHandle = runtimeInfo.StartScene;
 		return true;
 	}
 

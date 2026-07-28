@@ -16,10 +16,11 @@ namespace Hazel {
 
 	static AssetMetadata s_NullMetadata;
 
-	EditorAssetManager::EditorAssetManager()
+	EditorAssetManager::EditorAssetManager(bool scanAssets)
 	{
 		LoadAssetRegistry();
-		ScanAndRegisterAssets();
+		if (scanAssets)
+			ScanAndRegisterAssets();
 	}
 
 	EditorAssetManager::~EditorAssetManager()
@@ -177,11 +178,13 @@ namespace Hazel {
 
 		YAML::Node data = YAML::Load(buffer.str());
 		auto assets = data["Assets"];
-		if (!assets)
+		if (!assets || !assets.IsSequence())
 			return;
 
-		for (const auto& entry : assets)
+		for (size_t i = 0; i < assets.size(); ++i)
 		{
+			const YAML::Node& entry = assets[i];
+
 			AssetMetadata metadata;
 			metadata.Handle = entry["Handle"].as<uint64_t>();
 			metadata.FilePath = entry["FilePath"].as<std::string>();

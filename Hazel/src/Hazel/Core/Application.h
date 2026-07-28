@@ -15,7 +15,7 @@ namespace Hazel {
 	class HAZEL_API Application
 	{
 	public:
-		Application(const std::string& name = "Hazel App");
+		Application(const std::string& name = "Hazel App", bool enableImGui = true);
 		virtual ~Application();
 
 		void Run();
@@ -31,13 +31,15 @@ namespace Hazel {
 		void Close();
 
 		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
+		bool IsImGuiEnabled() const { return m_EnableImGui; }
 
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
 
 		std::unique_ptr<Window> m_Window;
-		ImGuiLayer* m_ImGuiLayer;
+		ImGuiLayer* m_ImGuiLayer = nullptr;
+		bool m_EnableImGui = true;
 		bool m_Running = true;
 		bool m_Minimized = false;
 		LayerStack m_LayerStack;
@@ -47,8 +49,8 @@ namespace Hazel {
 		
 	};
 
-	// to be defined in client
-	Application* CreateApplication();
+		// to be defined in client
+	Application* CreateApplication(int argc, char** argv);
 
 }
 

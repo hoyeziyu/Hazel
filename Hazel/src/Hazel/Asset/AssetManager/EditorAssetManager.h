@@ -12,7 +12,7 @@ namespace Hazel {
 	class EditorAssetManager
 	{
 	public:
-		EditorAssetManager();
+		explicit EditorAssetManager(bool scanAssets = true);
 		~EditorAssetManager();
 
 		void Shutdown();

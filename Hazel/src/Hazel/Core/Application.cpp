@@ -12,7 +12,9 @@ namespace Hazel {
 
 	Application* Application::s_Instance = nullptr;
 
-	Application::Application([[maybe_unused]] const std::string& name) {
+	Application::Application([[maybe_unused]] const std::string& name, bool enableImGui)
+		: m_EnableImGui(enableImGui)
+	{
 		HZ_PROFILE_FUNCTION();
 		HZ_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
@@ -23,12 +25,14 @@ namespace Hazel {
 
 		Renderer::Init();
 
-		m_ImGuiLayer = new ImGuiLayer();
-		PushOverlay(m_ImGuiLayer);
+		if (m_EnableImGui)
+		{
+			m_ImGuiLayer = new ImGuiLayer();
+			PushOverlay(m_ImGuiLayer);
+		}
 
 		ScriptEngine::GetMutable().InitializeHost();
 		AudioEngine::Get().Init();
-		
 	}
 
 	Application::~Application()
@@ -89,16 +93,19 @@ namespace Hazel {
 
 				AudioEngine::Get().Update();
 
-				m_ImGuiLayer->Begin();
-
+				if (m_EnableImGui && m_ImGuiLayer)
 				{
-					HZ_PROFILE_SCOPE("LayerStack OnImGuiRender");
+					m_ImGuiLayer->Begin();
 
-					for (Layer* layer : m_LayerStack)
-						layer->OnImGuiRender();
+					{
+						HZ_PROFILE_SCOPE("LayerStack OnImGuiRender");
+
+						for (Layer* layer : m_LayerStack)
+							layer->OnImGuiRender();
+					}
+
+					m_ImGuiLayer->End();
 				}
-
-				m_ImGuiLayer->End();
 
 			}
 

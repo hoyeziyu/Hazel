@@ -64,13 +64,32 @@ namespace Hazel {
 		}
 	}
 
+	void Project::SetActiveEditor(const Ref<Project>& project)
+	{
+		s_RuntimeActive = false;
+		s_RuntimeAssetManager.reset();
+		s_RuntimeAssetPack.reset();
+
+		s_ActiveProject = project;
+
+		if (s_ActiveProject)
+			s_ActiveProject->m_AssetManager = CreateRef<EditorAssetManager>(false);
+	}
+
 	void Project::SetActiveRuntime(const Ref<Project>& project, const Ref<AssetPack>& assetPack)
 	{
+		ScriptEngine::GetMutable().Shutdown();
+
 		s_ActiveProject = project;
 		s_RuntimeAssetPack = assetPack;
 		s_RuntimeActive = true;
 		s_RuntimeAssetManager = CreateRef<RuntimeAssetManager>();
 		s_RuntimeAssetManager->SetAssetPack(assetPack);
+
+#if HZ_SCRIPTING
+		ScriptEngine::GetMutable().Initialize(project);
+		ScriptEngine::GetMutable().LoadProjectAssembly();
+#endif
 	}
 
 	void Project::ClearActive()

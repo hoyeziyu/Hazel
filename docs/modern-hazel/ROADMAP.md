@@ -42,7 +42,7 @@
 |------|------------------|------|------|------|
 | M17 | miniaudio 基础 | LD50/LD51 音效 | ✅ | [module-17-miniaudio.md](./module-17-miniaudio.md) |
 | M18 | AnimationGraph 缩小版 | LD51 玩家动画 | ✅ | [module-18-animation.md](./module-18-animation.md) |
-| M19 | Hazel-Runtime + Launcher | 打包运行 |
+| M19 | Hazel-Runtime + Launcher | 打包运行 | ✅ | [module-19-runtime-launcher.md](./module-19-runtime-launcher.md) |
 | M20 | SoundGraph / SoundBank | LD51 SoundBank |
 
 ---

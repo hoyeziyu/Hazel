@@ -2,6 +2,7 @@
 #include "AssetPack.h"
 
 #include "Hazel/Asset/AssetManager/EditorAssetManager.h"
+#include "Hazel/Project/ProjectSerializer.h"
 #include "Hazel/Asset/AssetManager.h"
 #include "Hazel/Asset/AssetImporter.h"
 #include "Hazel/Project/Project.h"
@@ -183,6 +184,14 @@ namespace Hazel {
 
 		if (assetPackFile.Index.Scenes.empty())
 			return false;
+
+		ProjectSerializer runtimeSerializer(project);
+		const auto runtimePath = project->GetAssetDirectory() / "Project.hdat";
+		if (!runtimeSerializer.SerializeRuntime(runtimePath))
+		{
+			HZ_CORE_ERROR("Failed to write runtime project data to {}", runtimePath.string());
+			return false;
+		}
 
 		Buffer emptyAppBinary;
 		AssetPackSerializer::Serialize(outputPath, assetPackFile, emptyAppBinary, progress);
