@@ -77,6 +77,7 @@ namespace Hazel {
 		if (m_Host)
 			return;
 
+		m_HostReady = false;
 		m_Host = std::make_unique<Coral::HostInstance>();
 		const auto coralDir = (Project::GetRuntimeDirectory() / "DotNet").string();
 
@@ -89,6 +90,7 @@ namespace Hazel {
 		const Coral::CoralInitStatus status = m_Host->Initialize(settings);
 		if (status == Coral::CoralInitStatus::Success)
 		{
+			m_HostReady = true;
 			HZ_CORE_INFO("[Scripting] Coral host initialized (DotNet: {})", coralDir);
 			return;
 		}
@@ -106,6 +108,7 @@ namespace Hazel {
 		Coral::TypeCache::Get().Clear();
 		m_Host->Shutdown();
 		m_Host.reset();
+		m_HostReady = false;
 	}
 
 	void ScriptEngine::Initialize(const Ref<Project>& project)
@@ -113,6 +116,9 @@ namespace Hazel {
 		(void)project;
 		if (!m_Host)
 			InitializeHost();
+
+		if (!m_HostReady)
+			return;
 
 		m_LoadContext = std::make_unique<Coral::AssemblyLoadContext>(m_Host->CreateAssemblyLoadContext("HazelLoadContext"));
 

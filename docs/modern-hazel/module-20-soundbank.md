@@ -18,7 +18,7 @@ M20 Phase A 实现 **SoundConfig 资产 + SoundBank 打包 + Play 前构建**，
 SoundConfig YAML 兼容 LD51 扁平原格式：
 
 ```yaml
-AssetID: 20402389245123987104
+AssetID: 10402389245123987104
 IsLooping: false
 VolumeMultiplier: 0.8
 PitchMultiplier: 1.0
@@ -75,8 +75,8 @@ std::string FilePath;         // M17 遗留回退
 
 | 路径 | Handle |
 |------|--------|
-| `assets/Audio/Source/click.wav` | `20402389245123987104` |
-| `assets/Audio/Configs/SC_Click.hsoundc` | `21402389245123987105` |
+| `assets/Audio/Source/click.wav` | `10402389245123987104` |
+| `assets/Audio/Configs/SC_Click.hsoundc` | `11402389245123987105` |
 
 `Main.hazel` 含 **Click Audio** 实体，`PlayOnAwake` 引用 `SC_Click`。
 

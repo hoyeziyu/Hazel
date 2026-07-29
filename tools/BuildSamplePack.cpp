@@ -5,24 +5,27 @@
 #include "Hazel/Renderer/Renderer.h"
 #include "Hazel/Serialization/AssetPack.h"
 
-#include <spdlog/spdlog.h>
-
 #include <atomic>
 #include <filesystem>
 #include <iostream>
 
+#ifdef HZ_PLATFORM_WINDOWS
+#include <Windows.h>
+#endif
+
 int main(int argc, char** argv)
 {
-	std::cerr << "BuildSamplePack starting..." << std::endl;
-
-	spdlog::drop_all();
-	Hazel::Log::Init();
-
 	std::filesystem::path projectDirectory = argc >= 2 ? argv[1] : "Hazelnut/SampleProject";
 	if (!projectDirectory.is_absolute())
 		projectDirectory = std::filesystem::current_path() / projectDirectory;
 
-	std::cerr << "Project directory: " << projectDirectory.string() << std::endl;
+#ifdef HZ_PLATFORM_WINDOWS
+	char exePath[MAX_PATH];
+	GetModuleFileNameA(nullptr, exePath, MAX_PATH);
+	std::filesystem::current_path(std::filesystem::path(exePath).parent_path());
+#endif
+
+	Hazel::Log::InitHeadless();
 
 	std::filesystem::path projectFile;
 	for (const auto& entry : std::filesystem::directory_iterator(projectDirectory))
@@ -40,16 +43,12 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	std::cerr << "Project file: " << projectFile.string() << std::endl;
-
 	auto project = Hazel::CreateRef<Hazel::Project>();
 	Hazel::ProjectSerializer serializer(project);
 	if (!serializer.Deserialize(projectFile))
 		return 1;
 
-	std::cerr << "Project deserialized, activating editor..." << std::endl;
 	Hazel::Project::SetActiveEditor(project);
-	std::cerr << "Active project set, creating GL context..." << std::endl;
 
 	Hazel::WindowProps props("BuildSamplePack", 64, 64);
 	auto window = Hazel::Window::Create(props);
@@ -66,7 +65,16 @@ int main(int argc, char** argv)
 	}
 
 	std::cout << "Built " << outputPath.string() << std::endl;
-	std::cout << "Wrote " << (project->GetAssetDirectory() / "Project.hdat").string() << std::endl;
+
+	const auto runtimePath = project->GetAssetDirectory() / "Project.hdat";
+	if (std::filesystem::exists(runtimePath))
+		std::cout << "Wrote " << runtimePath.string() << std::endl;
+
+	const auto soundBankPath = project->GetAssetDirectory() / "SoundBank.hsb";
+	if (std::filesystem::exists(soundBankPath))
+		std::cout << "Wrote " << soundBankPath.string() << std::endl;
+	else
+		std::cerr << "SoundBank not written (no SoundConfig wav references)" << std::endl;
 
 	Hazel::Renderer::Shutdown();
 	Hazel::Project::ClearActive();

@@ -11,9 +11,9 @@ Assets:
   - Handle: 19402389245123987103
     FilePath: materials/Checkerboard.hmaterial
     Type: Material
-  - Handle: 20402389245123987104
+  - Handle: 10402389245123987104
     FilePath: Audio/Source/click.wav
     Type: Audio
-  - Handle: 21402389245123987105
+  - Handle: 11402389245123987105
     FilePath: Audio/Configs/SC_Click.hsoundc
     Type: SoundConfig

@@ -20,9 +20,66 @@
 
 #include <fstream>
 #include <sstream>
+#include <cstdlib>
 
 #include <glm/glm.hpp>
 #include <yaml-cpp/yaml.h>
+
+namespace Hazel {
+
+	namespace {
+
+		uint64_t YamlReadUint64(const YAML::Node& node, uint64_t defaultValue = 0)
+		{
+			if (!node || !node.IsDefined() || !node.IsScalar())
+				return defaultValue;
+
+			const std::string value = node.Scalar();
+			char* end = nullptr;
+			const unsigned long long parsed = std::strtoull(value.c_str(), &end, 10);
+			if (end == value.c_str() || (end && *end != '\0'))
+				return defaultValue;
+			return (uint64_t)parsed;
+		}
+
+		uint64_t ParseUint64FieldFromYamlText(const std::string& yamlString, std::string_view key)
+		{
+			const std::string needle = std::string(key) + ":";
+			size_t pos = yamlString.find(needle);
+			if (pos == std::string::npos)
+				return 0;
+
+			size_t start = pos + needle.size();
+			while (start < yamlString.size() && std::isspace((unsigned char)yamlString[start]))
+				start++;
+
+			if (start < yamlString.size() && yamlString[start] == '"')
+			{
+				start++;
+				size_t end = start;
+				while (end < yamlString.size() && yamlString[end] != '"')
+					end++;
+				if (end <= start)
+					return 0;
+
+				const std::string value = yamlString.substr(start, end - start);
+				return (uint64_t)std::strtoull(value.c_str(), nullptr, 10);
+			}
+
+			size_t end = start;
+			while (end < yamlString.size() && std::isdigit((unsigned char)yamlString[end]))
+				end++;
+
+			if (end <= start)
+				return 0;
+
+			const std::string value = yamlString.substr(start, end - start);
+			return (uint64_t)std::strtoull(value.c_str(), nullptr, 10);
+		}
+
+	}
+
+}
 
 namespace YAML {
 
@@ -917,7 +974,7 @@ namespace Hazel {
 		out << YAML::BeginMap;
 
 		if (soundConfig->DataSourceAsset)
-			out << YAML::Key << "AssetID" << YAML::Value << (uint64_t)soundConfig->DataSourceAsset;
+			out << YAML::Key << "AssetID" << YAML::Value << YAML::DoubleQuoted << std::to_string((uint64_t)soundConfig->DataSourceAsset);
 
 		out << YAML::Key << "IsLooping" << YAML::Value << soundConfig->IsLooping;
 		out << YAML::Key << "VolumeMultiplier" << YAML::Value << soundConfig->VolumeMultiplier;
@@ -933,8 +990,8 @@ namespace Hazel {
 		if (!data.IsMap())
 			return false;
 
-		if (data["AssetID"])
-			target->DataSourceAsset = data["AssetID"].as<uint64_t>();
+		// yaml-cpp corrupts uint64 values above INT64_MAX when parsed as numeric scalars
+		target->DataSourceAsset = (AssetHandle)ParseUint64FieldFromYamlText(yamlString, "AssetID");
 
 		if (data["IsLooping"])
 			target->IsLooping = data["IsLooping"].as<bool>();
@@ -966,16 +1023,7 @@ namespace Hazel {
 		std::stringstream strStream;
 		strStream << stream.rdbuf();
 
-		Ref<SoundConfigAsset> soundConfig;
-		if (Project::GetActiveAssetManager()->IsAssetValid(metadata.Handle))
-		{
-			auto existingAsset = Project::GetActiveAssetManager()->GetAsset(metadata.Handle);
-			if (existingAsset && existingAsset->GetAssetType() == AssetType::SoundConfig)
-				soundConfig = std::dynamic_pointer_cast<SoundConfigAsset>(existingAsset);
-		}
-
-		if (!soundConfig)
-			soundConfig = CreateRef<SoundConfigAsset>();
+		Ref<SoundConfigAsset> soundConfig = CreateRef<SoundConfigAsset>();
 
 		if (!DeserializeFromYAML(strStream.str(), soundConfig))
 			return false;

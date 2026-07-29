@@ -14,6 +14,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <cstdlib>
 
 TEST(AudioTest, EngineInitializesAndShutsDown)
 {
@@ -63,6 +64,21 @@ TEST(AudioTest, SoundConfigYamlRoundTrip)
 	EXPECT_FALSE(config->IsLooping);
 	EXPECT_FLOAT_EQ(config->VolumeMultiplier, 0.8f);
 	EXPECT_FLOAT_EQ(config->PitchMultiplier, 1.0f);
+}
+
+TEST(AudioTest, SoundConfigYamlRoundTripLargeHandle)
+{
+	const uint64_t kLargeHandle = std::strtoull("10402389245123987104", nullptr, 10);
+	const std::string yaml =
+		"AssetID: 10402389245123987104\n"
+		"IsLooping: false\n"
+		"VolumeMultiplier: 0.8\n"
+		"PitchMultiplier: 1.0\n";
+
+	auto config = Hazel::CreateRef<Hazel::SoundConfigAsset>();
+	Hazel::SoundConfigAssetSerializer serializer;
+	ASSERT_TRUE(serializer.DeserializeFromYAML(yaml, config));
+	EXPECT_EQ((uint64_t)config->DataSourceAsset, kLargeHandle);
 }
 
 TEST(AudioTest, AudioFileUtilsReadsWavHeader)

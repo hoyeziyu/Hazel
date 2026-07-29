@@ -7,14 +7,17 @@
 #include "Hazel/Project/ProjectSerializer.h"
 #include "Hazel/Serialization/FileStream.h"
 #include "Hazel/Serialization/AssetPack.h"
+#include "Hazel/Audio/AudioEngine.h"
+#include "Hazel/Asset/SoundConfigAsset.h"
 
 #include <cstring>
+#include <cstdlib>
 #include <filesystem>
 
 TEST(RuntimeTest, ProjectRuntimeInfoRoundTrip)
 {
 	Hazel::ProjectRuntimeInfo runtimeInfo{};
-	runtimeInfo.StartScene = 11703174775267464727;
+	runtimeInfo.StartScene = 11703174775267464727ull;
 
 	const std::filesystem::path path =
 		std::filesystem::temp_directory_path() / "hazel_runtime_test.hdat";
@@ -66,6 +69,9 @@ TEST(RuntimeTest, DeserializeRuntimeUpdatesStartSceneHandle)
 
 TEST(RuntimeTest, AssetManagerRoutesToRuntimeManager)
 {
+	const uint64_t kClickWavHandle = std::strtoull("10402389245123987104", nullptr, 10);
+	const uint64_t kSoundConfigHandle = std::strtoull("11402389245123987105", nullptr, 10);
+
 	const auto repoRoot = std::filesystem::path(HAZEL_REPO_ROOT);
 	const auto sampleProject = repoRoot / "Hazelnut" / "SampleProject";
 	const auto assetPackPath = sampleProject / "assets" / "AssetPack.hap";
@@ -88,6 +94,15 @@ TEST(RuntimeTest, AssetManagerRoutesToRuntimeManager)
 
 	auto scene = Hazel::Project::GetRuntimeAssetManager()->LoadScene(project->GetConfig().StartSceneHandle);
 	ASSERT_NE(scene, nullptr);
+
+	const auto soundBankPath = sampleProject / "assets" / "SoundBank.hsb";
+	ASSERT_TRUE(std::filesystem::exists(soundBankPath)) << "SampleProject SoundBank.hsb missing — run BuildSamplePack first";
+	EXPECT_TRUE(Hazel::AudioEngine::Get().LoadSoundBank(soundBankPath));
+	EXPECT_TRUE(Hazel::AudioEngine::Get().GetSoundBank()->Contains(kClickWavHandle));
+
+	const auto soundConfig = Hazel::AssetManager::GetAsset<Hazel::SoundConfigAsset>(kSoundConfigHandle);
+	ASSERT_NE(soundConfig, nullptr);
+	EXPECT_EQ((uint64_t)soundConfig->DataSourceAsset, kClickWavHandle);
 
 	Hazel::Project::ClearActive();
 	EXPECT_FALSE(Hazel::Project::IsRuntimeActive());

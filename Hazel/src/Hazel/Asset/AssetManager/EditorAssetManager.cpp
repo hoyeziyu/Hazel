@@ -6,6 +6,8 @@
 #include "Hazel/Project/Project.h"
 
 #include <algorithm>
+#include <cctype>
+#include <cstdlib>
 #include <fstream>
 #include <map>
 #include <sstream>
@@ -14,9 +16,72 @@
 
 namespace Hazel {
 
+	namespace {
+
+		uint64_t YamlReadUint64(const YAML::Node& node, uint64_t defaultValue = 0)
+		{
+			if (!node || !node.IsDefined() || !node.IsScalar())
+				return defaultValue;
+
+			const std::string value = node.Scalar();
+			char* end = nullptr;
+			const unsigned long long parsed = std::strtoull(value.c_str(), &end, 10);
+			if (end == value.c_str() || (end && *end != '\0'))
+				return defaultValue;
+			return (uint64_t)parsed;
+		}
+
+		std::string Trim(std::string value)
+		{
+			auto isSpace = [](unsigned char c) { return std::isspace(c); };
+			while (!value.empty() && isSpace((unsigned char)value.front()))
+				value.erase(value.begin());
+			while (!value.empty() && isSpace((unsigned char)value.back()))
+				value.pop_back();
+			return value;
+		}
+
+		std::string Unquote(std::string value)
+		{
+			value = Trim(value);
+			if (value.size() >= 2 && value.front() == '"' && value.back() == '"')
+				return value.substr(1, value.size() - 2);
+			return value;
+		}
+
+		bool ParseRegistryLine(const std::string& line, AssetMetadata& inOut, bool& entryComplete)
+		{
+			const std::string trimmed = Trim(line);
+			if (trimmed.rfind("- Handle:", 0) == 0)
+			{
+				inOut = AssetMetadata{};
+				const std::string handleText = Unquote(trimmed.substr(std::string("- Handle:").size()));
+				char* end = nullptr;
+				const unsigned long long parsed = std::strtoull(handleText.c_str(), &end, 10);
+				inOut.Handle = (end != handleText.c_str() && (!end || *end == '\0')) ? (uint64_t)parsed : 0;
+				entryComplete = false;
+				return true;
+			}
+			if (trimmed.rfind("FilePath:", 0) == 0)
+			{
+				inOut.FilePath = Unquote(trimmed.substr(std::string("FilePath:").size()));
+				return true;
+			}
+			if (trimmed.rfind("Type:", 0) == 0)
+			{
+				inOut.Type = AssetTypeFromString(Unquote(trimmed.substr(std::string("Type:").size())));
+				entryComplete = true;
+				return true;
+			}
+			return false;
+		}
+
+	}
+
 	static AssetMetadata s_NullMetadata;
 
 	EditorAssetManager::EditorAssetManager(bool scanAssets)
+		: m_PersistRegistry(scanAssets)
 	{
 		LoadAssetRegistry();
 		if (scanAssets)
@@ -30,7 +95,8 @@ namespace Hazel {
 
 	void EditorAssetManager::Shutdown()
 	{
-		WriteRegistryToFile();
+		if (m_PersistRegistry)
+			WriteRegistryToFile();
 		m_LoadedAssets.clear();
 	}
 
@@ -169,43 +235,45 @@ namespace Hazel {
 		if (!std::filesystem::exists(registryPath, ec))
 			return;
 
-		std::ifstream stream(registryPath);
+		std::ifstream stream(registryPath.string());
 		if (!stream)
 			return;
 
-		std::stringstream buffer;
-		buffer << stream.rdbuf();
+		std::string contents((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
 
-		YAML::Node data = YAML::Load(buffer.str());
-		auto assets = data["Assets"];
-		if (!assets || !assets.IsSequence())
-			return;
-
-		for (size_t i = 0; i < assets.size(); ++i)
+		AssetMetadata current;
+		bool entryComplete = false;
+		size_t start = 0;
+		while (start < contents.size())
 		{
-			const YAML::Node& entry = assets[i];
+			size_t end = contents.find('\n', start);
+			if (end == std::string::npos)
+				end = contents.size();
 
-			AssetMetadata metadata;
-			metadata.Handle = entry["Handle"].as<uint64_t>();
-			metadata.FilePath = entry["FilePath"].as<std::string>();
-			metadata.Type = AssetTypeFromString(entry["Type"].as<std::string>());
+			std::string line = contents.substr(start, end - start);
+			if (!line.empty() && line.back() == '\r')
+				line.pop_back();
 
-			if (!metadata.IsValid())
+			start = (end == contents.size()) ? contents.size() + 1 : end + 1;
+
+			if (line.empty())
 				continue;
 
-			if (metadata.Type != GetAssetTypeFromPath(metadata.FilePath))
-				metadata.Type = GetAssetTypeFromPath(metadata.FilePath);
-
-			if (!std::filesystem::exists(GetFileSystemPath(metadata), ec))
-			{
-				HZ_CORE_WARN("Asset registry entry missing on disk: {}", metadata.FilePath.string());
+			if (!ParseRegistryLine(line, current, entryComplete))
 				continue;
-			}
 
-			m_AssetRegistry.Set(metadata);
+			if (!entryComplete)
+				continue;
+
+			if (!current.IsValid())
+				continue;
+
+			if (current.Type != GetAssetTypeFromPath(current.FilePath))
+				current.Type = GetAssetTypeFromPath(current.FilePath);
+
+			m_AssetRegistry.Set(current);
+			entryComplete = false;
 		}
-
-		HZ_CORE_INFO("Loaded {} asset registry entries", m_AssetRegistry.Count());
 	}
 
 	void EditorAssetManager::WriteRegistryToFile()

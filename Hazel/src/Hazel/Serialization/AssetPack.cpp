@@ -11,6 +11,8 @@
 #include "Hazel/Scene/SceneSerializer.h"
 #include "Hazel/Asset/StaticMesh.h"
 #include "Hazel/Asset/MaterialAsset.h"
+#include "Hazel/Asset/SoundConfigAsset.h"
+#include "Hazel/Audio/AudioEngine.h"
 
 #include <chrono>
 
@@ -170,6 +172,14 @@ namespace Hazel {
 							sceneAssetList.insert(material->AlbedoMap);
 					}
 				}
+				else if (AssetManager::GetAssetType(assetHandle) == AssetType::SoundConfig)
+				{
+					if (auto soundConfig = AssetManager::GetAsset<SoundConfigAsset>(assetHandle))
+					{
+						if ((uint64_t)soundConfig->DataSourceAsset != 0)
+							sceneAssetList.insert(soundConfig->DataSourceAsset);
+					}
+				}
 			}
 
 			AssetPackFile::SceneInfo& sceneInfo = assetPackFile.Index.Scenes[sceneHandle];
@@ -192,6 +202,10 @@ namespace Hazel {
 			HZ_CORE_ERROR("Failed to write runtime project data to {}", runtimePath.string());
 			return false;
 		}
+
+		const auto soundBankPath = project->GetAssetDirectory() / "SoundBank.hsb";
+		if (!AudioEngine::Get().BuildSoundBank(soundBankPath))
+			HZ_CORE_WARN("SoundBank build skipped — no SoundConfig assets reference wav files");
 
 		Buffer emptyAppBinary;
 		AssetPackSerializer::Serialize(outputPath, assetPackFile, emptyAppBinary, progress);

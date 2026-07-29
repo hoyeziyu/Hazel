@@ -44,6 +44,7 @@
 | M18 | AnimationGraph 缩小版 | LD51 玩家动画 | ✅ | [module-18-animation.md](./module-18-animation.md) |
 | M19 | Hazel-Runtime + Launcher | 打包运行 | ✅ | [module-19-runtime-launcher.md](./module-19-runtime-launcher.md) |
 | M20 | SoundGraph / SoundBank | LD51 SoundBank | ✅ | [module-20-soundbank.md](./module-20-soundbank.md)（Phase A：SoundConfig + SoundBank） |
+| M21 | Runtime Pack 闭环 | Pack + SoundBank + 预置资产 | ✅ | [module-21-runtime-pack-closure.md](./module-21-runtime-pack-closure.md) |
 
 ---
 

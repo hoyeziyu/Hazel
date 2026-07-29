@@ -705,6 +705,16 @@ namespace Hazel {
 			}
 		}
 
+		{
+			auto view = m_Registry.view<AudioComponent>();
+			for (auto entity : view)
+			{
+				const auto& audio = view.get<AudioComponent>(entity);
+				if (audio.SoundConfig && (uint64_t)audio.SoundConfig != 0)
+					result.insert(audio.SoundConfig);
+			}
+		}
+
 		return result;
 	}
 

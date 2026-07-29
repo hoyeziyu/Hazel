@@ -828,6 +828,10 @@ namespace Hazel {
 			m_AssetPackStatus = "AssetPack: built " + outputPath.filename().string();
 			HZ_CORE_INFO("Built AssetPack at {}", outputPath.string());
 
+			const auto soundBankPath = project->GetAssetDirectory() / "SoundBank.hsb";
+			if (std::filesystem::exists(soundBankPath))
+				HZ_CORE_INFO("SoundBank available at {}", soundBankPath.string());
+
 			if (auto pack = AssetPack::Load(outputPath))
 			{
 				HZ_CORE_INFO("AssetPack index: {} scenes", pack->GetIndex().Index.Scenes.size());

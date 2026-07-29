@@ -10,6 +10,7 @@
 #include <fstream>
 
 #include <yaml-cpp/yaml.h>
+#include <cstdlib>
 
 
 namespace YAML {
@@ -89,6 +90,25 @@ namespace YAML {
 }
 
 namespace Hazel {
+
+	static uint64_t ReadUint64(const YAML::Node& node, uint64_t defaultValue = 0)
+	{
+		if (!node || !node.IsDefined() || !node.IsScalar())
+			return defaultValue;
+
+		const std::string value = node.Scalar();
+		char* end = nullptr;
+		const unsigned long long parsed = std::strtoull(value.c_str(), &end, 10);
+		if (end == value.c_str() || (end && *end != '\0'))
+			return defaultValue;
+		return (uint64_t)parsed;
+	}
+
+	static bool NodeIsDefined(const YAML::Node& node)
+	{
+		return node && node.IsDefined();
+	}
+
 	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec2& v)
 	{
 		out << YAML::Flow;
@@ -439,25 +459,25 @@ namespace Hazel {
 	{
 		for (auto entity : entitiesNode)
 		{
-			uint64_t uuid = entity["Entity"].as<uint64_t>();
+			uint64_t uuid = ReadUint64(entity["Entity"]);
 
 			std::string name;
 			auto tagComponent = entity["TagComponent"];
-			if (tagComponent)
+			if (NodeIsDefined(tagComponent))
 				name = tagComponent["Tag"].as<std::string>();
 
 			Entity deserializedEntity = scene->CreateEntityWithID(uuid, name);
 
 			auto prefabComponent = entity["PrefabComponent"];
-			if (prefabComponent)
+			if (NodeIsDefined(prefabComponent))
 			{
 				auto& pb = deserializedEntity.AddComponent<PrefabComponent>();
-				pb.PrefabID = prefabComponent["Prefab"].as<uint64_t>();
-				pb.EntityID = prefabComponent["Entity"].as<uint64_t>();
+				pb.PrefabID = ReadUint64(prefabComponent["Prefab"]);
+				pb.EntityID = ReadUint64(prefabComponent["Entity"]);
 			}
 
 			auto transformComponent = entity["TransformComponent"];
-			if (transformComponent)
+			if (NodeIsDefined(transformComponent))
 			{
 				auto& tc = deserializedEntity.GetComponent<TransformComponent>();
 				tc.Translation = transformComponent["Translation"].as<glm::vec3>();
@@ -466,7 +486,7 @@ namespace Hazel {
 			}
 
 			auto cameraComponent = entity["CameraComponent"];
-			if (cameraComponent)
+			if (NodeIsDefined(cameraComponent))
 			{
 				auto& cc = deserializedEntity.AddComponent<CameraComponent>();
 
@@ -486,33 +506,30 @@ namespace Hazel {
 			}
 
 			auto spriteRendererComponent = entity["SpriteRendererComponent"];
-			if (spriteRendererComponent)
+			if (NodeIsDefined(spriteRendererComponent))
 			{
 				auto& src = deserializedEntity.AddComponent<SpriteRendererComponent>();
 				src.Color = spriteRendererComponent["Color"].as<glm::vec4>();
-				if (spriteRendererComponent["Texture"])
-					src.Texture = spriteRendererComponent["Texture"].as<uint64_t>();
+				src.Texture = ReadUint64(spriteRendererComponent["Texture"]);
 			}
 
 			auto meshRendererComponent = entity["MeshRendererComponent"];
-			if (meshRendererComponent)
+			if (NodeIsDefined(meshRendererComponent))
 			{
 				auto& src = deserializedEntity.AddComponent<MeshRendererComponent>();
 				src.Color = meshRendererComponent["Color"].as<glm::vec4>();
-				if (meshRendererComponent["Visible"])
+				if (NodeIsDefined(meshRendererComponent["Visible"]))
 					src.Visible = meshRendererComponent["Visible"].as<bool>();
 			}
 
 			auto staticMeshComponent = entity["StaticMeshComponent"];
-			if (staticMeshComponent)
+			if (NodeIsDefined(staticMeshComponent))
 			{
 				auto& src = deserializedEntity.AddComponent<StaticMeshComponent>();
-				if (staticMeshComponent["StaticMesh"])
-					src.StaticMesh = staticMeshComponent["StaticMesh"].as<uint64_t>();
-				if (staticMeshComponent["Material"])
-					src.Material = staticMeshComponent["Material"].as<uint64_t>();
+				src.StaticMesh = ReadUint64(staticMeshComponent["StaticMesh"]);
 				src.Color = staticMeshComponent["Color"].as<glm::vec4>(glm::vec4(0.8f, 0.3f, 0.2f, 1.0f));
-				if (staticMeshComponent["Visible"])
+				src.Material = ReadUint64(staticMeshComponent["Material"]);
+				if (NodeIsDefined(staticMeshComponent["Visible"]))
 					src.Visible = staticMeshComponent["Visible"].as<bool>();
 			}
 
@@ -546,11 +563,10 @@ namespace Hazel {
 			}
 
 			auto audioComponent = entity["AudioComponent"];
-			if (audioComponent)
+			if (NodeIsDefined(audioComponent))
 			{
 				auto& ac = deserializedEntity.AddComponent<AudioComponent>();
-				if (audioComponent["SoundConfig"])
-					ac.SoundConfig = audioComponent["SoundConfig"].as<uint64_t>();
+				ac.SoundConfig = ReadUint64(audioComponent["SoundConfig"]);
 				ac.FilePath = audioComponent["FilePath"].as<std::string>("");
 				ac.Volume = audioComponent["Volume"].as<float>(1.0f);
 				ac.PlayOnAwake = audioComponent["PlayOnAwake"].as<bool>(true);
@@ -562,7 +578,7 @@ namespace Hazel {
 			{
 				auto& anim = deserializedEntity.AddComponent<AnimationComponent>();
 				if (animationComponent["AnimationController"])
-					anim.AnimationController = animationComponent["AnimationController"].as<uint64_t>();
+					anim.AnimationController = ReadUint64(animationComponent["AnimationController"]);
 				if (animationComponent["BoneEntities"])
 				{
 					auto ids = animationComponent["BoneEntities"].as<std::vector<uint64_t>>();
@@ -585,9 +601,9 @@ namespace Hazel {
 			{
 				auto& mesh = deserializedEntity.AddComponent<SkinnedMeshComponent>();
 				if (skinnedMeshComponent["StaticMesh"])
-					mesh.StaticMesh = skinnedMeshComponent["StaticMesh"].as<uint64_t>();
+					mesh.StaticMesh = ReadUint64(skinnedMeshComponent["StaticMesh"]);
 				if (skinnedMeshComponent["Material"])
-					mesh.Material = skinnedMeshComponent["Material"].as<uint64_t>();
+					mesh.Material = ReadUint64(skinnedMeshComponent["Material"]);
 				if (skinnedMeshComponent["Color"])
 					mesh.Color = skinnedMeshComponent["Color"].as<glm::vec4>(glm::vec4(0.8f, 0.3f, 0.2f, 1.0f));
 				if (skinnedMeshComponent["Visible"])
@@ -610,7 +626,7 @@ namespace Hazel {
 			auto scriptComponent = entity["ScriptComponent"];
 			if (scriptComponent)
 			{
-				uint64_t scriptID = scriptComponent["ScriptID"].as<uint64_t>(0);
+				uint64_t scriptID = ReadUint64(scriptComponent["ScriptID"]);
 				const auto& scriptEngine = ScriptEngine::GetInstance();
 
 				if ((scriptID == 0 || !scriptEngine.IsValidScript(scriptID)) && scriptComponent["ScriptName"])
@@ -662,7 +678,7 @@ namespace Hazel {
 									case DataType::Bool: fieldStorage.SetValue(Coral::Bool32(valueNode[i].as<bool>()), i); break;
 									case DataType::Vector2: fieldStorage.SetValue(valueNode[i].as<glm::vec2>(), i); break;
 									case DataType::Vector3: fieldStorage.SetValue(valueNode[i].as<glm::vec3>(), i); break;
-									case DataType::Entity: fieldStorage.SetValue(UUID(valueNode[i].as<uint64_t>()), i); break;
+									case DataType::Entity: fieldStorage.SetValue(UUID(ReadUint64(valueNode[i])), i); break;
 									default: break;
 									}
 								}
@@ -676,7 +692,7 @@ namespace Hazel {
 								case DataType::Bool: fieldStorage.SetValue(Coral::Bool32(valueNode.as<bool>())); break;
 								case DataType::Vector2: fieldStorage.SetValue(valueNode.as<glm::vec2>()); break;
 								case DataType::Vector3: fieldStorage.SetValue(valueNode.as<glm::vec3>()); break;
-								case DataType::Entity: fieldStorage.SetValue(UUID(valueNode.as<uint64_t>())); break;
+								case DataType::Entity: fieldStorage.SetValue(UUID(ReadUint64(valueNode))); break;
 								default: break;
 								}
 							}

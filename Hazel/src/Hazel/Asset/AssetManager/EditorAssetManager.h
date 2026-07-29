@@ -48,6 +48,7 @@ namespace Hazel {
 	private:
 		AssetRegistry m_AssetRegistry;
 		std::unordered_map<AssetHandle, Ref<Asset>> m_LoadedAssets;
+		bool m_PersistRegistry = true;
 	};
 
 }

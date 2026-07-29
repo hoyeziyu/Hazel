@@ -92,6 +92,7 @@ namespace Hazel {
 
 	private:
 		std::unique_ptr<Coral::HostInstance> m_Host;
+		bool m_HostReady = false;
 		std::unique_ptr<Coral::AssemblyLoadContext> m_LoadContext;
 		Scope<AssemblyData> m_CoreAssemblyData;
 		Scope<AssemblyData> m_AppAssemblyData;

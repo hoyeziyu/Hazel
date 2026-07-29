@@ -9,6 +9,7 @@
 #include "Hazel/Renderer/RenderCommand.h"
 #include "Hazel/Renderer/Renderer2D.h"
 #include "Hazel/Serialization/AssetPack.h"
+#include "Hazel/Audio/AudioEngine.h"
 
 #include <GLFW/glfw3.h>
 
@@ -157,6 +158,17 @@ namespace Hazel {
 		}
 
 		Project::SetActiveRuntime(project, assetPack);
+
+		const auto soundBankPath = project->GetAssetDirectory() / "SoundBank.hsb";
+		if (std::filesystem::exists(soundBankPath))
+		{
+			if (!AudioEngine::Get().LoadSoundBank(soundBankPath))
+				HZ_CORE_WARN("Failed to load SoundBank at {}", soundBankPath.string());
+		}
+		else
+		{
+			HZ_CORE_WARN("SoundBank not found at {} — runtime audio may be silent", soundBankPath.string());
+		}
 
 		auto runtimeAssetManager = Project::GetRuntimeAssetManager();
 		if (!runtimeAssetManager)
