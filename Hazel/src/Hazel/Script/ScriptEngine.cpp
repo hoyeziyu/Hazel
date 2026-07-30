@@ -31,6 +31,7 @@ namespace Hazel {
 			{ "Hazel.Vector3", DataType::Vector3 },
 			{ "System.Boolean", DataType::Bool },
 			{ "Hazel.Entity", DataType::Entity },
+			{ "Hazel.Prefab", DataType::Prefab },
 		};
 
 	}
@@ -254,6 +255,7 @@ namespace Hazel {
 				case DataType::Vector3: fieldMetadata.SetDefaultValue<glm::vec3>(temp); break;
 				case DataType::Bool: fieldMetadata.SetDefaultValue<Coral::Bool32>(temp); break;
 				case DataType::Entity: break;
+				case DataType::Prefab: break;
 				}
 			}
 

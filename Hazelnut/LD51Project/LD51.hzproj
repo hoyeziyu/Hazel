@@ -1,0 +1,5 @@
+Project:
+  Name: LD51
+  AssetDirectory: assets
+  ScriptModulePath: assets/Scripts/Binaries
+  StartScene: scenes/Main.hazel

@@ -19,6 +19,9 @@ Hazel-ScriptCore/obj/
 Hazelnut/SampleProject/assets/Scripts/Binaries/
 Hazelnut/SampleProject/assets/Scripts/Intermediates/
 Hazelnut/SampleProject/assets/Scripts/obj/
+Hazelnut/LD51Project/assets/Scripts/Binaries/
+Hazelnut/LD51Project/assets/Scripts/Intermediates/
+Hazelnut/LD51Project/assets/Scripts/obj/
 build/dotnet/
 *.user
 Sandbox/assets/textures/text*.jpg

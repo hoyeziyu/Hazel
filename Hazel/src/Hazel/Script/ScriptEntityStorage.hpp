@@ -28,7 +28,8 @@ namespace Hazel {
 		Vector2,
 		Vector3,
 		Bool,
-		Entity
+		Entity,
+		Prefab
 	};
 
 	inline uint64_t DataTypeSize(DataType type)
@@ -49,6 +50,7 @@ namespace Hazel {
 		case DataType::Vector3: return sizeof(float) * 3;
 		case DataType::Bool: return sizeof(Coral::Bool32);
 		case DataType::Entity: return sizeof(UUID);
+		case DataType::Prefab: return sizeof(UUID);
 		}
 		return 0;
 	}

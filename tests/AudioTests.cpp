@@ -165,3 +165,31 @@ TEST(AudioTest, AudioCommandRegistryLoadsTriggers)
 	handle = 0;
 	EXPECT_FALSE(registry.TryGetSoundConfig(unknownId, handle));
 }
+
+TEST(AudioTest, AudioCommandRegistryLoadsLd51NestedActions)
+{
+	namespace fs = std::filesystem;
+	const fs::path tempDir = fs::temp_directory_path() / "hazel_m23_audio_registry_ld51_test";
+	fs::create_directories(tempDir);
+	const fs::path registryPath = tempDir / "AudioCommandsRegistry.hzr";
+
+	const uint64_t kSoundConfigHandle = 11402389245123987105ULL;
+	{
+		std::ofstream out(registryPath);
+		out << "Triggers:\n";
+		out << "  - DebugName: Move\n";
+		out << "    Actions:\n";
+		out << "      - Type: Play\n";
+		out << "        Target: " << kSoundConfigHandle << "\n";
+		out << "        Context: GameObject\n";
+	}
+
+	auto& registry = Hazel::AudioCommandRegistry::Get();
+	registry.Clear();
+	ASSERT_TRUE(registry.LoadFromFile(registryPath));
+
+	const uint32_t moveId = Hazel::Hash::GenerateFNVHash("Move");
+	Hazel::AssetHandle handle = 0;
+	EXPECT_TRUE(registry.TryGetSoundConfig(moveId, handle));
+	EXPECT_EQ((uint64_t)handle, kSoundConfigHandle);
+}

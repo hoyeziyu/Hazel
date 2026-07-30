@@ -1,0 +1,7 @@
+Assets:
+  - Handle: 11703174775267464727
+    FilePath: scenes/Main.hazel
+    Type: Scene
+  - Handle: 11402389245123987105
+    FilePath: Audio/Configs/SC_Click.hsoundc
+    Type: SoundConfig

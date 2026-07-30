@@ -106,6 +106,16 @@ namespace Hazel {
 			}
 			break;
 		}
+		case DataType::Prefab:
+		{
+			uint64_t handle = (uint64_t)storage.GetValue<UUID>();
+			if (ImGui::InputScalar(storage.GetName().data(), ImGuiDataType_U64, &handle))
+			{
+				storage.SetValue(UUID(handle));
+				modified = true;
+			}
+			break;
+		}
 		default:
 			ImGui::TextDisabled("%.*s (unsupported)", (int)storage.GetName().size(), storage.GetName().data());
 			break;

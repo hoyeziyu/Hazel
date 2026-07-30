@@ -59,3 +59,27 @@ TEST(CSharpScriptTest, ScriptFieldStorageSerializesToYaml)
 	EXPECT_NE(yaml.find("Speed"), std::string::npos);
 	EXPECT_NE(yaml.find("2.5"), std::string::npos);
 }
+
+TEST(CSharpScriptTest, ScriptFieldPrefabSerializesToYaml)
+{
+	Hazel::Scene scene;
+	Hazel::Entity entity = scene.CreateEntity("PrefabFieldEntity");
+	const Hazel::UUID scriptID = Hazel::UUID(1001ull);
+	entity.AddComponent<Hazel::ScriptComponent>().ScriptID = scriptID;
+
+	const uint32_t fieldID = Hazel::Hash::GenerateFNVHash("Sample.Spawner.TilePrefab");
+	auto& entityStorage = scene.GetScriptStorage().EntityStorage[entity.GetUUID()];
+	entityStorage.ScriptID = scriptID;
+
+	const uint64_t prefabHandle = 18402389245123987102ull;
+	Hazel::Buffer prefabBuffer(&prefabHandle, sizeof(uint64_t));
+	scene.GetScriptStorage().SetFieldStorage(entity.GetUUID(), fieldID, "TilePrefab", Hazel::DataType::Prefab, prefabBuffer);
+
+	YAML::Emitter out;
+	Hazel::SceneSerializer::SerializeEntity(out, entity);
+	const std::string yaml = out.c_str();
+
+	EXPECT_NE(yaml.find("TilePrefab"), std::string::npos);
+	EXPECT_NE(yaml.find("Prefab"), std::string::npos);
+	EXPECT_NE(yaml.find("18402389245123987102"), std::string::npos);
+}

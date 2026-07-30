@@ -433,6 +433,7 @@ namespace Hazel {
 								case DataType::Vector2: out << fieldStorage.GetValue<glm::vec2>((uint32_t)i); break;
 								case DataType::Vector3: out << fieldStorage.GetValue<glm::vec3>((uint32_t)i); break;
 								case DataType::Entity: out << (uint64_t)fieldStorage.GetValue<UUID>((uint32_t)i); break;
+								case DataType::Prefab: out << (uint64_t)fieldStorage.GetValue<UUID>((uint32_t)i); break;
 								default: break;
 								}
 							}
@@ -448,6 +449,7 @@ namespace Hazel {
 							case DataType::Vector2: out << fieldStorage.GetValue<glm::vec2>(); break;
 							case DataType::Vector3: out << fieldStorage.GetValue<glm::vec3>(); break;
 							case DataType::Entity: out << (uint64_t)fieldStorage.GetValue<UUID>(); break;
+							case DataType::Prefab: out << (uint64_t)fieldStorage.GetValue<UUID>(); break;
 							default: break;
 							}
 						}
@@ -706,6 +708,7 @@ namespace Hazel {
 									case DataType::Vector2: fieldStorage.SetValue(valueNode[i].as<glm::vec2>(), i); break;
 									case DataType::Vector3: fieldStorage.SetValue(valueNode[i].as<glm::vec3>(), i); break;
 									case DataType::Entity: fieldStorage.SetValue(UUID(ReadUint64(valueNode[i])), i); break;
+									case DataType::Prefab: fieldStorage.SetValue(UUID(ReadUint64(valueNode[i])), i); break;
 									default: break;
 									}
 								}
@@ -720,6 +723,7 @@ namespace Hazel {
 								case DataType::Vector2: fieldStorage.SetValue(valueNode.as<glm::vec2>()); break;
 								case DataType::Vector3: fieldStorage.SetValue(valueNode.as<glm::vec3>()); break;
 								case DataType::Entity: fieldStorage.SetValue(UUID(ReadUint64(valueNode))); break;
+								case DataType::Prefab: fieldStorage.SetValue(UUID(ReadUint64(valueNode))); break;
 								default: break;
 								}
 							}

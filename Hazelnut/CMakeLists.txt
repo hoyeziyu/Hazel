@@ -26,6 +26,9 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/SampleProject"
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/SampleProject"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/LD51Project"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/LD51Project"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${CMAKE_CURRENT_SOURCE_DIR}/imgui.ini"
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/imgui.ini"

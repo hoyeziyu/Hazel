@@ -22,6 +22,7 @@ namespace Hazel {
 		case DataType::Vector3: return "Vector3";
 		case DataType::Bool: return "Bool";
 		case DataType::Entity: return "Entity";
+		case DataType::Prefab: return "Prefab";
 		}
 		return "Unknown";
 	}
@@ -42,6 +43,7 @@ namespace Hazel {
 		if (name == "Vector3") return DataType::Vector3;
 		if (name == "Bool") return DataType::Bool;
 		if (name == "Entity") return DataType::Entity;
+		if (name == "Prefab") return DataType::Prefab;
 		return DataType::Int;
 	}
 

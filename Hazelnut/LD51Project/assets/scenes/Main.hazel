@@ -1,0 +1,9 @@
+Scene:
+  Name: LD51 Shell
+Entities:
+  - Entity: 16876354252294603916
+    TagComponent:
+      Tag: LevelManager
+    Parent: 0
+    TransformComponent:
+      Translation: [0, 0, 0]

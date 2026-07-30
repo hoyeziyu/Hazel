@@ -1,0 +1,8 @@
+Triggers:
+  - DebugName: Click
+    Target: 11402389245123987105
+  - DebugName: Move
+    Actions:
+      - Type: Play
+        Target: 11402389245123987105
+        Context: GameObject
