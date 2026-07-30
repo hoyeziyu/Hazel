@@ -51,6 +51,12 @@
 
 ## 阶段 D — 三款游戏仿制
 
+| 模块 | 游戏 | 说明 | 状态 | 笔记 |
+|------|------|------|------|------|
+| M23 | LD51 Dichotomy Shell | 层级 + Prefab 树（Phase A） | ✅ | [module-23-ld51-shell.md](./module-23-ld51-shell.md) |
+
+---
+
 | 游戏 | 目录 | 依赖模块 | 核心玩法 |
 |------|------|----------|----------|
 | **Fragile** | `HazelGame/Fragile-main` | M14 物理、第三人称、Prefab | 行星重力、导弹 |

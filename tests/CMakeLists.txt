@@ -13,6 +13,7 @@ add_executable(HazelTests
     AudioTests.cpp
     AnimationTests.cpp
     RuntimeTests.cpp
+    HierarchyTests.cpp
 )
 
 target_compile_definitions(HazelTests PRIVATE "HAZEL_REPO_ROOT=\"${CMAKE_SOURCE_DIR}\"")

@@ -193,6 +193,16 @@ namespace Hazel {
 			out << YAML::EndMap;
 		}
 
+		if (entity.HasComponent<HierarchyComponent>())
+		{
+			auto& hierarchy = entity.GetComponent<HierarchyComponent>();
+			out << YAML::Key << "Parent" << YAML::Value << (uint64_t)hierarchy.Parent;
+			out << YAML::Key << "Children" << YAML::Value << YAML::BeginSeq;
+			for (UUID child : hierarchy.Children)
+				out << (uint64_t)child;
+			out << YAML::EndSeq;
+		}
+
 		if (entity.HasComponent<TransformComponent>())
 		{
 			out << YAML::Key << "TransformComponent";
@@ -476,13 +486,30 @@ namespace Hazel {
 				pb.EntityID = ReadUint64(prefabComponent["Entity"]);
 			}
 
+			if (NodeIsDefined(entity["Parent"]) || NodeIsDefined(entity["Children"]))
+			{
+				auto& hierarchy = deserializedEntity.AddComponent<HierarchyComponent>();
+				hierarchy.Parent = ReadUint64(entity["Parent"]);
+
+				hierarchy.Children.clear();
+				if (NodeIsDefined(entity["Children"]) && entity["Children"].IsSequence())
+				{
+					for (auto childNode : entity["Children"])
+						hierarchy.Children.push_back(ReadUint64(childNode));
+				}
+			}
+
 			auto transformComponent = entity["TransformComponent"];
 			if (NodeIsDefined(transformComponent))
 			{
 				auto& tc = deserializedEntity.GetComponent<TransformComponent>();
-				tc.Translation = transformComponent["Translation"].as<glm::vec3>();
-				tc.Rotation = transformComponent["Rotation"].as<glm::vec3>();
-				tc.Scale = transformComponent["Scale"].as<glm::vec3>();
+				if (NodeIsDefined(transformComponent["Translation"]))
+					tc.Translation = transformComponent["Translation"].as<glm::vec3>();
+				else if (NodeIsDefined(transformComponent["Position"]))
+					tc.Translation = transformComponent["Position"].as<glm::vec3>();
+
+				tc.Rotation = transformComponent["Rotation"].as<glm::vec3>(glm::vec3(0.0f));
+				tc.Scale = transformComponent["Scale"].as<glm::vec3>(glm::vec3(1.0f));
 			}
 
 			auto cameraComponent = entity["CameraComponent"];

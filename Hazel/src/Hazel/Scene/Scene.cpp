@@ -523,6 +523,7 @@ namespace Hazel {
 		CopyComponent<AudioComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<AnimationComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<SkinnedMeshComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<HierarchyComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<PrefabComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<NativeScriptComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<ScriptComponent>(target->m_Registry, m_Registry, enttMap);
@@ -597,6 +598,7 @@ namespace Hazel {
 		Entity newEntity = CreateEntity();
 		CopyComponentIfExists<TagComponent>(newEntity, entity);
 		CopyComponentIfExists<PrefabComponent>(newEntity, entity);
+		CopyComponentIfExists<HierarchyComponent>(newEntity, entity);
 		CopyComponentIfExists<TransformComponent>(newEntity, entity);
 		CopyComponentIfExists<SpriteRendererComponent>(newEntity, entity);
 		CopyComponentIfExists<MeshRendererComponent>(newEntity, entity);
@@ -605,6 +607,21 @@ namespace Hazel {
 		CopyComponentIfExists<RigidBody2DComponent>(newEntity, entity);
 		CopyComponentIfExists<BoxCollider2DComponent>(newEntity, entity);
 		CopyComponentIfExists<CameraComponent>(newEntity, entity);
+		CopyComponentIfExists<AudioComponent>(newEntity, entity);
+		CopyComponentIfExists<AnimationComponent>(newEntity, entity);
+		CopyComponentIfExists<SkinnedMeshComponent>(newEntity, entity);
+		CopyComponentIfExists<NativeScriptComponent>(newEntity, entity);
+
+		if (entity.HasComponent<ScriptComponent>())
+		{
+			const auto& srcScript = entity.GetComponent<ScriptComponent>();
+			if (srcScript.ScriptID)
+			{
+				newEntity.AddComponent<ScriptComponent>().ScriptID = srcScript.ScriptID;
+				m_ScriptStorage.InitializeEntityStorage(srcScript.ScriptID, newEntity.GetUUID());
+				m_ScriptStorage.CopyEntityStorage(entity.GetUUID(), newEntity.GetUUID(), m_ScriptStorage);
+			}
+		}
 
 		if (translation)
 			newEntity.GetComponent<TransformComponent>().Translation = *translation;
@@ -618,10 +635,114 @@ namespace Hazel {
 
 	Entity Scene::Instantiate(const Ref<Prefab>& prefab, const glm::vec3* translation, const glm::vec3* rotation, const glm::vec3* scale)
 	{
-		if (!prefab || !prefab->m_Entity)
+		if (!prefab || !prefab->m_Scene || !prefab->m_Entity)
 			return {};
 
-		return CreatePrefabEntity(prefab->m_Entity, translation, rotation, scale);
+		Ref<Scene> sourceScene = prefab->m_Scene;
+		std::unordered_map<UUID, UUID> uuidRemap;
+		std::vector<Entity> sourceEntities;
+		sourceEntities.reserve(sourceScene->m_Registry.view<IDComponent>().size());
+
+		sourceScene->m_Registry.view<IDComponent>().each([&](auto entityHandle, auto&)
+			{
+				sourceEntities.emplace_back(entityHandle, sourceScene.get());
+			});
+
+		if (sourceEntities.empty())
+			return {};
+
+		for (Entity sourceEntity : sourceEntities)
+			uuidRemap[sourceEntity.GetUUID()] = UUID();
+
+		auto remapUuid = [&uuidRemap](UUID uuid) -> UUID
+			{
+				if ((uint64_t)uuid == 0)
+					return UUID(0);
+
+				auto it = uuidRemap.find(uuid);
+				return it != uuidRemap.end() ? it->second : UUID(0);
+			};
+
+		Entity rootEntity;
+		for (Entity sourceEntity : sourceEntities)
+		{
+			const UUID newUuid = uuidRemap.at(sourceEntity.GetUUID());
+			std::string name = "Entity";
+			if (sourceEntity.HasComponent<TagComponent>())
+				name = sourceEntity.GetComponent<TagComponent>().Tag;
+
+			Entity newEntity = CreateEntityWithID(newUuid, name);
+
+			CopyComponentIfExists<TagComponent>(newEntity, sourceEntity);
+			CopyComponentIfExists<TransformComponent>(newEntity, sourceEntity);
+			CopyComponentIfExists<SpriteRendererComponent>(newEntity, sourceEntity);
+			CopyComponentIfExists<MeshRendererComponent>(newEntity, sourceEntity);
+			CopyComponentIfExists<StaticMeshComponent>(newEntity, sourceEntity);
+			CopyComponentIfExists<DirectionalLightComponent>(newEntity, sourceEntity);
+			CopyComponentIfExists<RigidBody2DComponent>(newEntity, sourceEntity);
+			CopyComponentIfExists<BoxCollider2DComponent>(newEntity, sourceEntity);
+			CopyComponentIfExists<CameraComponent>(newEntity, sourceEntity);
+			CopyComponentIfExists<AudioComponent>(newEntity, sourceEntity);
+			CopyComponentIfExists<NativeScriptComponent>(newEntity, sourceEntity);
+
+			if (sourceEntity.HasComponent<PrefabComponent>())
+			{
+				const auto& srcPrefab = sourceEntity.GetComponent<PrefabComponent>();
+				newEntity.AddComponent<PrefabComponent>(srcPrefab.PrefabID, remapUuid(srcPrefab.EntityID));
+			}
+
+			if (sourceEntity.HasComponent<HierarchyComponent>())
+			{
+				const auto& srcHierarchy = sourceEntity.GetComponent<HierarchyComponent>();
+				auto& hierarchy = newEntity.AddComponent<HierarchyComponent>();
+				hierarchy.Parent = remapUuid(srcHierarchy.Parent);
+				hierarchy.Children.reserve(srcHierarchy.Children.size());
+				for (UUID child : srcHierarchy.Children)
+					hierarchy.Children.push_back(remapUuid(child));
+			}
+
+			if (sourceEntity.HasComponent<AnimationComponent>())
+			{
+				newEntity.AddComponent<AnimationComponent>(sourceEntity.GetComponent<AnimationComponent>());
+				auto& anim = newEntity.GetComponent<AnimationComponent>();
+				for (UUID& boneId : anim.BoneEntities)
+					boneId = remapUuid(boneId);
+			}
+
+			if (sourceEntity.HasComponent<SkinnedMeshComponent>())
+			{
+				newEntity.AddComponent<SkinnedMeshComponent>(sourceEntity.GetComponent<SkinnedMeshComponent>());
+				auto& mesh = newEntity.GetComponent<SkinnedMeshComponent>();
+				for (UUID& boneId : mesh.BoneEntities)
+					boneId = remapUuid(boneId);
+			}
+
+			if (sourceEntity.HasComponent<ScriptComponent>())
+			{
+				const auto& srcScript = sourceEntity.GetComponent<ScriptComponent>();
+				if (srcScript.ScriptID)
+				{
+					newEntity.AddComponent<ScriptComponent>().ScriptID = srcScript.ScriptID;
+					m_ScriptStorage.InitializeEntityStorage(srcScript.ScriptID, newEntity.GetUUID());
+					sourceScene->GetScriptStorage().CopyEntityStorage(sourceEntity.GetUUID(), newEntity.GetUUID(), m_ScriptStorage);
+				}
+			}
+
+			if (sourceEntity == prefab->m_Entity)
+				rootEntity = newEntity;
+		}
+
+		if (!rootEntity)
+			return {};
+
+		if (translation)
+			rootEntity.GetComponent<TransformComponent>().Translation = *translation;
+		if (rotation)
+			rootEntity.GetComponent<TransformComponent>().Rotation = *rotation;
+		if (scale)
+			rootEntity.GetComponent<TransformComponent>().Scale = *scale;
+
+		return rootEntity;
 	}
 
 	Entity Scene::DuplicateEntity(Entity entity)
@@ -653,6 +774,7 @@ namespace Hazel {
 		CopyComponentIfExists<AudioComponent>(newEntity, entity);
 		CopyComponentIfExists<AnimationComponent>(newEntity, entity);
 		CopyComponentIfExists<SkinnedMeshComponent>(newEntity, entity);
+		CopyComponentIfExists<HierarchyComponent>(newEntity, entity);
 		CopyComponentIfExists<NativeScriptComponent>(newEntity, entity);
 
 		if (entity.HasComponent<ScriptComponent>())
@@ -729,6 +851,10 @@ namespace Hazel {
 	}
 	template<>
 	void Scene::OnComponentAdded<PrefabComponent>(Entity, PrefabComponent&)
+	{
+	}
+	template<>
+	void Scene::OnComponentAdded<HierarchyComponent>(Entity, HierarchyComponent&)
 	{
 	}
 	template<>

@@ -308,21 +308,7 @@ namespace Hazel {
 
 	bool PrefabSerializer::DeserializeFromYAML(const std::string& yamlString, const Ref<Prefab>& prefab) const
 	{
-		YAML::Node data = YAML::Load(yamlString);
-		if (!data["Prefab"])
-			return false;
-
-		prefab->m_Scene = Scene::CreateEmpty();
-		YAML::Node prefabNode = data["Prefab"];
-		SceneSerializer::DeserializeEntities(prefabNode, prefab->m_Scene);
-
-		prefab->m_Scene->m_Registry.view<PrefabComponent>().each([&](auto entityID, auto&)
-			{
-				if (!prefab->m_Entity)
-					prefab->m_Entity = { entityID, prefab->m_Scene.get() };
-			});
-
-		return (bool)prefab->m_Entity;
+		return prefab->LoadFromYAML(yamlString);
 	}
 
 	void SceneAssetSerializer::Serialize(const AssetMetadata& metadata, const Ref<Asset>& asset) const

@@ -23,6 +23,12 @@ namespace Hazel {
 
 		std::unordered_set<AssetHandle> GetAssetList(bool recursive = true);
 
+		bool LoadFromYAML(const std::string& yamlString);
+
+		Ref<Scene>& GetScene() { return m_Scene; }
+		const Ref<Scene>& GetScene() const { return m_Scene; }
+		Entity GetRootEntity() const { return m_Entity; }
+
 	private:
 		Entity CreatePrefabFromEntity(Entity entity);
 

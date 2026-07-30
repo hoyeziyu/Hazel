@@ -89,9 +89,8 @@ cd build\msvc-debug; ctest -C Debug --output-on-failure
 
 ## 相关模块
 
-- M19 Runtime — [module-19-runtime-launcher.md](./module-19-runtime-launcher.md)
-- M20 SoundBank — [module-20-soundbank.md](./module-20-soundbank.md)
+- M22 Play-from-Pack — [module-22-play-from-pack.md](./module-22-play-from-pack.md)
 
-## 下一模块（M22）
+## 下一模块（M23）
 
-Editor Play-from-Pack + Runtime SoundBank 强制校验 — [module-22-play-from-pack.md](./module-22-play-from-pack.md)
+LD51 Dichotomy Shell — 实体层级与多实体 Prefab 实例化 — [module-23-ld51-shell.md](./module-23-ld51-shell.md)

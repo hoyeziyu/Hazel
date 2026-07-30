@@ -9,6 +9,10 @@
 #include "Hazel/Asset/AssetManager.h"
 #include "Hazel/Project/Project.h"
 
+#include <yaml-cpp/yaml.h>
+
+#include "SceneSerializer.h"
+
 namespace Hazel {
 
 	Entity Prefab::CreatePrefabFromEntity(Entity entity)
@@ -79,6 +83,39 @@ namespace Hazel {
 		}
 
 		return prefabAssetList;
+	}
+
+	bool Prefab::LoadFromYAML(const std::string& yamlString)
+	{
+		YAML::Node data = YAML::Load(yamlString);
+		if (!data["Prefab"])
+			return false;
+
+		m_Scene = Scene::CreateEmpty();
+		YAML::Node prefabNode = data["Prefab"];
+		SceneSerializer::DeserializeEntities(prefabNode, m_Scene);
+
+		m_Entity = {};
+		for (UUID uuid : m_Scene->GetAllEntityUUIDs())
+		{
+			Entity entity = m_Scene->GetEntityWithUUID(uuid);
+			if (!entity || !entity.HasComponent<HierarchyComponent>())
+				continue;
+
+			if ((uint64_t)entity.GetComponent<HierarchyComponent>().Parent == 0)
+				m_Entity = entity;
+		}
+
+		if (!m_Entity)
+		{
+			m_Scene->GetRegistry().view<PrefabComponent>().each([&](auto entityID, auto&)
+				{
+					if (!m_Entity)
+						m_Entity = { entityID, m_Scene.get() };
+				});
+		}
+
+		return (bool)m_Entity;
 	}
 
 }

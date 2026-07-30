@@ -30,6 +30,15 @@ namespace Hazel {
 			: PrefabID(prefabID), EntityID(entityID) {}
 	};
 
+	struct HierarchyComponent
+	{
+		UUID Parent = 0;
+		std::vector<UUID> Children;
+
+		HierarchyComponent() = default;
+		HierarchyComponent(const HierarchyComponent&) = default;
+	};
+
 	struct TagComponent
 	{
 		std::string Tag;
