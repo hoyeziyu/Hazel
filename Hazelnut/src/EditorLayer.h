@@ -60,6 +60,7 @@ namespace Hazel {
 		void OnScenePlay();
 		void OnSceneStop();
 		void UpdateRuntimeCameraControls(Timestep ts);
+		AssetHandle ResolveActiveSceneHandle() const;
 
 		void NewScene();
 		void OpenScene();

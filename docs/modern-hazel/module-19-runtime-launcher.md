@@ -101,11 +101,12 @@ cmake --build --preset=debug
 
 ## 验收清单
 
-- [ ] Build Asset Pack 生成 `AssetPack.hap` + `Project.hdat`
-- [ ] `AssetManager::GetAsset` 在 Runtime 模式下从 Pack 加载
-- [ ] `Hazel-Runtime.exe SampleProject` 加载 Main 场景并渲染
-- [ ] Launcher Play 能启动 Runtime 进程
-- [ ] `ctest` 含 HDAT 与 Runtime 路由测试
+- [x] Build Asset Pack 生成 `AssetPack.hap` + `Project.hdat`
+- [x] `AssetManager::GetAsset` 在 Runtime 模式下从 Pack 加载
+- [x] `Hazel-Runtime.exe SampleProject` 加载 Main 场景并渲染
+- [x] Launcher Play 能启动 Runtime 进程
+- [x] `ctest` 含 HDAT 与 Runtime 路由测试
+- [x] Editor Play 从 Pack 加载（M22）
 
 ## 刻意未做
 

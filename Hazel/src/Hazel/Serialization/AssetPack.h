@@ -26,6 +26,7 @@ namespace Hazel {
 
 		bool IsAssetHandleValid(AssetHandle assetHandle) const;
 		AssetType GetAssetType(AssetHandle sceneHandle, AssetHandle assetHandle) const;
+		bool RequiresSoundBank() const;
 
 		const AssetPackFile& GetIndex() const { return m_File; }
 		const std::filesystem::path& GetPath() const { return m_Path; }

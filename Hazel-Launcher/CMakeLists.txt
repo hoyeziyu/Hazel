@@ -40,4 +40,13 @@ endif()
 
 if(HZ_SCRIPTING)
     hazel_deploy_scripting_runtime(${PROJECT_NAME})
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/SampleProject/assets/Scripts/Binaries"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_SOURCE_DIR}/Hazelnut/SampleProject/assets/Scripts/Binaries/Sample.dll"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/SampleProject/assets/Scripts/Binaries/Sample.dll"
+        COMMENT "Deploy Sample.dll into bundled SampleProject for Hazel-Launcher"
+        VERBATIM
+    )
 endif()

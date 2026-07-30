@@ -45,6 +45,7 @@
 | M19 | Hazel-Runtime + Launcher | 打包运行 | ✅ | [module-19-runtime-launcher.md](./module-19-runtime-launcher.md) |
 | M20 | SoundGraph / SoundBank | LD51 SoundBank | ✅ | [module-20-soundbank.md](./module-20-soundbank.md)（Phase A：SoundConfig + SoundBank） |
 | M21 | Runtime Pack 闭环 | Pack + SoundBank + 预置资产 | ✅ | [module-21-runtime-pack-closure.md](./module-21-runtime-pack-closure.md) |
+| M22 | Editor Play-from-Pack | Play 走 Pack + Runtime 硬化 | ✅ | [module-22-play-from-pack.md](./module-22-play-from-pack.md) |
 
 ---
 

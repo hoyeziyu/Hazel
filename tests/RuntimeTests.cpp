@@ -95,6 +95,8 @@ TEST(RuntimeTest, AssetManagerRoutesToRuntimeManager)
 	auto scene = Hazel::Project::GetRuntimeAssetManager()->LoadScene(project->GetConfig().StartSceneHandle);
 	ASSERT_NE(scene, nullptr);
 
+	EXPECT_TRUE(assetPack->RequiresSoundBank());
+
 	const auto soundBankPath = sampleProject / "assets" / "SoundBank.hsb";
 	ASSERT_TRUE(std::filesystem::exists(soundBankPath)) << "SampleProject SoundBank.hsb missing — run BuildSamplePack first";
 	EXPECT_TRUE(Hazel::AudioEngine::Get().LoadSoundBank(soundBankPath));

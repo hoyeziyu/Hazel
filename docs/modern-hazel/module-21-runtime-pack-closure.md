@@ -91,3 +91,7 @@ cd build\msvc-debug; ctest -C Debug --output-on-failure
 
 - M19 Runtime — [module-19-runtime-launcher.md](./module-19-runtime-launcher.md)
 - M20 SoundBank — [module-20-soundbank.md](./module-20-soundbank.md)
+
+## 下一模块（M22）
+
+Editor Play-from-Pack + Runtime SoundBank 强制校验 — [module-22-play-from-pack.md](./module-22-play-from-pack.md)

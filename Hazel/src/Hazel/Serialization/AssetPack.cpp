@@ -101,6 +101,21 @@ namespace Hazel {
 		return AssetType::None;
 	}
 
+	bool AssetPack::RequiresSoundBank() const
+	{
+		for (const auto& [sceneHandle, sceneInfo] : m_File.Index.Scenes)
+		{
+			(void)sceneHandle;
+			for (const auto& [assetHandle, assetInfo] : sceneInfo.Assets)
+			{
+				(void)assetHandle;
+				if (assetInfo.Type == (uint16_t)AssetType::SoundConfig)
+					return true;
+			}
+		}
+		return false;
+	}
+
 	bool AssetPack::CreateFromActiveProject(const std::filesystem::path& outputPath, std::atomic<float>& progress)
 	{
 		auto project = Project::GetActive();

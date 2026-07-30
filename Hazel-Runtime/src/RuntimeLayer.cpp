@@ -160,14 +160,25 @@ namespace Hazel {
 		Project::SetActiveRuntime(project, assetPack);
 
 		const auto soundBankPath = project->GetAssetDirectory() / "SoundBank.hsb";
-		if (std::filesystem::exists(soundBankPath))
+		if (assetPack->RequiresSoundBank())
+		{
+			if (!std::filesystem::exists(soundBankPath))
+			{
+				HZ_CORE_ERROR("SoundBank required but missing: {}", soundBankPath.string());
+				HZ_CORE_ERROR("Build Asset Pack from Hazelnut before running Hazel-Runtime.");
+				return false;
+			}
+
+			if (!AudioEngine::Get().LoadSoundBank(soundBankPath))
+			{
+				HZ_CORE_ERROR("Failed to load SoundBank at {}", soundBankPath.string());
+				return false;
+			}
+		}
+		else if (std::filesystem::exists(soundBankPath))
 		{
 			if (!AudioEngine::Get().LoadSoundBank(soundBankPath))
-				HZ_CORE_WARN("Failed to load SoundBank at {}", soundBankPath.string());
-		}
-		else
-		{
-			HZ_CORE_WARN("SoundBank not found at {} — runtime audio may be silent", soundBankPath.string());
+				HZ_CORE_WARN("Failed to load optional SoundBank at {}", soundBankPath.string());
 		}
 
 		auto runtimeAssetManager = Project::GetRuntimeAssetManager();

@@ -20,6 +20,8 @@
 #include "Hazel/Script/ScriptEngine.h"
 #include "Hazel/Script/ScriptBuilder.h"
 #include "Hazel/Asset/AssetManager.h"
+#include "Hazel/Asset/AssetManager/EditorAssetManager.h"
+#include "Hazel/Asset/AssetManager/RuntimeAssetManager.h"
 #include "Hazel/Audio/AudioEngine.h"
 #include "Hazel/Serialization/AssetPack.h"
 #include "Hazel/Scene/Prefab.h"
@@ -316,7 +318,7 @@ namespace Hazel {
 				UI::HoverRow(m_AssetPackStatus.c_str(), "Last AssetPack build status");
 
 			const std::string stateLine = std::string("State: ") + (m_SceneState == SceneState::Edit ? "Edit" : "Play");
-			UI::HoverRow(stateLine.c_str(), m_SceneState == SceneState::Edit ? "Editing the scene" : "Running a runtime copy of the editor scene");
+			UI::HoverRow(stateLine.c_str(), m_SceneState == SceneState::Edit ? "Editing the scene" : "Running the baked AssetPack scene");
 
 			ImGui::End();
 		}
@@ -463,23 +465,82 @@ namespace Hazel {
 		if (m_SceneState == SceneState::Play)
 			return;
 
-		if (auto project = Project::GetActive())
+		auto project = Project::GetActive();
+		if (!project)
 		{
-			const auto bankPath = project->GetAssetDirectory() / "SoundBank.hsb";
-			AudioEngine::Get().BuildSoundBank(bankPath);
-			AudioEngine::Get().LoadSoundBank(bankPath);
+			HZ_CORE_ERROR("Cannot enter Play mode without an active project.");
+			return;
+		}
+
+		if (m_ActiveScenePath && m_EditorScene)
+		{
+			SceneSerializer serializer(m_EditorScene);
+			serializer.Serialize(m_ActiveScenePath->string());
+		}
+
+		const auto outputPath = project->GetAssetDirectory() / "AssetPack.hap";
+		std::atomic<float> progress = 0.0f;
+		if (!AssetPack::CreateFromActiveProject(outputPath, progress))
+		{
+			HZ_CORE_ERROR("Play aborted: AssetPack build failed.");
+			return;
+		}
+
+		auto pack = AssetPack::Load(outputPath);
+		if (!pack)
+		{
+			HZ_CORE_ERROR("Play aborted: failed to load AssetPack.");
+			return;
+		}
+
+		const AssetHandle sceneHandle = ResolveActiveSceneHandle();
+		if ((uint64_t)sceneHandle == 0)
+		{
+			HZ_CORE_ERROR("Play aborted: active scene is not registered in the asset registry.");
+			return;
+		}
+
+		Project::SetActiveRuntime(project, pack);
+
+		const auto soundBankPath = project->GetAssetDirectory() / "SoundBank.hsb";
+		if (pack->RequiresSoundBank())
+		{
+			if (!std::filesystem::exists(soundBankPath) || !AudioEngine::Get().LoadSoundBank(soundBankPath))
+			{
+				HZ_CORE_ERROR("Play aborted: SoundBank required but missing or invalid at {}", soundBankPath.string());
+				Project::SetActive(project);
+				return;
+			}
+		}
+		else if (std::filesystem::exists(soundBankPath))
+		{
+			AudioEngine::Get().LoadSoundBank(soundBankPath);
+		}
+
+		auto runtimeAssetManager = Project::GetRuntimeAssetManager();
+		if (!runtimeAssetManager)
+		{
+			HZ_CORE_ERROR("Play aborted: runtime asset manager unavailable.");
+			Project::SetActive(project);
+			return;
+		}
+
+		m_RuntimeScene = runtimeAssetManager->LoadScene(sceneHandle);
+		if (!m_RuntimeScene)
+		{
+			HZ_CORE_ERROR("Play aborted: scene handle {} not found in AssetPack.", (uint64_t)sceneHandle);
+			Project::SetActive(project);
+			return;
 		}
 
 		m_SceneState = SceneState::Play;
-		m_RuntimeScene = CreateRef<Scene>();
-		m_EditorScene->CopyTo(m_RuntimeScene);
 
 		if (m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f)
 			m_RuntimeScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 
 		ScriptEngine::GetMutable().SetCurrentScene(m_RuntimeScene);
 		m_RuntimeScene->OnRuntimeStart();
-		HZ_CORE_INFO("Entered Play mode");
+		HZ_CORE_INFO("Entered Play mode (AssetPack)");
 	}
 
 	void EditorLayer::OnSceneStop()
@@ -491,9 +552,42 @@ namespace Hazel {
 		ScriptEngine::GetMutable().SetCurrentScene(nullptr);
 		m_SceneState = SceneState::Edit;
 		m_RuntimeScene = nullptr;
+
+		if (Project::IsRuntimeActive())
+		{
+			if (auto project = Project::GetActive())
+				Project::SetActive(project);
+		}
+
 		Project::ReloadScriptEngine();
 		SyncScriptStorageAfterReload();
 		HZ_CORE_INFO("Stopped Play mode");
+	}
+
+	AssetHandle EditorLayer::ResolveActiveSceneHandle() const
+	{
+		auto project = Project::GetActive();
+		if (!project)
+			return AssetHandle(0);
+
+		auto assetManager = project->GetAssetManager();
+		if (!assetManager)
+			return AssetHandle(0);
+
+		if (m_ActiveScenePath)
+		{
+			std::error_code ec;
+			const auto relative = std::filesystem::relative(*m_ActiveScenePath, project->GetAssetDirectory(), ec);
+			if (!ec)
+			{
+				const auto& metadata = assetManager->GetMetadata(relative);
+				if (metadata.IsValid())
+					return metadata.Handle;
+			}
+		}
+
+		const auto& metadata = assetManager->GetMetadata(project->GetConfig().StartScene);
+		return metadata.IsValid() ? metadata.Handle : AssetHandle(0);
 	}
 
 	void EditorLayer::UpdateRuntimeCameraControls(Timestep ts)
