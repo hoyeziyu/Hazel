@@ -1,6 +1,6 @@
-# M23 — LD51 Dichotomy Shell（Phase A：实体层级）
+# M23 — LD51 Dichotomy Shell
 
-> 阶段 D 入口：为 LD51 仿制打通 **Parent/Children 层级 + 多实体 Prefab 实例化**，后续 Phase B 再接 C# Prefab API 与 PNG 关卡。
+> 阶段 D 入口：为 LD51 仿制打通 **Parent/Children 层级 + 多实体 Prefab 实例化 + C# 脚本胶水**。
 
 ---
 
@@ -14,7 +14,7 @@
 
 ---
 
-## Phase A（本提交）
+## Phase A（`ebca7e1`）
 
 | 项 | 说明 |
 |----|------|
@@ -26,12 +26,39 @@
 
 ---
 
-## Phase B（后续）
+## Phase B（本提交）
 
-- C# `Entity.Children` / `Prefab.Instantiate` / `GetComponent<T>`
-- `AudioCommandsRegistry` + `Audio.PostEvent`
-- PNG `LevelReader` + `LD51Project` 资产子集
+### C++ 引擎
+
+| 项 | 说明 |
+|----|------|
+| `Scene::SetParent` / `InstantiateChild` | 脚本侧父子挂载 + 子 Prefab 实例化 |
+| `AudioCommandRegistry` | 解析 `assets/AudioCommandsRegistry.hzr`（`DebugName` → SoundConfig Handle） |
+| `ScriptGlue` 扩展 | Entity 层级、`HasComponent<T>`、Prefab 实例化、`ScriptComponent.Instance`、`Audio.PostEvent` |
+| `Project::SetActive` | 加载 AudioCommandsRegistry |
+
+### C# ScriptCore
+
+| 文件 | API |
+|------|-----|
+| `AssetHandle` / `Asset<T>` / `Prefab` | 编辑器可赋值 Prefab 字段 |
+| `Entity` | `Parent`、`Children`、`HasComponent<T>`、`GetComponent<T>`、`Instantiate*`、`As<T>`、`Destroy` |
+| `Scene` | `InstantiatePrefab*`、`InstantiatePrefabWithParent*` |
+| `Audio` | `AudioCommandID`、`PostEvent`（查 registry → `PlaySoundConfig`） |
+| `Mathf` / `Vector3` | LD51 基础数学（Lerp、Distance、XZ/YZ swizzle 等） |
+
+### 测试
+
+- `AudioTest.AudioCommandRegistryLoadsTriggers` — `.hzr` 行解析 + FNV hash 查表
+
+---
+
+## Phase C（后续）
+
+- `DataType::Prefab` 脚本字段序列化
+- PNG `LevelReader` + `Hazelnut/LD51Project` 资产子集
 - TextComponent 或 ImGui 倒计时 stub
+- 完整 Audio API（`PostEventAtLocation`、参数、过滤器等）
 
 ---
 
@@ -53,8 +80,9 @@ Prefab:
 ## 验证
 
 ```powershell
-cmake --build --preset=debug --target HazelTests
-cd build\msvc-debug; ctest -C Debug -R HierarchyTest --output-on-failure
+cmake --build --preset=debug --target hazel-engine HazelTests
+dotnet build Hazel-ScriptCore/Hazel-ScriptCore.csproj -c Debug
+cd build\msvc-debug; ctest -C Debug --output-on-failure
 ```
 
 ---

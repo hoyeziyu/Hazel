@@ -12,14 +12,20 @@
   <ItemGroup>
     <Compile Include="Source\Hazel\Attributes\EditorAssignableAttribute.cs" />
     <Compile Include="Source\Hazel\Attributes\ShowInEditorAttribute.cs" />
+    <Compile Include="Source\Hazel\Audio\Audio.cs" />
+    <Compile Include="Source\Hazel\Core\Asset.cs" />
+    <Compile Include="Source\Hazel\Core\AssetHandle.cs" />
     <Compile Include="Source\Hazel\Core\FormatUtils.cs" />
     <Compile Include="Source\Hazel\Core\Input.cs" />
     <Compile Include="Source\Hazel\Core\InternalCalls.cs" />
     <Compile Include="Source\Hazel\Core\Log.cs" />
+    <Compile Include="Source\Hazel\Math\Mathf.cs" />
+    <Compile Include="Source\Hazel\Math\Transform.cs" />
     <Compile Include="Source\Hazel\Math\Vector2.cs" />
     <Compile Include="Source\Hazel\Math\Vector3.cs" />
     <Compile Include="Source\Hazel\Scene\Components.cs" />
     <Compile Include="Source\Hazel\Scene\Entity.cs" />
+    <Compile Include="Source\Hazel\Scene\Prefab.cs" />
     <Compile Include="Source\Hazel\Scene\Scene.cs" />
   </ItemGroup>
   <ItemGroup>

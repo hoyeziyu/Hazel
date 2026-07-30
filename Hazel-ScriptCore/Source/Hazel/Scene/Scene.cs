@@ -42,5 +42,61 @@ namespace Hazel
 				return entities;
 			}
 		}
+
+		public static Entity? InstantiatePrefab(Prefab prefab)
+		{
+			unsafe
+			{
+				ulong entityID = InternalCalls.Scene_InstantiatePrefab(prefab.Handle.m_Handle);
+				return entityID == 0 ? null : new Entity(entityID);
+			}
+		}
+
+		public static Entity? InstantiatePrefab(Prefab prefab, Vector3 translation)
+		{
+			unsafe
+			{
+				ulong entityID = InternalCalls.Scene_InstantiatePrefabWithTranslation(prefab.Handle.m_Handle, &translation);
+				return entityID == 0 ? null : new Entity(entityID);
+			}
+		}
+
+		public static Entity? InstantiatePrefab(Prefab prefab, Transform transform)
+		{
+			unsafe
+			{
+				ulong entityID = InternalCalls.Scene_InstantiatePrefabWithTransform(
+					prefab.Handle.m_Handle, &transform.Position, &transform.Rotation, &transform.Scale);
+				return entityID == 0 ? null : new Entity(entityID);
+			}
+		}
+
+		public static Entity? InstantiatePrefabWithParent(Prefab prefab, Entity parent)
+		{
+			unsafe
+			{
+				ulong entityID = InternalCalls.Scene_InstantiatePrefab(prefab.Handle.m_Handle);
+				return entityID == 0 ? null : new Entity(entityID) { Parent = parent };
+			}
+		}
+
+		public static Entity? InstantiatePrefabWithParent(Prefab prefab, Vector3 translation, Entity parent)
+		{
+			unsafe
+			{
+				ulong entityID = InternalCalls.Scene_InstantiateChildPrefabWithTranslation(parent.ID, prefab.Handle.m_Handle, &translation);
+				return entityID == 0 ? null : new Entity(entityID);
+			}
+		}
+
+		public static Entity? InstantiatePrefabWithParent(Prefab prefab, Transform transform, Entity parent)
+		{
+			unsafe
+			{
+				ulong entityID = InternalCalls.Scene_InstantiateChildPrefabWithTransform(
+					parent.ID, prefab.Handle.m_Handle, &transform.Position, &transform.Rotation, &transform.Scale);
+				return entityID == 0 ? null : new Entity(entityID);
+			}
+		}
 	}
 }

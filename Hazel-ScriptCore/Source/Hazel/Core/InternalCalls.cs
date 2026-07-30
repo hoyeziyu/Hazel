@@ -43,6 +43,27 @@ namespace Hazel
 		internal static delegate* unmanaged<ulong, bool> AnimationComponent_GetIsAnimationPlaying;
 		internal static delegate* unmanaged<ulong, bool, void> AnimationComponent_SetIsAnimationPlaying;
 
+		internal static delegate* unmanaged<ulong, ulong> Entity_GetParent;
+		internal static delegate* unmanaged<ulong, ulong, void> Entity_SetParent;
+		internal static delegate* unmanaged<ulong, NativeArray<ulong>> Entity_GetChildren;
+		internal static delegate* unmanaged<ulong, ReflectionType, bool> Entity_HasComponent;
+
+		internal static delegate* unmanaged<ulong, NativeInstance<object>> ScriptComponent_GetInstance;
+
+		internal static delegate* unmanaged<ulong, bool> AudioComponent_GetPlayOnAwake;
+		internal static delegate* unmanaged<ulong, bool, void> AudioComponent_SetPlayOnAwake;
+		internal static delegate* unmanaged<ulong, float> AudioComponent_GetVolume;
+		internal static delegate* unmanaged<ulong, float, void> AudioComponent_SetVolume;
+
+		internal static delegate* unmanaged<NativeString, uint> AudioCommandID_Constructor;
+		internal static delegate* unmanaged<uint, ulong, uint> Audio_PostEventFromAC;
+
+		internal static delegate* unmanaged<ulong, ulong> Scene_InstantiatePrefab;
+		internal static delegate* unmanaged<ulong, Vector3*, ulong> Scene_InstantiatePrefabWithTranslation;
+		internal static delegate* unmanaged<ulong, Vector3*, Vector3*, Vector3*, ulong> Scene_InstantiatePrefabWithTransform;
+		internal static delegate* unmanaged<ulong, ulong, Vector3*, ulong> Scene_InstantiateChildPrefabWithTranslation;
+		internal static delegate* unmanaged<ulong, ulong, Vector3*, Vector3*, Vector3*, ulong> Scene_InstantiateChildPrefabWithTransform;
+
 #pragma warning restore CS0649
 	}
 }

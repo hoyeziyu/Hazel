@@ -18,6 +18,8 @@ namespace Hazel {
 		}
 
 		bool IsValid() const { return m_Handle != nullptr; }
+		Coral::ManagedObject* GetManagedObject() { return m_Handle; }
+		const Coral::ManagedObject* GetManagedObject() const { return m_Handle; }
 
 	private:
 		Coral::ManagedObject* m_Handle = nullptr;

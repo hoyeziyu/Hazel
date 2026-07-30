@@ -5,6 +5,7 @@
 #include "Hazel/Asset/AssetManager/RuntimeAssetManager.h"
 #include "Hazel/Serialization/AssetPack.h"
 #include "Hazel/Script/ScriptEngine.h"
+#include "Hazel/Audio/AudioCommandRegistry.h"
 
 #ifdef HZ_PLATFORM_WINDOWS
 #include <Windows.h>
@@ -61,6 +62,9 @@ namespace Hazel {
 		{
 			s_ActiveProject->m_AssetManager = CreateRef<EditorAssetManager>();
 			ScriptEngine::GetMutable().Initialize(s_ActiveProject);
+
+			const auto registryPath = s_ActiveProject->GetAssetDirectory() / "AudioCommandsRegistry.hzr";
+			AudioCommandRegistry::Get().LoadFromFile(registryPath);
 		}
 	}
 
@@ -90,6 +94,12 @@ namespace Hazel {
 		ScriptEngine::GetMutable().Initialize(project);
 		ScriptEngine::GetMutable().LoadProjectAssembly();
 #endif
+
+		if (s_ActiveProject)
+		{
+			const auto registryPath = s_ActiveProject->GetAssetDirectory() / "AudioCommandsRegistry.hzr";
+			AudioCommandRegistry::Get().LoadFromFile(registryPath);
+		}
 	}
 
 	void Project::ClearActive()

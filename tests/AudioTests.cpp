@@ -3,6 +3,8 @@
 #include "Hazel/Audio/AudioEngine.h"
 #include "Hazel/Audio/AudioFileUtils.h"
 #include "Hazel/Audio/SoundBank.h"
+#include "Hazel/Audio/AudioCommandRegistry.h"
+#include "Hazel/Core/Hash.h"
 #include "Hazel/Serialization/FileStream.h"
 #include "Hazel/Asset/AssetSerializer.h"
 #include "Hazel/Asset/SoundConfigAsset.h"
@@ -125,4 +127,41 @@ TEST(AudioTest, SoundBankLoadEmptyIndex)
 	ASSERT_NE(bank, nullptr);
 	EXPECT_TRUE(bank->IsLoaded());
 	EXPECT_FALSE(bank->Contains(1));
+}
+
+TEST(AudioTest, AudioCommandRegistryLoadsTriggers)
+{
+	namespace fs = std::filesystem;
+	const fs::path tempDir = fs::temp_directory_path() / "hazel_m23_audio_registry_test";
+	fs::create_directories(tempDir);
+	const fs::path registryPath = tempDir / "AudioCommandsRegistry.hzr";
+
+	const uint64_t kSoundConfigHandle = 11402389245123987105ULL;
+	{
+		std::ofstream out(registryPath);
+		out << "Triggers:\n";
+		out << "  - DebugName: Move\n";
+		out << "    Target: " << kSoundConfigHandle << "\n";
+		out << "  - DebugName: Click\n";
+		out << "    Target: " << kSoundConfigHandle << "\n";
+	}
+
+	auto& registry = Hazel::AudioCommandRegistry::Get();
+	registry.Clear();
+	ASSERT_TRUE(registry.LoadFromFile(registryPath));
+
+	const uint32_t moveId = Hazel::Hash::GenerateFNVHash("Move");
+	const uint32_t clickId = Hazel::Hash::GenerateFNVHash("Click");
+	const uint32_t unknownId = Hazel::Hash::GenerateFNVHash("Unknown");
+
+	Hazel::AssetHandle handle = 0;
+	EXPECT_TRUE(registry.TryGetSoundConfig(moveId, handle));
+	EXPECT_EQ((uint64_t)handle, kSoundConfigHandle);
+
+	handle = 0;
+	EXPECT_TRUE(registry.TryGetSoundConfig("Click", handle));
+	EXPECT_EQ((uint64_t)handle, kSoundConfigHandle);
+
+	handle = 0;
+	EXPECT_FALSE(registry.TryGetSoundConfig(unknownId, handle));
 }

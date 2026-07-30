@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using Coral.Managed.Interop;
+
 namespace Hazel
 {
 	public enum RigidBody2DBodyType
@@ -5,6 +9,58 @@ namespace Hazel
 		Static = 0,
 		Dynamic,
 		Kinematic
+	}
+
+	public class TagComponent : Component
+	{
+		public string Tag
+		{
+			get
+			{
+				unsafe
+				{
+					string? tag = InternalCalls.TagComponent_GetTag(Entity.ID);
+					return tag ?? string.Empty;
+				}
+			}
+			set { unsafe { InternalCalls.TagComponent_SetTag(Entity.ID, value); } }
+		}
+	}
+
+	public class TransformComponent : Component
+	{
+		public Vector3 Translation
+		{
+			get
+			{
+				Vector3 result;
+				unsafe { InternalCalls.TransformComponent_GetTranslation(Entity.ID, &result); }
+				return result;
+			}
+			set { unsafe { InternalCalls.TransformComponent_SetTranslation(Entity.ID, &value); } }
+		}
+
+		public Vector3 Rotation
+		{
+			get
+			{
+				Vector3 result;
+				unsafe { InternalCalls.TransformComponent_GetRotation(Entity.ID, &result); }
+				return result;
+			}
+			set { unsafe { InternalCalls.TransformComponent_SetRotation(Entity.ID, &value); } }
+		}
+
+		public Vector3 Scale
+		{
+			get
+			{
+				Vector3 result;
+				unsafe { InternalCalls.TransformComponent_GetScale(Entity.ID, &result); }
+				return result;
+			}
+			set { unsafe { InternalCalls.TransformComponent_SetScale(Entity.ID, &value); } }
+		}
 	}
 
 	public class RigidBody2DComponent : Component
@@ -58,6 +114,32 @@ namespace Hazel
 			set { unsafe { InternalCalls.AnimationComponent_SetIsAnimationPlaying(Entity.ID, value); } }
 		}
 	}
+
+	public class AudioComponent : Component
+	{
+		public bool PlayOnAwake
+		{
+			get { unsafe { return InternalCalls.AudioComponent_GetPlayOnAwake(Entity.ID); } }
+			set { unsafe { InternalCalls.AudioComponent_SetPlayOnAwake(Entity.ID, value); } }
+		}
+
+		public float Volume
+		{
+			get { unsafe { return InternalCalls.AudioComponent_GetVolume(Entity.ID); } }
+			set { unsafe { InternalCalls.AudioComponent_SetVolume(Entity.ID, value); } }
+		}
+	}
+
+	public class ScriptComponent : Component
+	{
+		public NativeInstance<object> Instance
+		{
+			get { unsafe { return InternalCalls.ScriptComponent_GetInstance(Entity.ID); } }
+		}
+	}
+
+	public class CameraComponent : Component { }
+	public class SkinnedMeshComponent : Component { }
 
 	public abstract class Component
 	{

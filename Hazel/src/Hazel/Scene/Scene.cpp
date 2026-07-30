@@ -745,6 +745,50 @@ namespace Hazel {
 		return rootEntity;
 	}
 
+	void Scene::SetParent(Entity child, Entity parent)
+	{
+		if (!child)
+			return;
+
+		UUID oldParent = 0;
+		if (child.HasComponent<HierarchyComponent>())
+			oldParent = child.GetComponent<HierarchyComponent>().Parent;
+
+		if ((uint64_t)oldParent != 0)
+		{
+			Entity oldParentEntity = GetEntityWithUUID(oldParent);
+			if (oldParentEntity && oldParentEntity.HasComponent<HierarchyComponent>())
+			{
+				auto& siblings = oldParentEntity.GetComponent<HierarchyComponent>().Children;
+				siblings.erase(std::remove(siblings.begin(), siblings.end(), child.GetUUID()), siblings.end());
+			}
+		}
+
+		if (!child.HasComponent<HierarchyComponent>())
+			child.AddComponent<HierarchyComponent>();
+
+		auto& hierarchy = child.GetComponent<HierarchyComponent>();
+		hierarchy.Parent = parent ? parent.GetUUID() : UUID(0);
+
+		if (!parent)
+			return;
+
+		if (!parent.HasComponent<HierarchyComponent>())
+			parent.AddComponent<HierarchyComponent>();
+
+		auto& parentChildren = parent.GetComponent<HierarchyComponent>().Children;
+		if (std::find(parentChildren.begin(), parentChildren.end(), child.GetUUID()) == parentChildren.end())
+			parentChildren.push_back(child.GetUUID());
+	}
+
+	Entity Scene::InstantiateChild(const Ref<Prefab>& prefab, Entity parent, const glm::vec3* translation, const glm::vec3* rotation, const glm::vec3* scale)
+	{
+		Entity instance = Instantiate(prefab, translation, rotation, scale);
+		if (instance && parent)
+			SetParent(instance, parent);
+		return instance;
+	}
+
 	Entity Scene::DuplicateEntity(Entity entity)
 	{
 		if (entity.HasComponent<PrefabComponent>())

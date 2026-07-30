@@ -34,6 +34,8 @@ namespace Hazel {
 
 		Entity DuplicateEntity(Entity entity);
 		Entity Instantiate(const Ref<Prefab>& prefab, const glm::vec3* translation = nullptr, const glm::vec3* rotation = nullptr, const glm::vec3* scale = nullptr);
+		Entity InstantiateChild(const Ref<Prefab>& prefab, Entity parent, const glm::vec3* translation = nullptr, const glm::vec3* rotation = nullptr, const glm::vec3* scale = nullptr);
+		void SetParent(Entity child, Entity parent);
 
 		std::unordered_set<AssetHandle> GetAssetList() const;
 

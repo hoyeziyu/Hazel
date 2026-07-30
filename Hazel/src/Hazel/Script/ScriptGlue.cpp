@@ -8,17 +8,41 @@
 #include "Hazel/Physics2D/Physics2DScene.h"
 #include "Hazel/Scene/Scene.h"
 #include "Hazel/Script/ScriptEngine.h"
+#include "Hazel/Asset/AssetManager.h"
+#include "Hazel/Scene/Prefab.h"
+#include "Hazel/Audio/AudioEngine.h"
+#include "Hazel/Audio/AudioCommandRegistry.h"
+#include "Hazel/Core/Hash.h"
+#include "Hazel/Project/Project.h"
 
 #include <Coral/Array.hpp>
 #include <Coral/Assembly.hpp>
 #include <Coral/String.hpp>
+#include <Coral/Type.hpp>
 #include <box2d/box2d.h>
 #include <glm/glm.hpp>
 #include <cstring>
+#include <functional>
+#include <unordered_map>
 
 namespace Hazel {
 
 #define HZ_ADD_INTERNAL_CALL(icall) coreAssembly.AddInternalCall("Hazel.InternalCalls", #icall, (void*)InternalCalls::icall)
+
+	static std::unordered_map<Coral::TypeId, std::function<bool(Entity&)>> s_HasComponentFuncs;
+
+	template<typename TComponent>
+	static void RegisterManagedComponent(Coral::ManagedAssembly& coreAssembly, const char* managedName)
+	{
+		auto& type = coreAssembly.GetType(managedName);
+		if (!type)
+		{
+			HZ_CORE_WARN("[Scripting] Missing C# component type: {}", managedName);
+			return;
+		}
+
+		s_HasComponentFuncs[type.GetTypeId()] = [](Entity& entity) { return entity.HasComponent<TComponent>(); };
+	}
 
 	enum class LogLevel : int32_t
 	{
@@ -31,6 +55,11 @@ namespace Hazel {
 	};
 
 	namespace InternalCalls {
+
+		uint64_t Scene_InstantiatePrefabWithTransform(uint64_t prefabHandle, glm::vec3* translation, glm::vec3* rotation, glm::vec3* scale);
+		uint64_t Scene_InstantiatePrefabWithTranslation(uint64_t prefabHandle, glm::vec3* translation);
+		uint64_t Scene_InstantiateChildPrefabWithTransform(uint64_t parentID, uint64_t prefabHandle, glm::vec3* translation, glm::vec3* rotation, glm::vec3* scale);
+		uint64_t Scene_InstantiateChildPrefabWithTranslation(uint64_t parentID, uint64_t prefabHandle, glm::vec3* translation);
 
 		static b2BodyId DecodeBody(uint64_t handle)
 		{
@@ -348,10 +377,196 @@ namespace Hazel {
 				return;
 			entity.GetComponent<AnimationComponent>().IsAnimationPlaying = isPlaying;
 		}
+
+		uint64_t Entity_GetParent(uint64_t entityID)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<HierarchyComponent>())
+				return 0;
+			return entity.GetComponent<HierarchyComponent>().Parent;
+		}
+
+		void Entity_SetParent(uint64_t childID, uint64_t parentID)
+		{
+			Ref<Scene> scene = ScriptEngine::GetInstance().GetCurrentScene();
+			if (!scene)
+				return;
+
+			Entity child = scene->GetEntityWithUUID(childID);
+			if (!child)
+				return;
+
+			Entity parent = parentID != 0 ? scene->GetEntityWithUUID(parentID) : Entity{};
+			scene->SetParent(child, parent);
+		}
+
+		Coral::Array<uint64_t> Entity_GetChildren(uint64_t entityID)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<HierarchyComponent>())
+				return Coral::Array<uint64_t>::New(0);
+
+			const auto& children = entity.GetComponent<HierarchyComponent>().Children;
+			auto result = Coral::Array<uint64_t>::New((int32_t)children.size());
+			for (int32_t i = 0; i < (int32_t)children.size(); i++)
+				result[i] = children[i];
+			return result;
+		}
+
+		bool Entity_HasComponent(uint64_t entityID, Coral::ReflectionType componentType)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity)
+				return false;
+
+			Coral::Type& type = componentType;
+			if (!type)
+				return false;
+
+			auto it = s_HasComponentFuncs.find(type.GetTypeId());
+			if (it == s_HasComponentFuncs.end())
+				return false;
+
+			auto func = it->second;
+			return func(entity);
+		}
+
+		uint64_t Scene_InstantiatePrefab(uint64_t prefabHandle)
+		{
+			return Scene_InstantiatePrefabWithTranslation(prefabHandle, nullptr);
+		}
+
+		uint64_t Scene_InstantiatePrefabWithTranslation(uint64_t prefabHandle, glm::vec3* translation)
+		{
+			return Scene_InstantiatePrefabWithTransform(prefabHandle, translation, nullptr, nullptr);
+		}
+
+		uint64_t Scene_InstantiatePrefabWithTransform(uint64_t prefabHandle, glm::vec3* translation, glm::vec3* rotation, glm::vec3* scale)
+		{
+			Ref<Scene> scene = ScriptEngine::GetInstance().GetCurrentScene();
+			if (!scene)
+				return 0;
+
+			auto prefab = AssetManager::GetAsset<Prefab>(AssetHandle(prefabHandle));
+			if (!prefab)
+			{
+				HZ_CORE_WARN("[Scripting] Cannot instantiate prefab handle {}", prefabHandle);
+				return 0;
+			}
+
+			Entity entity = scene->Instantiate(prefab, translation, rotation, scale);
+			return entity ? entity.GetUUID() : UUID(0);
+		}
+
+		uint64_t Scene_InstantiateChildPrefabWithTranslation(uint64_t parentID, uint64_t prefabHandle, glm::vec3* translation)
+		{
+			return Scene_InstantiateChildPrefabWithTransform(parentID, prefabHandle, translation, nullptr, nullptr);
+		}
+
+		uint64_t Scene_InstantiateChildPrefabWithTransform(uint64_t parentID, uint64_t prefabHandle, glm::vec3* translation, glm::vec3* rotation, glm::vec3* scale)
+		{
+			Ref<Scene> scene = ScriptEngine::GetInstance().GetCurrentScene();
+			if (!scene)
+				return 0;
+
+			Entity parent = scene->GetEntityWithUUID(parentID);
+			if (!parent)
+				return 0;
+
+			auto prefab = AssetManager::GetAsset<Prefab>(AssetHandle(prefabHandle));
+			if (!prefab)
+				return 0;
+
+			Entity entity = scene->InstantiateChild(prefab, parent, translation, rotation, scale);
+			return entity ? entity.GetUUID() : UUID(0);
+		}
+
+		Coral::ManagedObject ScriptComponent_GetInstance(uint64_t entityID)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<ScriptComponent>())
+				return {};
+
+			const auto& component = entity.GetComponent<ScriptComponent>();
+			if (!component.Instance.IsValid())
+				return {};
+
+			return *component.Instance.GetManagedObject();
+		}
+
+		uint32_t AudioCommandID_Constructor(Coral::String commandName)
+		{
+			const uint32_t id = Hash::GenerateFNVHash(std::string(commandName));
+			Coral::String::Free(commandName);
+			return id;
+		}
+
+		uint32_t Audio_PostEventFromAC(uint32_t commandId, uint64_t entityID)
+		{
+			AssetHandle soundConfig = 0;
+			if (!AudioCommandRegistry::Get().TryGetSoundConfig(commandId, soundConfig))
+			{
+				HZ_CORE_WARN("[Audio] Unknown audio command id {}", commandId);
+				return 0;
+			}
+
+			Entity entity = GetEntity(entityID);
+			if (entity && entity.HasComponent<AudioComponent>())
+			{
+				auto& audio = entity.GetComponent<AudioComponent>();
+				audio.SoundConfig = soundConfig;
+			}
+
+			AudioEngine::Get().PlaySoundConfig(soundConfig);
+			return commandId;
+		}
+
+		bool AudioComponent_GetPlayOnAwake(uint64_t entityID)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<AudioComponent>())
+				return false;
+			return entity.GetComponent<AudioComponent>().PlayOnAwake;
+		}
+
+		void AudioComponent_SetPlayOnAwake(uint64_t entityID, bool value)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<AudioComponent>())
+				return;
+			entity.GetComponent<AudioComponent>().PlayOnAwake = value;
+		}
+
+		float AudioComponent_GetVolume(uint64_t entityID)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<AudioComponent>())
+				return 1.0f;
+			return entity.GetComponent<AudioComponent>().Volume;
+		}
+
+		void AudioComponent_SetVolume(uint64_t entityID, float value)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<AudioComponent>())
+				return;
+			entity.GetComponent<AudioComponent>().Volume = value;
+		}
 	}
 
 	void ScriptGlue::RegisterGlue(Coral::ManagedAssembly& coreAssembly)
 	{
+		s_HasComponentFuncs.clear();
+
+		RegisterManagedComponent<TagComponent>(coreAssembly, "Hazel.TagComponent");
+		RegisterManagedComponent<TransformComponent>(coreAssembly, "Hazel.TransformComponent");
+		RegisterManagedComponent<RigidBody2DComponent>(coreAssembly, "Hazel.RigidBody2DComponent");
+		RegisterManagedComponent<AnimationComponent>(coreAssembly, "Hazel.AnimationComponent");
+		RegisterManagedComponent<AudioComponent>(coreAssembly, "Hazel.AudioComponent");
+		RegisterManagedComponent<ScriptComponent>(coreAssembly, "Hazel.ScriptComponent");
+		RegisterManagedComponent<CameraComponent>(coreAssembly, "Hazel.CameraComponent");
+		RegisterManagedComponent<SkinnedMeshComponent>(coreAssembly, "Hazel.SkinnedMeshComponent");
+
 		HZ_ADD_INTERNAL_CALL(Scene_IsEntityValid);
 		HZ_ADD_INTERNAL_CALL(Scene_FindEntityByTag);
 		HZ_ADD_INTERNAL_CALL(Scene_CreateEntity);
@@ -382,6 +597,22 @@ namespace Hazel {
 		HZ_ADD_INTERNAL_CALL(AnimationComponent_SetAnimationTime);
 		HZ_ADD_INTERNAL_CALL(AnimationComponent_GetIsAnimationPlaying);
 		HZ_ADD_INTERNAL_CALL(AnimationComponent_SetIsAnimationPlaying);
+		HZ_ADD_INTERNAL_CALL(Entity_GetParent);
+		HZ_ADD_INTERNAL_CALL(Entity_SetParent);
+		HZ_ADD_INTERNAL_CALL(Entity_GetChildren);
+		HZ_ADD_INTERNAL_CALL(Entity_HasComponent);
+		HZ_ADD_INTERNAL_CALL(Scene_InstantiatePrefab);
+		HZ_ADD_INTERNAL_CALL(Scene_InstantiatePrefabWithTranslation);
+		HZ_ADD_INTERNAL_CALL(Scene_InstantiatePrefabWithTransform);
+		HZ_ADD_INTERNAL_CALL(Scene_InstantiateChildPrefabWithTranslation);
+		HZ_ADD_INTERNAL_CALL(Scene_InstantiateChildPrefabWithTransform);
+		HZ_ADD_INTERNAL_CALL(ScriptComponent_GetInstance);
+		HZ_ADD_INTERNAL_CALL(AudioCommandID_Constructor);
+		HZ_ADD_INTERNAL_CALL(Audio_PostEventFromAC);
+		HZ_ADD_INTERNAL_CALL(AudioComponent_GetPlayOnAwake);
+		HZ_ADD_INTERNAL_CALL(AudioComponent_SetPlayOnAwake);
+		HZ_ADD_INTERNAL_CALL(AudioComponent_GetVolume);
+		HZ_ADD_INTERNAL_CALL(AudioComponent_SetVolume);
 		coreAssembly.UploadInternalCalls();
 	}
 
