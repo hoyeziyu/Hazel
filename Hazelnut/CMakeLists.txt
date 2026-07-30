@@ -43,7 +43,12 @@ if(HZ_SCRIPTING)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${CMAKE_CURRENT_SOURCE_DIR}/SampleProject/Assets/Scripts/Binaries/Sample.dll"
             "$<TARGET_FILE_DIR:${PROJECT_NAME}>/SampleProject/assets/Scripts/Binaries/Sample.dll"
-        COMMENT "Deploy Sample.dll into bundled SampleProject"
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/LD51Project/assets/Scripts/Binaries"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/LD51Project/assets/Scripts/Binaries/LD51.dll"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/LD51Project/assets/Scripts/Binaries/LD51.dll"
+        COMMENT "Deploy Sample.dll and LD51.dll into bundled projects"
         VERBATIM
     )
 endif()

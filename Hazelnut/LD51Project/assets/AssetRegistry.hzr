@@ -2,6 +2,33 @@ Assets:
   - Handle: 11703174775267464727
     FilePath: scenes/Main.hazel
     Type: Scene
+  - Handle: 17402389245123987101
+    FilePath: meshes/Cube.hmesh
+    Type: MeshSource
+  - Handle: 18402389245123987102
+    FilePath: meshes/Cube.hsm
+    Type: StaticMesh
+  - Handle: 19402389245123987103
+    FilePath: materials/Checkerboard.hmaterial
+    Type: Material
   - Handle: 11402389245123987105
     FilePath: Audio/Configs/SC_Click.hsoundc
     Type: SoundConfig
+  - Handle: 20402389245123987110
+    FilePath: Prefabs/Tiles/GrassTile.hprefab
+    Type: Prefab
+  - Handle: 20402389245123987111
+    FilePath: Prefabs/Tiles/EmptyTile.hprefab
+    Type: Prefab
+  - Handle: 20402389245123987112
+    FilePath: Prefabs/Tiles/GoalItem.hprefab
+    Type: Prefab
+  - Handle: 20402389245123987113
+    FilePath: Prefabs/Sections/SectionContainer.hprefab
+    Type: Prefab
+  - Handle: 20402389245123987114
+    FilePath: Prefabs/Sections/LevelContainer.hprefab
+    Type: Prefab
+  - Handle: 20402389245123987115
+    FilePath: Prefabs/Tiles/SandboxTile.hprefab
+    Type: Prefab

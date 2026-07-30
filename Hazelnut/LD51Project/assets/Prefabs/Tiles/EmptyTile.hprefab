@@ -1,0 +1,13 @@
+Prefab:
+  - Entity: 10069443060331666451
+    TagComponent:
+      Tag: EmptyTile
+    Parent: 0
+    Children: []
+    PrefabComponent:
+      Prefab: 20402389245123987111
+      Entity: 10069443060331666451
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]

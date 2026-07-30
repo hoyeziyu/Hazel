@@ -5,6 +5,8 @@ set(HAZEL_CORAL_MANAGED_PROJ "${CMAKE_SOURCE_DIR}/vendor/Coral/Coral.Managed/Cor
 set(HAZEL_SCRIPTCORE_PROJ "${CMAKE_SOURCE_DIR}/Hazel-ScriptCore/Hazel-ScriptCore.csproj")
 set(HAZEL_SAMPLE_SCRIPT_PROJ "${CMAKE_SOURCE_DIR}/Hazelnut/SampleProject/Assets/Scripts/Sample.csproj")
 set(HAZEL_SAMPLE_SCRIPT_OUTPUT "${CMAKE_SOURCE_DIR}/Hazelnut/SampleProject/Assets/Scripts/Binaries")
+set(HAZEL_LD51_SCRIPT_PROJ "${CMAKE_SOURCE_DIR}/Hazelnut/LD51Project/assets/Scripts/LD51.csproj")
+set(HAZEL_LD51_SCRIPT_OUTPUT "${CMAKE_SOURCE_DIR}/Hazelnut/LD51Project/assets/Scripts/Binaries")
 
 set(DOTNET_CONFIG "$<IF:$<CONFIG:Debug>,Debug,Release>")
 
@@ -12,6 +14,7 @@ add_custom_target(HazelDotNetBuild ALL
     COMMAND ${CMAKE_COMMAND} -E make_directory "${HAZEL_DOTNET_OUTPUT}/DotNet"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${HAZEL_DOTNET_OUTPUT}/Resources/Scripts"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${HAZEL_SAMPLE_SCRIPT_OUTPUT}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${HAZEL_LD51_SCRIPT_OUTPUT}"
     COMMAND dotnet build "${HAZEL_CORAL_MANAGED_PROJ}" -c ${DOTNET_CONFIG} --nologo
         -p:AppendTargetFrameworkToOutputPath=false
         -p:OutputPath="${HAZEL_DOTNET_OUTPUT}/DotNet/"
@@ -22,7 +25,10 @@ add_custom_target(HazelDotNetBuild ALL
     COMMAND dotnet build "${HAZEL_SAMPLE_SCRIPT_PROJ}" -c ${DOTNET_CONFIG} --nologo
         -p:OutputPath="${HAZEL_SAMPLE_SCRIPT_OUTPUT}/"
         -p:IntermediateOutputPath="${HAZEL_DOTNET_OUTPUT}/intermediate/Sample/"
-    COMMENT "Building Coral.Managed, Hazel-ScriptCore, and Sample game scripts"
+    COMMAND dotnet build "${HAZEL_LD51_SCRIPT_PROJ}" -c ${DOTNET_CONFIG} --nologo
+        -p:OutputPath="${HAZEL_LD51_SCRIPT_OUTPUT}/"
+        -p:IntermediateOutputPath="${HAZEL_DOTNET_OUTPUT}/intermediate/LD51/"
+    COMMENT "Building Coral.Managed, Hazel-ScriptCore, Sample and LD51 game scripts"
     VERBATIM
 )
 

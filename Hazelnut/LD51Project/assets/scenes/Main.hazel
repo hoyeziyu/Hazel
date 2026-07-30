@@ -1,5 +1,5 @@
 Scene:
-  Name: LD51 Shell
+  Name: LD51 Prototype
 Entities:
   - Entity: 16876354252294603916
     TagComponent:
@@ -7,3 +7,56 @@ Entities:
     Parent: 0
     TransformComponent:
       Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      ScriptName: LD51.LevelManager
+      Fields:
+        - Name: EmptyTile
+          Type: Prefab
+          Value: 20402389245123987111
+        - Name: GrassTile
+          Type: Prefab
+          Value: 20402389245123987110
+        - Name: GoalItem
+          Type: Prefab
+          Value: 20402389245123987112
+        - Name: SandboxTile
+          Type: Prefab
+          Value: 20402389245123987115
+        - Name: SectionContainer
+          Type: Prefab
+          Value: 20402389245123987113
+        - Name: LevelContainer
+          Type: Prefab
+          Value: 20402389245123987114
+  - Entity: 16876354252294603917
+    TagComponent:
+      Tag: Camera
+    Parent: 0
+    TransformComponent:
+      Translation: [0, 18, 16]
+      Rotation: [-0.8, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 1
+        PerspectiveFOV: 0.785398
+        PerspectiveNear: 0.01
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 16876354252294603918
+    TagComponent:
+      Tag: Sun
+    Parent: 0
+    TransformComponent:
+      Translation: [0, 10, 0]
+      Rotation: [0.6, 0.8, 0]
+      Scale: [1, 1, 1]
+    DirectionalLightComponent:
+      Radiance: [1, 0.97, 0.92]
+      Intensity: 2.5

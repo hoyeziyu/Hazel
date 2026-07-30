@@ -12,6 +12,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Source\LevelReader.cs" />
+    <Compile Include="Source\LevelSection.cs" />
+    <Compile Include="Source\LevelManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\Hazel-ScriptCore\Hazel-ScriptCore.csproj" />

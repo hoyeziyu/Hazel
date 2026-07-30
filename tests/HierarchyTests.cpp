@@ -92,3 +92,37 @@ Prefab:
 	EXPECT_EQ((uint64_t)child.GetComponent<Hazel::HierarchyComponent>().Parent, (uint64_t)instance.GetUUID());
 	EXPECT_NE((uint64_t)child.GetUUID(), 200ull);
 }
+
+TEST(HierarchyTest, Ld51GrassTilePrefabLoadsMesh)
+{
+	const std::string yaml = R"(
+Prefab:
+  - Entity: 10069443060331666450
+    TagComponent:
+      Tag: GrassTile
+    Parent: 0
+    Children: []
+    PrefabComponent:
+      Prefab: 20402389245123987110
+      Entity: 10069443060331666450
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    StaticMeshComponent:
+      StaticMesh: 18402389245123987102
+      Material: 19402389245123987103
+      Color: [0.2, 0.8, 0.2, 1]
+      Visible: true
+)";
+
+	auto prefab = Hazel::CreateRef<Hazel::Prefab>();
+	ASSERT_TRUE(prefab->LoadFromYAML(yaml));
+
+	auto scene = Hazel::CreateRef<Hazel::Scene>();
+	Hazel::Entity instance = scene->Instantiate(prefab, nullptr, nullptr, nullptr);
+	ASSERT_TRUE(instance);
+	EXPECT_EQ(instance.GetComponent<Hazel::TagComponent>().Tag, "GrassTile");
+	EXPECT_TRUE(instance.HasComponent<Hazel::StaticMeshComponent>());
+	EXPECT_EQ((uint64_t)instance.GetComponent<Hazel::StaticMeshComponent>().StaticMesh, 18402389245123987102ull);
+}
