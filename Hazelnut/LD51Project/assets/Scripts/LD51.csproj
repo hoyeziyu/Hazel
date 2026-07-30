@@ -14,6 +14,11 @@
     <Compile Include="Source\LevelReader.cs" />
     <Compile Include="Source\LevelSection.cs" />
     <Compile Include="Source\LevelManager.cs" />
+    <Compile Include="Source\Vector3Int.cs" />
+    <Compile Include="Source\PlayerBase.cs" />
+    <Compile Include="Source\Player.cs" />
+    <Compile Include="Source\PlayerReplicator.cs" />
+    <Compile Include="Source\TimeManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\Hazel-ScriptCore\Hazel-ScriptCore.csproj" />

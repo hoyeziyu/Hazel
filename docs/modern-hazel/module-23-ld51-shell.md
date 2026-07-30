@@ -1,53 +1,51 @@
 # M23 — LD51 Dichotomy Shell
 
-> 阶段 D 入口：LD51 仿制 **Parent/Children + Prefab 树 + C# 脚本 + PNG 关卡 + LevelManager**。
+> 阶段 D：LD51 仿制 **层级 + Prefab + C# 脚本 + PNG 关卡 + 双角色循环**。
 
 ---
 
-## Phase A（`ebca7e1`）— 实体层级 + Prefab 实例化
+## Phase A–D
 
-## Phase B（`0b15da0`）— C# ScriptCore + AudioCommandRegistry
-
-## Phase C（`2901a27`）— Prefab 脚本字段 + LD51Project 壳
+见 git 历史：`ebca7e1` → `2901a27` → `17bc280`。
 
 ---
 
-## Phase D（本提交）
+## Phase E（本提交）
 
 | 项 | 说明 |
 |----|------|
-| 最小 Prefab 集 | `GrassTile` / `EmptyTile` / `GoalItem` / `SandboxTile` / `SectionContainer` / `LevelContainer` |
-| `LevelManager.cs` | 读 `Starter.png` → 实例化 Sandbox + Level 双区地块 |
-| `LevelSection.cs` | 地块字典与 Goal 坐标 |
-| 场景 | `Main.hazel` — Camera + Sun + LevelManager（Prefab 脚本字段） |
-| 构建 | `HazelDotNetBuild` 含 LD51.dll；Hazelnut POST_BUILD 部署 |
+| `PlayerBase` / `Player` | WASD 沙盒移动，录制步进 |
+| `PlayerReplicator` | 回放录制路径，Goal 检测 |
+| `TimeManager` | 10 秒倒计时（日志），触发 `SwitchRound` |
+| `LevelManager` 扩展 | 地块升起动画、双区切换、`HasValidSandboxTile` |
+| 场景 | Player（蓝）+ Replicator（红）+ TimeManager + Audio |
 
-### 打开并 Play
+### 操作
+
+| 键 | 功能 |
+|----|------|
+| W/A/S/D 或方向键 | 沙盒区移动（录制路径） |
+| Space | 预览相邻沙盒格（日志） |
+| 等待 10s | 自动切换至 Replicator 回放 |
+
+### 验证
 
 ```powershell
 cmake --build --preset=debug --target Hazelnut
+dotnet build Hazelnut/LD51Project/assets/Scripts/LD51.csproj -c Debug
 .\bin\Debug-windows-x86_64\Hazelnut\Hazelnut.exe Hazelnut\LD51Project\LD51.hzproj
 ```
 
-Play 后 `LevelManager.OnCreate` 会从 `assets/Levels/Starter.png` 生成 11×11 地块（Sandbox 区 + Level 区）。
+Play 后：Level 区地块从 Y=-100 升起；WASD 移动蓝色 Player；10 秒后红色 Replicator 回放路径。
 
 ---
 
-## Phase E（后续）
+## Phase F（后续）
 
-- Player / PlayerReplicator / TimeManager 脚本
-- 更多 Tile Prefab（Lava、Spikes 等）与 LD51 完整资产导入
-- TextComponent 或 ImGui 倒计时
-
----
-
-## 验证
-
-```powershell
-cmake --build --preset=debug --target HazelTests Hazelnut
-cd build\msvc-debug; ctest -C Debug --output-on-failure
-dotnet build Hazelnut/LD51Project/assets/Scripts/LD51.csproj -c Debug
-```
+- TextComponent 倒计时 UI
+- 更多 Tile Prefab（Lava、Spikes、Bridge）
+- Player 死亡 / 慢动作 / FOV
+- 完整 LD51 资产导入
 
 ---
 

@@ -9,6 +9,11 @@ Entities:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
+    AudioComponent:
+      SoundConfig: 11402389245123987105
+      Volume: 1.0
+      PlayOnAwake: false
+      Loop: false
     ScriptComponent:
       ScriptName: LD51.LevelManager
       Fields:
@@ -60,3 +65,57 @@ Entities:
     DirectionalLightComponent:
       Radiance: [1, 0.97, 0.92]
       Intensity: 2.5
+  - Entity: 16876354252294603920
+    TagComponent:
+      Tag: Player
+    Parent: 0
+    TransformComponent:
+      Translation: [0, 0.5, -5]
+      Rotation: [0, 0, 0]
+      Scale: [0.6, 0.6, 0.6]
+    StaticMeshComponent:
+      StaticMesh: 18402389245123987102
+      Material: 19402389245123987103
+      Color: [0.2, 0.4, 1, 1]
+      Visible: true
+    ScriptComponent:
+      ScriptName: LD51.Player
+      Fields:
+        - Name: PlayerReplicatorEntity
+          Type: Entity
+          Value: 16876354252294603921
+  - Entity: 16876354252294603921
+    TagComponent:
+      Tag: PlayerReplicator
+    Parent: 0
+    TransformComponent:
+      Translation: [0, 0.5, 5]
+      Rotation: [0, 0, 0]
+      Scale: [0.6, 0.6, 0.6]
+    StaticMeshComponent:
+      StaticMesh: 18402389245123987102
+      Material: 19402389245123987103
+      Color: [1, 0.3, 0.2, 1]
+      Visible: true
+    ScriptComponent:
+      ScriptName: LD51.PlayerReplicator
+  - Entity: 16876354252294603922
+    TagComponent:
+      Tag: TimeManager
+    Parent: 0
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      ScriptName: LD51.TimeManager
+      Fields:
+        - Name: CameraEntity
+          Type: Entity
+          Value: 16876354252294603917
+        - Name: PlayerEntity
+          Type: Entity
+          Value: 16876354252294603920
+        - Name: PlayerReplicatorEntity
+          Type: Entity
+          Value: 16876354252294603921

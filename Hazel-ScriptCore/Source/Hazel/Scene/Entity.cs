@@ -167,6 +167,8 @@ namespace Hazel
 		public void Destroy() => Scene.DestroyEntity(this);
 		public void Destroy(Entity other) => Scene.DestroyEntity(other);
 
+		public Entity? FindEntityByTag(string tag) => Scene.FindEntityByTag(tag);
+
 		protected virtual void OnCreate() { }
 		protected virtual void OnUpdate(float ts) { }
 		protected virtual void OnDestroy() { }

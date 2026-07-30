@@ -45,5 +45,16 @@ namespace LD51
 			var key = new TileKey { X = tileX, Z = tileZ };
 			return m_Tiles.TryGetValue(key, out var tile) ? tile : null;
 		}
+
+		public TileData?[] GetTileNeighbours(int tileX, int tileZ)
+		{
+			return new[]
+			{
+				GetTile(tileX, tileZ + 1),
+				GetTile(tileX + 1, tileZ),
+				GetTile(tileX, tileZ - 1),
+				GetTile(tileX - 1, tileZ)
+			};
+		}
 	}
 }
