@@ -14,6 +14,8 @@
 #include "Hazel/Audio/AudioCommandRegistry.h"
 #include "Hazel/Core/Hash.h"
 #include "Hazel/Project/Project.h"
+#include "Hazel/Debug/RuntimeHUD.h"
+#include "Hazel/Core/Time.h"
 
 #include <Coral/Array.hpp>
 #include <Coral/Assembly.hpp>
@@ -552,6 +554,48 @@ namespace Hazel {
 				return;
 			entity.GetComponent<AudioComponent>().Volume = value;
 		}
+
+		float CameraComponent_GetVerticalFOV(uint64_t entityID)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<CameraComponent>())
+				return 45.0f;
+			return glm::degrees(entity.GetComponent<CameraComponent>().Camera.GetPerspectiveVerticalFOV());
+		}
+
+		void CameraComponent_SetVerticalFOV(uint64_t entityID, float verticalFovDegrees)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<CameraComponent>())
+				return;
+			entity.GetComponent<CameraComponent>().Camera.SetPerspectiveVerticalFOV(glm::radians(verticalFovDegrees));
+		}
+
+		void RuntimeHUD_SetLine(int32_t index, Coral::String text)
+		{
+			if (index < 0)
+			{
+				Coral::String::Free(text);
+				return;
+			}
+			RuntimeHUD::SetLine((size_t)index, std::string(text));
+			Coral::String::Free(text);
+		}
+
+		void RuntimeHUD_Clear()
+		{
+			RuntimeHUD::Clear();
+		}
+
+		float Time_GetTimeScale()
+		{
+			return Time::GetTimeScale();
+		}
+
+		void Time_SetTimeScale(float timeScale)
+		{
+			Time::SetTimeScale(timeScale);
+		}
 	}
 
 	void ScriptGlue::RegisterGlue(Coral::ManagedAssembly& coreAssembly)
@@ -613,6 +657,12 @@ namespace Hazel {
 		HZ_ADD_INTERNAL_CALL(AudioComponent_SetPlayOnAwake);
 		HZ_ADD_INTERNAL_CALL(AudioComponent_GetVolume);
 		HZ_ADD_INTERNAL_CALL(AudioComponent_SetVolume);
+		HZ_ADD_INTERNAL_CALL(CameraComponent_GetVerticalFOV);
+		HZ_ADD_INTERNAL_CALL(CameraComponent_SetVerticalFOV);
+		HZ_ADD_INTERNAL_CALL(RuntimeHUD_SetLine);
+		HZ_ADD_INTERNAL_CALL(RuntimeHUD_Clear);
+		HZ_ADD_INTERNAL_CALL(Time_GetTimeScale);
+		HZ_ADD_INTERNAL_CALL(Time_SetTimeScale);
 		coreAssembly.UploadInternalCalls();
 	}
 

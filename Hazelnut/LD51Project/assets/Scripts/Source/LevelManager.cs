@@ -23,8 +23,10 @@ namespace LD51
 		public Prefab SandboxTile = null!;
 		public Prefab SectionContainer = null!;
 		public Prefab LevelContainer = null!;
+		public Prefab SpikesTile = null!;
+		public Prefab LavaTile = null!;
 
-		public string LevelFile = "assets/Levels/Starter.png";
+		public string LevelFile = "assets/Levels/Challenge.png";
 
 		public Entity m_CameraEntity = null!;
 		public AudioComponent AC = null!;
@@ -51,6 +53,9 @@ namespace LD51
 
 			m_TilePrefabs[TileType.None] = EmptyTile;
 			m_TilePrefabs[TileType.Grass] = GrassTile;
+			m_TilePrefabs[TileType.Spikes] = SpikesTile;
+			m_TilePrefabs[TileType.Lava] = LavaTile;
+			m_TilePrefabs[TileType.LavaDeadly] = LavaTile;
 			m_ItemPrefabs[ItemType.Goal] = GoalItem;
 
 			string levelPath = ResolveLevelPath(LevelFile);
@@ -149,6 +154,24 @@ namespace LD51
 			int tileZ = Mathf.FloorToInt(position.Z);
 			var goal = m_Section.GoalTile;
 			return goal.X == tileX && goal.Z == tileZ;
+		}
+
+		public bool IsDeadlyTile(Vector3 position)
+		{
+			if (m_Section == null)
+				return false;
+
+			int tileX = Mathf.FloorToInt(position.X);
+			int tileZ = Mathf.FloorToInt(position.Z);
+			TileData? tile = m_Section.GetTile(tileX, tileZ);
+			if (tile == null || !tile.IsVisible)
+				return false;
+
+			return tile.Type == TileType.Spikes
+				|| tile.Type == TileType.Lava
+				|| tile.Type == TileType.LavaDeadly
+				|| tile.Type == TileType.OceanDeadly
+				|| tile.Type == TileType.DesertDeadly;
 		}
 
 		public void OnPlayerDied(Entity playerEntity)

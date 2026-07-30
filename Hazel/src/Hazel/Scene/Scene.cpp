@@ -16,6 +16,8 @@
 #include "Hazel/Script/NativeScriptFactory.h"
 #include "Hazel/Script/NativeScriptRegistry.h"
 #include "Hazel/Script/ScriptEngine.h"
+#include "Hazel/Core/Time.h"
+#include "Hazel/Debug/RuntimeHUD.h"
 #include "Hazel/Audio/AudioEngine.h"
 #include "Hazel/Animation/AnimationSystem.h"
 #include "Hazel/Project/Project.h"
@@ -349,6 +351,8 @@ namespace Hazel {
 
 	void Scene::OnUpdateRuntime(Timestep ts)
 	{
+		ts = ts * Time::GetTimeScale();
+
 		Physics2DScene::Step(*this, ts);
 		AnimationSystem::Update(*this, ts);
 
@@ -390,6 +394,9 @@ namespace Hazel {
 
 	void Scene::OnRuntimeStart()
 	{
+		RuntimeHUD::Clear();
+		Time::Reset();
+
 		RegisterBuiltInNativeScripts();
 		NativeScriptFactory::BindSceneScripts(*this);
 		Physics2DScene::Init(*this);
@@ -449,6 +456,9 @@ namespace Hazel {
 
 	void Scene::OnRuntimeStop()
 	{
+		RuntimeHUD::Clear();
+		Time::Reset();
+
 		Physics2DScene::Shutdown(*this);
 
 		m_Registry.view<AudioComponent>().each([](auto, AudioComponent& ac) {

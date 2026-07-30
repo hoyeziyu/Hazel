@@ -1,0 +1,18 @@
+Prefab:
+  - Entity: 10069443060331666451
+    TagComponent:
+      Tag: SpikesTile
+    Parent: 0
+    Children: []
+    PrefabComponent:
+      Prefab: 20402389245123987116
+      Entity: 10069443060331666451
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    StaticMeshComponent:
+      StaticMesh: 18402389245123987102
+      Material: 19402389245123987103
+      Color: [0.55, 0.55, 0.6, 1]
+      Visible: true

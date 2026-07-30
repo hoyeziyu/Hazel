@@ -35,6 +35,12 @@ Entities:
         - Name: LevelContainer
           Type: Prefab
           Value: 20402389245123987114
+        - Name: SpikesTile
+          Type: Prefab
+          Value: 20402389245123987116
+        - Name: LavaTile
+          Type: Prefab
+          Value: 20402389245123987117
   - Entity: 16876354252294603917
     TagComponent:
       Tag: Camera

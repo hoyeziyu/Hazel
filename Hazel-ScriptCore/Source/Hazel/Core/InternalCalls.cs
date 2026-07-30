@@ -64,6 +64,15 @@ namespace Hazel
 		internal static delegate* unmanaged<ulong, ulong, Vector3*, ulong> Scene_InstantiateChildPrefabWithTranslation;
 		internal static delegate* unmanaged<ulong, ulong, Vector3*, Vector3*, Vector3*, ulong> Scene_InstantiateChildPrefabWithTransform;
 
+		internal static delegate* unmanaged<ulong, float> CameraComponent_GetVerticalFOV;
+		internal static delegate* unmanaged<ulong, float, void> CameraComponent_SetVerticalFOV;
+
+		internal static delegate* unmanaged<int, NativeString, void> RuntimeHUD_SetLine;
+		internal static delegate* unmanaged<void> RuntimeHUD_Clear;
+
+		internal static delegate* unmanaged<float> Time_GetTimeScale;
+		internal static delegate* unmanaged<float, void> Time_SetTimeScale;
+
 #pragma warning restore CS0649
 	}
 }

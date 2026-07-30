@@ -19,6 +19,8 @@
     <Compile Include="Source\Hazel\Core\Input.cs" />
     <Compile Include="Source\Hazel\Core\InternalCalls.cs" />
     <Compile Include="Source\Hazel\Core\Log.cs" />
+    <Compile Include="Source\Hazel\Core\Time.cs" />
+    <Compile Include="Source\Hazel\Debug\RuntimeHUD.cs" />
     <Compile Include="Source\Hazel\Math\Mathf.cs" />
     <Compile Include="Source\Hazel\Math\Transform.cs" />
     <Compile Include="Source\Hazel\Math\Vector2.cs" />

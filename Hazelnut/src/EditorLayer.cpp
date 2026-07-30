@@ -27,6 +27,7 @@
 #include "Hazel/Scene/Prefab.h"
 #include "Hazel/ImGui/ImGuiUtilities.h"
 #include "Hazel/Utils/PlatformUtils.h"
+#include "Hazel/Debug/RuntimeHUD.h"
 
 #include <ImGuizmo.h>
 #include <atomic>
@@ -360,6 +361,24 @@ namespace Hazel {
 
 		uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
 		ImGui::Image((ImTextureID)(uintptr_t)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+
+		if (m_SceneState == SceneState::Play)
+		{
+			const auto& hudLines = RuntimeHUD::GetLines();
+			ImDrawList* drawList = ImGui::GetWindowDrawList();
+			const ImVec2 imageMin = ImGui::GetItemRectMin();
+			float y = imageMin.y + 12.0f;
+			for (const std::string& line : hudLines)
+			{
+				if (line.empty())
+					continue;
+
+				const ImVec2 textPos = ImVec2(imageMin.x + 12.0f, y);
+				drawList->AddText(ImVec2(textPos.x + 1.0f, textPos.y + 1.0f), IM_COL32(0, 0, 0, 200), line.c_str());
+				drawList->AddText(textPos, IM_COL32(255, 255, 255, 255), line.c_str());
+				y += 22.0f;
+			}
+		}
 
 		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
 		if (m_SceneState == SceneState::Edit && selectedEntity && m_GizmoType != -1)

@@ -18,6 +18,8 @@ namespace LD51
 		{
 			if (Input.IsKeyPressed(KeyCode.F))
 				m_TimeManager?.EnterSlowMotion();
+			else
+				m_TimeManager?.ExitSlowMotion();
 
 			if (!IsActivePlayer)
 				return;

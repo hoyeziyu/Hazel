@@ -138,7 +138,14 @@ namespace Hazel
 		}
 	}
 
-	public class CameraComponent : Component { }
+	public class CameraComponent : Component
+	{
+		public float VerticalFOV
+		{
+			get { unsafe { return InternalCalls.CameraComponent_GetVerticalFOV(Entity.ID); } }
+			set { unsafe { InternalCalls.CameraComponent_SetVerticalFOV(Entity.ID, value); } }
+		}
+	}
 	public class SkinnedMeshComponent : Component { }
 
 	public abstract class Component
