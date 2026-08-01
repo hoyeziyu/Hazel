@@ -571,6 +571,67 @@ namespace Hazel {
 			entity.GetComponent<CameraComponent>().Camera.SetPerspectiveVerticalFOV(glm::radians(verticalFovDegrees));
 		}
 
+		Coral::String TextComponent_GetText(uint64_t entityID)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<TextComponent>())
+				return Coral::String::New("");
+			return Coral::String::New(entity.GetComponent<TextComponent>().Text);
+		}
+
+		void TextComponent_SetText(uint64_t entityID, Coral::String text)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<TextComponent>())
+			{
+				Coral::String::Free(text);
+				return;
+			}
+
+			entity.GetComponent<TextComponent>().Text = text;
+			Coral::String::Free(text);
+		}
+
+		void TextComponent_GetColor(uint64_t entityID, glm::vec4* outColor)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !outColor)
+				return;
+
+			if (!entity.HasComponent<TextComponent>())
+			{
+				*outColor = glm::vec4(1.0f);
+				return;
+			}
+
+			*outColor = entity.GetComponent<TextComponent>().Color;
+		}
+
+		void TextComponent_SetColor(uint64_t entityID, glm::vec4* inColor)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !inColor || !entity.HasComponent<TextComponent>())
+				return;
+
+			entity.GetComponent<TextComponent>().Color = *inColor;
+		}
+
+		float TextComponent_GetOffsetY(uint64_t entityID)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<TextComponent>())
+				return 0.5f;
+			return entity.GetComponent<TextComponent>().OffsetY;
+		}
+
+		void TextComponent_SetOffsetY(uint64_t entityID, float offsetY)
+		{
+			Entity entity = GetEntity(entityID);
+			if (!entity || !entity.HasComponent<TextComponent>())
+				return;
+			entity.GetComponent<TextComponent>().OffsetY = offsetY;
+		}
+
 		void RuntimeHUD_SetLine(int32_t index, Coral::String text)
 		{
 			if (index < 0)
@@ -626,6 +687,7 @@ namespace Hazel {
 		RegisterManagedComponent<AudioComponent>(coreAssembly, "Hazel.AudioComponent");
 		RegisterManagedComponent<ScriptComponent>(coreAssembly, "Hazel.ScriptComponent");
 		RegisterManagedComponent<CameraComponent>(coreAssembly, "Hazel.CameraComponent");
+		RegisterManagedComponent<TextComponent>(coreAssembly, "Hazel.TextComponent");
 		RegisterManagedComponent<SkinnedMeshComponent>(coreAssembly, "Hazel.SkinnedMeshComponent");
 
 		HZ_ADD_INTERNAL_CALL(Scene_IsEntityValid);
@@ -676,6 +738,12 @@ namespace Hazel {
 		HZ_ADD_INTERNAL_CALL(AudioComponent_SetVolume);
 		HZ_ADD_INTERNAL_CALL(CameraComponent_GetVerticalFOV);
 		HZ_ADD_INTERNAL_CALL(CameraComponent_SetVerticalFOV);
+		HZ_ADD_INTERNAL_CALL(TextComponent_GetText);
+		HZ_ADD_INTERNAL_CALL(TextComponent_SetText);
+		HZ_ADD_INTERNAL_CALL(TextComponent_GetColor);
+		HZ_ADD_INTERNAL_CALL(TextComponent_SetColor);
+		HZ_ADD_INTERNAL_CALL(TextComponent_GetOffsetY);
+		HZ_ADD_INTERNAL_CALL(TextComponent_SetOffsetY);
 		HZ_ADD_INTERNAL_CALL(RuntimeHUD_SetLine);
 		HZ_ADD_INTERNAL_CALL(RuntimeHUD_Clear);
 		HZ_ADD_INTERNAL_CALL(RuntimeWorldLabel_Set);

@@ -146,6 +146,40 @@ namespace Hazel
 			set { unsafe { InternalCalls.CameraComponent_SetVerticalFOV(Entity.ID, value); } }
 		}
 	}
+
+	public class TextComponent : Component
+	{
+		public string Text
+		{
+			get
+			{
+				unsafe
+				{
+					string? text = InternalCalls.TextComponent_GetText(Entity.ID);
+					return text ?? string.Empty;
+				}
+			}
+			set { unsafe { InternalCalls.TextComponent_SetText(Entity.ID, value); } }
+		}
+
+		public Vector4 Color
+		{
+			get
+			{
+				Vector4 result;
+				unsafe { InternalCalls.TextComponent_GetColor(Entity.ID, &result); }
+				return result;
+			}
+			set { unsafe { InternalCalls.TextComponent_SetColor(Entity.ID, &value); } }
+		}
+
+		public float OffsetY
+		{
+			get { unsafe { return InternalCalls.TextComponent_GetOffsetY(Entity.ID); } }
+			set { unsafe { InternalCalls.TextComponent_SetOffsetY(Entity.ID, value); } }
+		}
+	}
+
 	public class SkinnedMeshComponent : Component { }
 
 	public abstract class Component

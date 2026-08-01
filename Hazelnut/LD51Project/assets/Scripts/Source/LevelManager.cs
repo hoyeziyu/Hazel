@@ -30,7 +30,7 @@ namespace LD51
 		public Prefab BridgeLeftRightItem = null!;
 		public Prefab AxeTrapItem = null!;
 
-		public string LevelFile = "assets/Levels/DualMechanisms.png";
+		public string LevelFile = "assets/Levels/BridgeUpDown.png";
 
 		public Entity m_CameraEntity = null!;
 		public AudioComponent AC = null!;
@@ -285,6 +285,14 @@ namespace LD51
 
 			float y = tile.BridgeOpen ? 0.45f : -0.25f;
 			tile.ItemEntity.Translation = new Vector3(0, y, 0);
+
+			TextComponent? text = tile.ItemEntity.GetComponent<TextComponent>();
+			if (text != null)
+			{
+				text.Color = tile.BridgeOpen
+					? new Vector4(0.3f, 1.0f, 0.4f, 1.0f)
+					: new Vector4(0.9f, 0.75f, 0.4f, 1.0f);
+			}
 		}
 
 		private void UpdateTraps(float ts)

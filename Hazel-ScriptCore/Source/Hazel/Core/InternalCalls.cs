@@ -67,6 +67,13 @@ namespace Hazel
 		internal static delegate* unmanaged<ulong, float> CameraComponent_GetVerticalFOV;
 		internal static delegate* unmanaged<ulong, float, void> CameraComponent_SetVerticalFOV;
 
+		internal static delegate* unmanaged<ulong, NativeString> TextComponent_GetText;
+		internal static delegate* unmanaged<ulong, NativeString, void> TextComponent_SetText;
+		internal static delegate* unmanaged<ulong, Vector4*, void> TextComponent_GetColor;
+		internal static delegate* unmanaged<ulong, Vector4*, void> TextComponent_SetColor;
+		internal static delegate* unmanaged<ulong, float> TextComponent_GetOffsetY;
+		internal static delegate* unmanaged<ulong, float, void> TextComponent_SetOffsetY;
+
 		internal static delegate* unmanaged<int, NativeString, void> RuntimeHUD_SetLine;
 		internal static delegate* unmanaged<void> RuntimeHUD_Clear;
 

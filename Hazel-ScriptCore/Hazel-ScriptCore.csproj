@@ -25,6 +25,7 @@
     <Compile Include="Source\Hazel\Math\Transform.cs" />
     <Compile Include="Source\Hazel\Math\Vector2.cs" />
     <Compile Include="Source\Hazel\Math\Vector3.cs" />
+    <Compile Include="Source\Hazel\Math\Vector4.cs" />
     <Compile Include="Source\Hazel\Scene\Components.cs" />
     <Compile Include="Source\Hazel\Scene\Entity.cs" />
     <Compile Include="Source\Hazel\Scene\Prefab.cs" />
