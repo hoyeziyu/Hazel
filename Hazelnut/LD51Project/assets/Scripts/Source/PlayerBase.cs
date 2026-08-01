@@ -12,6 +12,7 @@ namespace LD51
 
 		protected Vector3Int m_TargetLocation;
 		protected Vector3 m_SpawnLocation;
+		protected Vector3 m_PreviousPosition;
 
 		protected TimeManager? m_TimeManager;
 		protected LevelManager? m_LevelManager;
@@ -52,6 +53,7 @@ namespace LD51
 
 			Rotation = Vector3.Zero;
 			float previousY = Translation.Y;
+			m_PreviousPosition = Translation;
 			m_TargetLocation.Y = (int)Translation.Y;
 
 			Move(deltaTime);
@@ -61,7 +63,11 @@ namespace LD51
 				Translation = new Vector3(m_TargetLocation.X, previousY, m_TargetLocation.Z);
 				StopAnimation(0);
 
-				if (m_LevelManager != null && (m_LevelManager.IsDeadlyTile(Translation) || m_LevelManager.IsBlockedTile(Translation)))
+				if (m_LevelManager != null && (
+					m_LevelManager.IsBlockedTile(Translation) ||
+					m_LevelManager.IsMoveBlocked(m_PreviousPosition, Translation) ||
+					m_LevelManager.IsDeadlyTile(Translation) ||
+					m_LevelManager.IsTrapDeadly(Translation)))
 				{
 					m_LevelManager.OnPlayerDied(this);
 					return;

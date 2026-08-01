@@ -47,3 +47,6 @@ Assets:
   - Handle: 20402389245123987120
     FilePath: Prefabs/Items/BridgeLeftRightItem.hprefab
     Type: Prefab
+  - Handle: 20402389245123987121
+    FilePath: Prefabs/Items/AxeTrapItem.hprefab
+    Type: Prefab

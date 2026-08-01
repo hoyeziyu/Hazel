@@ -1,0 +1,18 @@
+Prefab:
+  - Entity: 10069443060331666470
+    TagComponent:
+      Tag: AxeTrapItem
+    Parent: 0
+    Children: []
+    PrefabComponent:
+      Prefab: 20402389245123987121
+      Entity: 10069443060331666470
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.2, 0.55, 0.85]
+    StaticMeshComponent:
+      StaticMesh: 18402389245123987102
+      Material: 19402389245123987103
+      Color: [0.85, 0.15, 0.15, 1]
+      Visible: true

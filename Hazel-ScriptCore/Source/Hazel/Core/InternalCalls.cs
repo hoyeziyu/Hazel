@@ -70,6 +70,9 @@ namespace Hazel
 		internal static delegate* unmanaged<int, NativeString, void> RuntimeHUD_SetLine;
 		internal static delegate* unmanaged<void> RuntimeHUD_Clear;
 
+		internal static delegate* unmanaged<int, Vector3*, NativeString, void> RuntimeWorldLabel_Set;
+		internal static delegate* unmanaged<void> RuntimeWorldLabel_Clear;
+
 		internal static delegate* unmanaged<float> Time_GetTimeScale;
 		internal static delegate* unmanaged<float, void> Time_SetTimeScale;
 

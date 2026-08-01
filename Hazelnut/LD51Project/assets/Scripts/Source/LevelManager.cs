@@ -28,8 +28,9 @@ namespace LD51
 		public Prefab PressurePlateItem = null!;
 		public Prefab BridgeUpDownItem = null!;
 		public Prefab BridgeLeftRightItem = null!;
+		public Prefab AxeTrapItem = null!;
 
-		public string LevelFile = "assets/Levels/Mechanisms.png";
+		public string LevelFile = "assets/Levels/TrapsAndBridges.png";
 
 		public Entity m_CameraEntity = null!;
 		public AudioComponent AC = null!;
@@ -44,6 +45,8 @@ namespace LD51
 		private LevelSection? m_Section;
 		private bool m_IsReplicatingMoves;
 		private bool m_BridgesOpen;
+		private bool m_HasGoal;
+		private float m_TrapTimer;
 		private readonly List<TileAnimationInfo> m_TilesToAnimate = new List<TileAnimationInfo>();
 
 		protected override void OnCreate()
@@ -83,6 +86,8 @@ namespace LD51
 
 		protected override void OnUpdate(float ts)
 		{
+			UpdateTraps(ts);
+
 			if (m_TilesToAnimate.Count == 0)
 				return;
 
@@ -169,13 +174,37 @@ namespace LD51
 			if (tile == null)
 				return true;
 
-			if (!tile.IsVisible)
+			return !tile.IsVisible;
+		}
+
+		public bool IsMoveBlocked(Vector3 from, Vector3 to)
+		{
+			TileData? tile = GetTileAt(to);
+			if (tile == null || !tile.IsVisible)
 				return true;
 
-			if (IsBridgeItem(tile.ItemType))
-				return !tile.BridgeOpen;
+			if (!IsBridgeItem(tile.ItemType) || tile.BridgeOpen)
+				return false;
+
+			float dx = to.X - from.X;
+			float dz = to.Z - from.Z;
+
+			if (tile.ItemType == ItemType.BridgeLeftRight && Math.Abs(dx) > 0.01f)
+				return true;
+
+			if (tile.ItemType == ItemType.BridgeUpDown && Math.Abs(dz) > 0.01f)
+				return true;
 
 			return false;
+		}
+
+		public bool IsTrapDeadly(Vector3 position)
+		{
+			TileData? tile = GetTileAt(position);
+			if (tile == null || !tile.IsVisible || tile.TrapType == TrapType.None)
+				return false;
+
+			return tile.TrapActive;
 		}
 
 		public void OnEntitySteppedTile(Vector3 position)
@@ -229,6 +258,58 @@ namespace LD51
 
 			float y = tile.BridgeOpen ? 0.45f : -0.25f;
 			tile.ItemEntity.Translation = new Vector3(0, y, 0);
+		}
+
+		private void UpdateTraps(float ts)
+		{
+			if (m_Section == null)
+				return;
+
+			m_TrapTimer += ts;
+			bool trapActive = ((int)(m_TrapTimer / 2.0f) % 2) == 0;
+
+			foreach (var kvp in m_Section.Tiles)
+			{
+				TileData tile = kvp.Value;
+				if (tile.TrapType == TrapType.None)
+					continue;
+
+				tile.TrapActive = trapActive;
+				UpdateTrapVisual(tile);
+			}
+		}
+
+		private static void UpdateTrapVisual(TileData tile)
+		{
+			if (tile.TrapEntity == null)
+				return;
+
+			float swing = tile.TrapActive ? 0.0f : 0.45f;
+			if (tile.TrapType == TrapType.AxeLeftRight)
+				tile.TrapEntity.Translation = new Vector3(swing, 0.85f, 0);
+			else if (tile.TrapType == TrapType.AxeUpDown)
+				tile.TrapEntity.Translation = new Vector3(0, 0.85f, swing);
+		}
+
+		private void SetupWorldLabels()
+		{
+			HUD.ClearWorldLabels();
+
+			if (m_HasGoal)
+			{
+				HUD.SetWorldLabel(0, new Vector3(m_Section!.GoalTile.X, 1.2f, m_Section.GoalTile.Z), "GOAL");
+			}
+
+			foreach (var kvp in m_Section!.Tiles)
+			{
+				TileData tile = kvp.Value;
+				Vector3 worldPos = new Vector3(kvp.Key.X, 1.0f, kvp.Key.Z);
+
+				if (tile.ItemType == ItemType.PressurePlate)
+					HUD.SetWorldLabel(1, worldPos, "PLATE");
+				else if (tile.TrapType != TrapType.None)
+					HUD.SetWorldLabel(2, worldPos, "AXE");
+			}
 		}
 
 		private TileData? GetTileAt(Vector3 position)
@@ -357,6 +438,7 @@ namespace LD51
 					ItemType item = level.Items[x, y];
 					if (item == ItemType.Goal)
 					{
+						m_HasGoal = true;
 						m_Section.GoalTile = new TileKey { X = (int)tx, Z = (int)tzLevel };
 						sectionContainer.InstantiateChild(GoalItem, new Vector3(tx, 0.5f, tzSandbox));
 					}
@@ -369,27 +451,40 @@ namespace LD51
 					if (item != ItemType.None && m_ItemPrefabs.TryGetValue(item, out Prefab itemPrefab))
 						itemEntity = tileEntity.InstantiateChild(itemPrefab, Vector3.Zero);
 
+					TrapType trap = level.Traps[x, y];
+					Entity? trapEntity = null;
+					if (trap != TrapType.None)
+						trapEntity = tileEntity.InstantiateChild(AxeTrapItem, Vector3.Zero);
+
 					bool bridgeOpen = !IsBridgeItem(item);
 					var tileData = new TileData
 					{
 						TileEntity = tileEntity,
 						ItemEntity = itemEntity,
+						TrapEntity = trapEntity,
 						Type = tile,
 						IsVisible = false,
 						BridgeOpen = bridgeOpen,
+						TrapActive = false,
 						ItemType = item,
-						TrapType = level.Traps[x, y]
+						TrapType = trap
 					};
 
 					if (IsBridgeItem(item))
 						UpdateBridgeVisual(tileData);
+
+					if (trap != TrapType.None)
+						UpdateTrapVisual(tileData);
 
 					m_Section.AddTile((int)tx, (int)tzLevel, tileData);
 				}
 			}
 
 			m_BridgesOpen = false;
+			m_TrapTimer = 0.0f;
 			HUD.SetLine(3, "Bridges: CLOSED");
+			HUD.SetLine(4, "Axe: alternating");
+			SetupWorldLabels();
 		}
 	}
 }

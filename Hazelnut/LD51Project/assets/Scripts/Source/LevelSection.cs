@@ -15,9 +15,11 @@ namespace LD51
 	{
 		public Entity? TileEntity;
 		public Entity? ItemEntity;
+		public Entity? TrapEntity;
 		public TileType Type;
 		public bool IsVisible;
 		public bool BridgeOpen;
+		public bool TrapActive;
 		public TrapType TrapType;
 		public ItemType ItemType;
 	}

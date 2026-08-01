@@ -587,6 +587,23 @@ namespace Hazel {
 			RuntimeHUD::Clear();
 		}
 
+		void RuntimeWorldLabel_Set(int32_t index, glm::vec3* position, Coral::String text)
+		{
+			if (index < 0 || !position)
+			{
+				Coral::String::Free(text);
+				return;
+			}
+
+			RuntimeHUD::SetWorldLabel((size_t)index, *position, std::string(text));
+			Coral::String::Free(text);
+		}
+
+		void RuntimeWorldLabel_Clear()
+		{
+			RuntimeHUD::ClearWorldLabels();
+		}
+
 		float Time_GetTimeScale()
 		{
 			return Time::GetTimeScale();
@@ -661,6 +678,8 @@ namespace Hazel {
 		HZ_ADD_INTERNAL_CALL(CameraComponent_SetVerticalFOV);
 		HZ_ADD_INTERNAL_CALL(RuntimeHUD_SetLine);
 		HZ_ADD_INTERNAL_CALL(RuntimeHUD_Clear);
+		HZ_ADD_INTERNAL_CALL(RuntimeWorldLabel_Set);
+		HZ_ADD_INTERNAL_CALL(RuntimeWorldLabel_Clear);
 		HZ_ADD_INTERNAL_CALL(Time_GetTimeScale);
 		HZ_ADD_INTERNAL_CALL(Time_SetTimeScale);
 		coreAssembly.UploadInternalCalls();

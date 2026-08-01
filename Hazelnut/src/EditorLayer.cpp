@@ -367,6 +367,10 @@ namespace Hazel {
 			const auto& hudLines = RuntimeHUD::GetLines();
 			ImDrawList* drawList = ImGui::GetWindowDrawList();
 			const ImVec2 imageMin = ImGui::GetItemRectMin();
+			const ImVec2 imageMax = ImGui::GetItemRectMax();
+			const float viewportWidth = imageMax.x - imageMin.x;
+			const float viewportHeight = imageMax.y - imageMin.y;
+
 			float y = imageMin.y + 12.0f;
 			for (const std::string& line : hudLines)
 			{
@@ -377,6 +381,37 @@ namespace Hazel {
 				drawList->AddText(ImVec2(textPos.x + 1.0f, textPos.y + 1.0f), IM_COL32(0, 0, 0, 200), line.c_str());
 				drawList->AddText(textPos, IM_COL32(255, 255, 255, 255), line.c_str());
 				y += 22.0f;
+			}
+
+			if (m_RuntimeScene)
+			{
+				Entity cameraEntity = m_RuntimeScene->GetPrimaryCameraEntity();
+				if (cameraEntity)
+				{
+					const auto& transform = cameraEntity.GetComponent<TransformComponent>();
+					const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
+					const glm::mat4 viewProjection = camera.GetProjection() * glm::inverse(transform.GetTransform());
+
+					for (const RuntimeHUD::WorldLabelEntry& label : RuntimeHUD::GetWorldLabels())
+					{
+						if (!label.Active || label.Text.empty())
+							continue;
+
+						glm::vec4 clip = viewProjection * glm::vec4(label.Position, 1.0f);
+						if (clip.w <= 0.0f)
+							continue;
+
+						glm::vec3 ndc = glm::vec3(clip) / clip.w;
+						if (ndc.x < -1.0f || ndc.x > 1.0f || ndc.y < -1.0f || ndc.y > 1.0f || ndc.z < -1.0f || ndc.z > 1.0f)
+							continue;
+
+						const float screenX = imageMin.x + (ndc.x * 0.5f + 0.5f) * viewportWidth;
+						const float screenY = imageMin.y + (1.0f - (ndc.y * 0.5f + 0.5f)) * viewportHeight;
+						const ImVec2 textPos(screenX, screenY);
+						drawList->AddText(ImVec2(textPos.x + 1.0f, textPos.y + 1.0f), IM_COL32(0, 0, 0, 200), label.Text.c_str());
+						drawList->AddText(textPos, IM_COL32(255, 230, 80, 255), label.Text.c_str());
+					}
+				}
 			}
 		}
 
