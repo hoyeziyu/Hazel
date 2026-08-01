@@ -7,6 +7,7 @@ namespace LD51
 		public Entity PlayerReplicatorEntity = null!;
 		private PlayerReplicator? m_Replicator;
 		private bool m_InputEnabled = true;
+		private bool m_NKeyWasDown;
 
 		protected override void OnCreate()
 		{
@@ -16,6 +17,11 @@ namespace LD51
 
 		protected override void OnUpdate(float deltaTime)
 		{
+			bool nDown = Input.IsKeyPressed(KeyCode.N);
+			if (nDown && !m_NKeyWasDown)
+				LevelManager.Instance?.NextLevel();
+			m_NKeyWasDown = nDown;
+
 			if (Input.IsKeyPressed(KeyCode.F))
 				m_TimeManager?.EnterSlowMotion();
 			else
@@ -42,6 +48,13 @@ namespace LD51
 		{
 			IsActivePlayer = true;
 			m_InputEnabled = true;
+		}
+
+		public override void ResetToStart()
+		{
+			base.ResetToStart();
+			m_InputEnabled = true;
+			IsActivePlayer = true;
 		}
 
 		protected override void Move(float ts)

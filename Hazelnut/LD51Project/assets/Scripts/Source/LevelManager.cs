@@ -30,7 +30,18 @@ namespace LD51
 		public Prefab BridgeLeftRightItem = null!;
 		public Prefab AxeTrapItem = null!;
 
-		public string LevelFile = "assets/Levels/BridgeUpDown.png";
+		public string[] LevelGallery =
+		{
+			"assets/Levels/D.png",
+			"assets/Levels/S.png",
+			"assets/Levels/E.png",
+			"assets/Levels/BridgeUpDown.png",
+			"assets/Levels/DualMechanisms.png",
+			"assets/Levels/TrapsAndBridges.png",
+			"assets/Levels/Starter.png",
+		};
+
+		public string LevelFile = "assets/Levels/D.png";
 
 		public Entity m_CameraEntity = null!;
 		public AudioComponent AC = null!;
@@ -45,6 +56,7 @@ namespace LD51
 		private LevelSection? m_Section;
 		private bool m_IsReplicatingMoves;
 		private bool m_HasGoal;
+		private int m_LevelIndex;
 		private float m_TrapTimer;
 		private readonly List<TileAnimationInfo> m_TilesToAnimate = new List<TileAnimationInfo>();
 
@@ -67,6 +79,16 @@ namespace LD51
 			m_ItemPrefabs[ItemType.BridgeUpDown] = BridgeUpDownItem;
 			m_ItemPrefabs[ItemType.BridgeLeftRight] = BridgeLeftRightItem;
 
+			m_LevelIndex = 0;
+			for (int i = 0; i < LevelGallery.Length; i++)
+			{
+				if (LevelGallery[i] == LevelFile)
+				{
+					m_LevelIndex = i;
+					break;
+				}
+			}
+
 			string levelPath = ResolveLevelPath(LevelFile);
 			if (!File.Exists(levelPath))
 			{
@@ -76,6 +98,7 @@ namespace LD51
 
 			LoadLevel(levelPath);
 			GameStarted = true;
+			UpdateLevelHudLine();
 			Log.Info("LevelManager: loaded level with {0} tiles", m_Section?.Tiles.Count ?? 0);
 
 			var replicator = FindEntityByTag("PlayerReplicator");
@@ -109,6 +132,65 @@ namespace LD51
 
 			if (finished > 0)
 				m_TilesToAnimate.RemoveAll(a => a.Data.IsVisible);
+		}
+
+		public void NextLevel()
+		{
+			if (LevelGallery == null || LevelGallery.Length == 0)
+				return;
+
+			m_LevelIndex = (m_LevelIndex + 1) % LevelGallery.Length;
+			LevelFile = LevelGallery[m_LevelIndex];
+			ReloadLevel();
+		}
+
+		public void ReloadLevel()
+		{
+			ClearLevel();
+
+			string levelPath = ResolveLevelPath(LevelFile);
+			if (!File.Exists(levelPath))
+			{
+				Log.Error("LevelManager: level file not found: {0}", levelPath);
+				return;
+			}
+
+			m_IsReplicatingMoves = false;
+			LoadLevel(levelPath);
+			UpdateLevelHudLine();
+
+			var player = FindEntityByTag("Player")?.As<Player>();
+			var replicator = FindEntityByTag("PlayerReplicator")?.As<PlayerReplicator>();
+			player?.ResetToStart();
+			replicator?.ResetToStart();
+
+			FindEntityByTag("TimeManager")?.As<TimeManager>()?.Reset();
+
+			var replEntity = FindEntityByTag("PlayerReplicator");
+			if (replEntity != null)
+				ShowNeighbouringTiles(new Vector3Int(replEntity.Translation));
+
+			Log.Info("LevelManager: reloaded {0}", LevelFile);
+		}
+
+		private void ClearLevel()
+		{
+			m_TilesToAnimate.Clear();
+
+			if (m_Section?.SandboxEntity != null)
+				Scene.DestroyEntity(m_Section.SandboxEntity);
+
+			if (m_Section?.LevelEntity != null)
+				Scene.DestroyEntity(m_Section.LevelEntity);
+
+			m_Section = null;
+			m_HasGoal = false;
+		}
+
+		private void UpdateLevelHudLine()
+		{
+			string name = Path.GetFileNameWithoutExtension(LevelFile);
+			HUD.SetLine(5, $"Level: {name} (N)");
 		}
 
 		public bool IsReplicatingMoves() => m_IsReplicatingMoves;

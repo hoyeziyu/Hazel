@@ -1,47 +1,41 @@
 # M23 — LD51 Dichotomy Shell
 
-> 阶段 J：TextComponent 脚本绑定、BridgeUpDown 双轴谜题关卡、Item 标签与配色。
+> 阶段 K：TextComponent 编辑器预览、LD51 简易网格、字母关卡画廊。
 
 ---
 
-## Phase A–I
+## Phase A–J
 
-见 git 历史：`ebca7e1` → `c38519a`。
+见 git 历史：`ebca7e1` → `37bb2c7`。
 
 ---
 
-## Phase J（本提交）
+## Phase K（本提交）
 
 | 项 | 说明 |
 |----|------|
-| `TextComponent` C# 绑定 | `Text` / `Color` / `OffsetY`；新增 `Vector4` |
-| 脚本演示 | 桥梁开关时通过 `TextComponent.Color` 切换绿/金标签 |
-| `BridgeUpDown.png` | 三列 plate + 左/中/右 混合 LR/UD 桥，Goal 居中 |
-| Item 标签 | `BR-LR` / `BR-UD` 区分桥梁类型 |
+| TextComponent 编辑器预览 | Edit 模式视口投影世界标签（与 Play 一致） |
+| 简易网格 | `TileFlat`（平面地块）、`GoalGem`（八面体）；OBJ 源文件供 Content Browser 导入 |
+| 字母关卡 | `D.png` / `S.png` / `E.png` |
+| LevelGallery | 按 **N** 循环切换关卡；HUD 第 6 行显示关卡名 |
+
+### 关卡说明
+
+| 关卡 | 内容 |
+|------|------|
+| **D** | 单列 Plate + BridgeUpDown + Goal（入门） |
+| **S** | 十字 Spikes + Goal |
+| **E** | Plate + Axe + BridgeLeftRight + Goal |
+| BridgeUpDown / DualMechanisms / … | Phase I–J 谜题 |
 
 ### 操作
 
 | 键 | 功能 |
 |----|------|
 | W/A/S/D | 沙盒移动 |
-| 左列 PLATE (x=-2) | 切换左桥 (BridgeLeftRight) |
-| 中列 PLATE (x=0) | 切换中桥 (BridgeUpDown) |
-| 右列 PLATE (x=+2) | 切换右桥 (BridgeLeftRight) |
-| 等待 10s | Replicator 须走已开桥路径至 Goal |
-
-桥梁关闭时：LR 阻挡左右移动，UD 阻挡前后移动。HUD 第 4 行 `Bridges: open/total`。
-
-### C# 示例
-
-```csharp
-var text = entity.GetComponent<TextComponent>();
-if (text != null)
-{
-    text.Text = "GOAL";
-    text.Color = new Vector4(1, 0.9f, 0.2f, 1);
-    text.OffsetY = 0.8f;
-}
-```
+| **N** | 下一关卡（画廊循环） |
+| F | 慢动作 |
+| Space | 揭示相邻地块（调试） |
 
 ### 验证
 
@@ -52,13 +46,15 @@ cd build\msvc-debug; ctest -C Debug --output-on-failure
 .\bin\Debug-windows-x86_64\Hazelnut\Hazelnut.exe Hazelnut\LD51Project\LD51.hzproj
 ```
 
+Edit 模式打开带 TextComponent 的 Prefab 即可看到标签预览。
+
 ---
 
-## Phase K（后续）
+## Phase L（后续）
 
-- 导入 HazelGame 真实 glTF 模型替换占位立方体
-- TextComponent 编辑器实时预览
-- 更多 LD51 字母关卡
+- 从 HazelGame 导入 glTF（Bridge、SpikeTile 等）
+- TextComponent 编辑器 Gizmo / 拖拽 OffsetY
+- 完整 26 字母关卡集
 
 ---
 

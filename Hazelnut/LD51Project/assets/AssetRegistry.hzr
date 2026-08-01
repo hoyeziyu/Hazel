@@ -11,6 +11,18 @@ Assets:
   - Handle: 19402389245123987103
     FilePath: materials/Checkerboard.hmaterial
     Type: Material
+  - Handle: 18402389245123987202
+    FilePath: meshes/TileFlat.hsm
+    Type: StaticMesh
+  - Handle: 17402389245123987201
+    FilePath: meshes/TileFlat.hmesh
+    Type: MeshSource
+  - Handle: 17402389245123987203
+    FilePath: meshes/GoalGem.hmesh
+    Type: MeshSource
+  - Handle: 18402389245123987204
+    FilePath: meshes/GoalGem.hsm
+    Type: StaticMesh
   - Handle: 11402389245123987105
     FilePath: Audio/Configs/SC_Click.hsoundc
     Type: SoundConfig

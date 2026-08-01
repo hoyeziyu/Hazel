@@ -84,6 +84,39 @@ namespace Hazel {
 				"      FixedAspectRatio: false\n";
 		}
 
+		void DrawSceneTextComponentLabels(Scene* scene, const glm::mat4& viewProjection, ImDrawList* drawList,
+			const ImVec2& imageMin, float viewportWidth, float viewportHeight)
+		{
+			if (!scene)
+				return;
+
+			scene->GetRegistry().view<TransformComponent, TextComponent>().each([&](entt::entity, TransformComponent& transform, TextComponent& text) {
+				if (text.Text.empty())
+					return;
+
+				glm::vec3 position = transform.Translation + glm::vec3(0.0f, text.OffsetY, 0.0f);
+				glm::vec4 clip = viewProjection * glm::vec4(position, 1.0f);
+				if (clip.w <= 0.0f)
+					return;
+
+				glm::vec3 ndc = glm::vec3(clip) / clip.w;
+				if (ndc.x < -1.0f || ndc.x > 1.0f || ndc.y < -1.0f || ndc.y > 1.0f || ndc.z < -1.0f || ndc.z > 1.0f)
+					return;
+
+				const float screenX = imageMin.x + (ndc.x * 0.5f + 0.5f) * viewportWidth;
+				const float screenY = imageMin.y + (1.0f - (ndc.y * 0.5f + 0.5f)) * viewportHeight;
+				const ImVec2 textPos(screenX, screenY);
+				const auto& c = text.Color;
+				ImU32 textColor = IM_COL32(
+					(int)(c.r * 255.0f),
+					(int)(c.g * 255.0f),
+					(int)(c.b * 255.0f),
+					(int)(c.a * 255.0f));
+				drawList->AddText(ImVec2(textPos.x + 1.0f, textPos.y + 1.0f), IM_COL32(0, 0, 0, 200), text.Text.c_str());
+				drawList->AddText(textPos, textColor, text.Text.c_str());
+			});
+		}
+
 	}
 
 	EditorLayer::EditorLayer()
@@ -419,6 +452,16 @@ namespace Hazel {
 					}
 				}
 			}
+		}
+		else if (m_SceneState == SceneState::Edit && m_EditorScene)
+		{
+			ImDrawList* drawList = ImGui::GetWindowDrawList();
+			const ImVec2 imageMin = ImGui::GetItemRectMin();
+			const ImVec2 imageMax = ImGui::GetItemRectMax();
+			const float viewportWidth = imageMax.x - imageMin.x;
+			const float viewportHeight = imageMax.y - imageMin.y;
+			const glm::mat4 viewProjection = m_EditorCamera.GetProjectionMatrix() * m_EditorCamera.GetViewMatrix();
+			DrawSceneTextComponentLabels(m_EditorScene.get(), viewProjection, drawList, imageMin, viewportWidth, viewportHeight);
 		}
 
 		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();

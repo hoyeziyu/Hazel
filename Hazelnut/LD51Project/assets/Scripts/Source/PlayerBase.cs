@@ -121,6 +121,15 @@ namespace LD51
 			StopAnimation(0);
 		}
 
+		public virtual void ResetToStart()
+		{
+			m_IsDead = false;
+			m_DeathTimer = 1.0f;
+			Translation = m_SpawnLocation;
+			m_TargetLocation = new Vector3Int(Translation);
+			StopAnimation(0);
+		}
+
 		protected void PlayMoveAudio()
 		{
 			if (LevelManager.Instance?.AC == null)

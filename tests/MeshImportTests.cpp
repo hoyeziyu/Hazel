@@ -49,3 +49,18 @@ TEST(MeshImportTest, DetectsModelExtensions)
 	EXPECT_TRUE(Hazel::MeshImportService::IsModelExtension("bar.fbx"));
 	EXPECT_FALSE(Hazel::MeshImportService::IsModelExtension("tex.png"));
 }
+
+TEST(MeshImportTest, Ld51TileFlatObjImports)
+{
+	const std::filesystem::path objPath =
+		std::filesystem::path(HAZEL_REPO_ROOT) / "Hazelnut/LD51Project/assets/models/TileFlat.obj";
+
+	if (!std::filesystem::exists(objPath))
+		GTEST_SKIP() << "LD51 TileFlat.obj not found";
+
+	Hazel::AssimpMeshImporter importer(objPath);
+	Hazel::Ref<Hazel::MeshSource> mesh = importer.ImportToMeshSource();
+	ASSERT_TRUE(mesh);
+	EXPECT_GE(mesh->GetPositions().size(), 4u);
+	EXPECT_GE(mesh->GetIndices().size(), 3u);
+}

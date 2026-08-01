@@ -112,5 +112,14 @@ namespace LD51
 				TimeSpentOnTile = 0.0f
 			});
 		}
+
+		public override void ResetToStart()
+		{
+			base.ResetToStart();
+			m_RecordedMoves.Clear();
+			m_TileTimer = 0.0f;
+			m_ReplicateEnabled = false;
+			IsActivePlayer = false;
+		}
 	}
 }

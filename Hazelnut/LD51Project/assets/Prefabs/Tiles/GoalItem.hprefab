@@ -12,7 +12,7 @@ Prefab:
       Rotation: [0, 0, 0]
       Scale: [0.5, 0.5, 0.5]
     StaticMeshComponent:
-      StaticMesh: 18402389245123987102
+      StaticMesh: 18402389245123987204
       Material: 19402389245123987103
       Color: [1, 0.85, 0.1, 1]
       Visible: true
