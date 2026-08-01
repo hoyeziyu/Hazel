@@ -116,6 +116,18 @@ namespace Hazel {
 			: Radiance(radiance), Intensity(intensity) {}
 	};
 
+	struct TextComponent
+	{
+		std::string Text;
+		glm::vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
+		float OffsetY = 0.5f;
+
+		TextComponent() = default;
+		TextComponent(const TextComponent&) = default;
+		TextComponent(const std::string& text)
+			: Text(text) {}
+	};
+
 	struct RigidBody2DComponent
 	{
 		enum class Type { Static = 0, Dynamic, Kinematic };

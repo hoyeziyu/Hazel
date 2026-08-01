@@ -16,3 +16,7 @@ Prefab:
       Material: 19402389245123987103
       Color: [0.3, 0.5, 1, 1]
       Visible: true
+    TextComponent:
+      Text: PLATE
+      Color: [0.4, 0.7, 1, 1]
+      OffsetY: 0.35

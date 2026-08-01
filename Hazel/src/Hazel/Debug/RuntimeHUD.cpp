@@ -34,13 +34,14 @@ namespace Hazel {
 		}
 	}
 
-	void RuntimeHUD::SetWorldLabel(size_t index, const glm::vec3& position, const std::string& text)
+	void RuntimeHUD::SetWorldLabel(size_t index, const glm::vec3& position, const std::string& text, const glm::vec4& color)
 	{
 		if (index >= MaxWorldLabels)
 			return;
 
 		s_WorldLabels[index].Position = position;
 		s_WorldLabels[index].Text = text;
+		s_WorldLabels[index].Color = color;
 		s_WorldLabels[index].Active = !text.empty();
 	}
 

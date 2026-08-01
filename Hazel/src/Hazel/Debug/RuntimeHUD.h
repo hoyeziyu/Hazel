@@ -13,6 +13,7 @@ namespace Hazel {
 		{
 			glm::vec3 Position = glm::vec3(0.0f);
 			std::string Text;
+			glm::vec4 Color = glm::vec4(1.0f);
 			bool Active = false;
 		};
 
@@ -24,7 +25,7 @@ namespace Hazel {
 		static const std::array<std::string, MaxLines>& GetLines();
 
 		static void ClearWorldLabels();
-		static void SetWorldLabel(size_t index, const glm::vec3& position, const std::string& text);
+		static void SetWorldLabel(size_t index, const glm::vec3& position, const std::string& text, const glm::vec4& color = glm::vec4(1.0f));
 		static const std::array<WorldLabelEntry, MaxWorldLabels>& GetWorldLabels();
 
 	private:

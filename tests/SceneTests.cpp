@@ -88,3 +88,35 @@ TEST(SceneSerializerTest, SerializeAndDeserializeRoundTrip)
 	std::error_code ec;
 	std::filesystem::remove(path, ec);
 }
+
+TEST(SceneSerializerTest, TextComponentSerializeRoundTrip)
+{
+	auto scene = Hazel::CreateRef<Hazel::Scene>();
+	Hazel::Entity entity = scene->CreateEntity("Label");
+	auto& text = entity.AddComponent<Hazel::TextComponent>();
+	text.Text = "GOAL";
+	text.Color = glm::vec4(1.0f, 0.9f, 0.2f, 1.0f);
+	text.OffsetY = 0.8f;
+
+	const std::filesystem::path path =
+		std::filesystem::temp_directory_path() / "hazel_text_component_test.yaml";
+
+	Hazel::SceneSerializer writer(scene);
+	writer.Serialize(path.string());
+
+	auto loadedScene = Hazel::CreateRef<Hazel::Scene>();
+	Hazel::SceneSerializer reader(loadedScene);
+	ASSERT_TRUE(reader.Deserialize(path.string()));
+
+	Hazel::Entity loaded = loadedScene->TryGetEntityWithTag("Label");
+	ASSERT_TRUE(loaded);
+	ASSERT_TRUE(loaded.HasComponent<Hazel::TextComponent>());
+
+	const auto& loadedText = loaded.GetComponent<Hazel::TextComponent>();
+	EXPECT_EQ(loadedText.Text, "GOAL");
+	EXPECT_FLOAT_EQ(loadedText.Color.r, 1.0f);
+	EXPECT_FLOAT_EQ(loadedText.OffsetY, 0.8f);
+
+	std::error_code ec;
+	std::filesystem::remove(path, ec);
+}

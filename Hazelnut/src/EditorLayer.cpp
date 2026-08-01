@@ -408,8 +408,14 @@ namespace Hazel {
 						const float screenX = imageMin.x + (ndc.x * 0.5f + 0.5f) * viewportWidth;
 						const float screenY = imageMin.y + (1.0f - (ndc.y * 0.5f + 0.5f)) * viewportHeight;
 						const ImVec2 textPos(screenX, screenY);
+						const auto& c = label.Color;
+						ImU32 textColor = IM_COL32(
+							(int)(c.r * 255.0f),
+							(int)(c.g * 255.0f),
+							(int)(c.b * 255.0f),
+							(int)(c.a * 255.0f));
 						drawList->AddText(ImVec2(textPos.x + 1.0f, textPos.y + 1.0f), IM_COL32(0, 0, 0, 200), label.Text.c_str());
-						drawList->AddText(textPos, IM_COL32(255, 230, 80, 255), label.Text.c_str());
+						drawList->AddText(textPos, textColor, label.Text.c_str());
 					}
 				}
 			}

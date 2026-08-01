@@ -30,7 +30,7 @@ namespace LD51
 		public Prefab BridgeLeftRightItem = null!;
 		public Prefab AxeTrapItem = null!;
 
-		public string LevelFile = "assets/Levels/TrapsAndBridges.png";
+		public string LevelFile = "assets/Levels/DualMechanisms.png";
 
 		public Entity m_CameraEntity = null!;
 		public AudioComponent AC = null!;
@@ -44,7 +44,6 @@ namespace LD51
 		private readonly Dictionary<ItemType, Prefab> m_ItemPrefabs = new Dictionary<ItemType, Prefab>();
 		private LevelSection? m_Section;
 		private bool m_IsReplicatingMoves;
-		private bool m_BridgesOpen;
 		private bool m_HasGoal;
 		private float m_TrapTimer;
 		private readonly List<TileAnimationInfo> m_TilesToAnimate = new List<TileAnimationInfo>();
@@ -216,7 +215,8 @@ namespace LD51
 			if (tile == null || tile.ItemType != ItemType.PressurePlate)
 				return;
 
-			ToggleBridges();
+			int plateX = GetTileColumn(position);
+			ToggleBridgesForColumn(plateX);
 
 			if (AC != null)
 			{
@@ -225,25 +225,52 @@ namespace LD51
 			}
 		}
 
-		private void ToggleBridges()
+		private static int GetTileColumn(Vector3 position)
+		{
+			return Mathf.FloorToInt(position.X);
+		}
+
+		private void ToggleBridgesForColumn(int columnX)
 		{
 			if (m_Section == null)
 				return;
 
-			m_BridgesOpen = !m_BridgesOpen;
-
 			foreach (var kvp in m_Section.Tiles)
 			{
+				if (kvp.Key.X != columnX)
+					continue;
+
 				TileData tile = kvp.Value;
 				if (!IsBridgeItem(tile.ItemType))
 					continue;
 
-				tile.BridgeOpen = m_BridgesOpen;
+				tile.BridgeOpen = !tile.BridgeOpen;
 				UpdateBridgeVisual(tile);
 			}
 
-			HUD.SetLine(3, m_BridgesOpen ? "Bridges: OPEN" : "Bridges: CLOSED");
-			Log.Info("LevelManager: bridges {0}", m_BridgesOpen ? "opened" : "closed");
+			UpdateBridgeHudLine();
+			Log.Info("LevelManager: toggled bridges on column {0}", columnX);
+		}
+
+		private void UpdateBridgeHudLine()
+		{
+			int open = 0;
+			int total = 0;
+
+			if (m_Section != null)
+			{
+				foreach (var kvp in m_Section.Tiles)
+				{
+					if (!IsBridgeItem(kvp.Value.ItemType))
+						continue;
+
+					total++;
+					if (kvp.Value.BridgeOpen)
+						open++;
+				}
+			}
+
+			HUD.SetLine(3, $"Bridges: {open}/{total}");
 		}
 
 		private static bool IsBridgeItem(ItemType item)
@@ -289,27 +316,6 @@ namespace LD51
 				tile.TrapEntity.Translation = new Vector3(swing, 0.85f, 0);
 			else if (tile.TrapType == TrapType.AxeUpDown)
 				tile.TrapEntity.Translation = new Vector3(0, 0.85f, swing);
-		}
-
-		private void SetupWorldLabels()
-		{
-			HUD.ClearWorldLabels();
-
-			if (m_HasGoal)
-			{
-				HUD.SetWorldLabel(0, new Vector3(m_Section!.GoalTile.X, 1.2f, m_Section.GoalTile.Z), "GOAL");
-			}
-
-			foreach (var kvp in m_Section!.Tiles)
-			{
-				TileData tile = kvp.Value;
-				Vector3 worldPos = new Vector3(kvp.Key.X, 1.0f, kvp.Key.Z);
-
-				if (tile.ItemType == ItemType.PressurePlate)
-					HUD.SetWorldLabel(1, worldPos, "PLATE");
-				else if (tile.TrapType != TrapType.None)
-					HUD.SetWorldLabel(2, worldPos, "AXE");
-			}
 		}
 
 		private TileData? GetTileAt(Vector3 position)
@@ -480,11 +486,9 @@ namespace LD51
 				}
 			}
 
-			m_BridgesOpen = false;
 			m_TrapTimer = 0.0f;
-			HUD.SetLine(3, "Bridges: CLOSED");
+			UpdateBridgeHudLine();
 			HUD.SetLine(4, "Axe: alternating");
-			SetupWorldLabels();
 		}
 	}
 }

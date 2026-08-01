@@ -295,6 +295,19 @@ namespace Hazel {
 			out << YAML::EndMap;
 		}
 
+		if (entity.HasComponent<TextComponent>())
+		{
+			out << YAML::Key << "TextComponent";
+			out << YAML::BeginMap;
+
+			auto& text = entity.GetComponent<TextComponent>();
+			out << YAML::Key << "Text" << YAML::Value << text.Text;
+			out << YAML::Key << "Color" << YAML::Value << text.Color;
+			out << YAML::Key << "OffsetY" << YAML::Value << text.OffsetY;
+
+			out << YAML::EndMap;
+		}
+
 		if (entity.HasComponent<RigidBody2DComponent>())
 		{
 			out << YAML::Key << "RigidBody2DComponent";
@@ -568,6 +581,15 @@ namespace Hazel {
 				auto& src = deserializedEntity.AddComponent<DirectionalLightComponent>();
 				src.Radiance = directionalLightComponent["Radiance"].as<glm::vec3>(glm::vec3(1.0f));
 				src.Intensity = directionalLightComponent["Intensity"].as<float>(1.0f);
+			}
+
+			auto textComponent = entity["TextComponent"];
+			if (textComponent)
+			{
+				auto& src = deserializedEntity.AddComponent<TextComponent>();
+				src.Text = textComponent["Text"].as<std::string>("");
+				src.Color = textComponent["Color"].as<glm::vec4>(glm::vec4(1.0f));
+				src.OffsetY = textComponent["OffsetY"].as<float>(0.5f);
 			}
 
 			auto rigidBody2DComponent = entity["RigidBody2DComponent"];

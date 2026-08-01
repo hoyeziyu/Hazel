@@ -326,6 +326,12 @@ namespace Hazel {
 				ImGui::CloseCurrentPopup();
 			}
 
+			if (ImGui::MenuItem("Text"))
+			{
+				m_SelectionContext.AddComponent<TextComponent>();
+				ImGui::CloseCurrentPopup();
+			}
+
 			if (ImGui::MenuItem("Rigid Body 2D"))
 			{
 				if (!m_SelectionContext.HasComponent<RigidBody2DComponent>())
@@ -536,6 +542,16 @@ namespace Hazel {
 			ImGui::ColorEdit3("Radiance", glm::value_ptr(component.Radiance));
 			ImGui::DragFloat("Intensity", &component.Intensity, 0.05f, 0.0f, 100.0f);
 			});
+
+		DrawComponent<TextComponent>("Text", entity, [](auto& component) {
+			char buffer[256];
+			memset(buffer, 0, sizeof(buffer));
+			strncpy_s(buffer, sizeof(buffer), component.Text.c_str(), _TRUNCATE);
+			if (ImGui::InputText("Text", buffer, sizeof(buffer)))
+				component.Text = std::string(buffer);
+			ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
+			ImGui::DragFloat("Offset Y", &component.OffsetY, 0.05f, -5.0f, 5.0f);
+		});
 
 		DrawComponent<RigidBody2DComponent>("Rigid Body 2D", entity, [](auto& component) {
 			const char* bodyTypes[] = { "Static", "Dynamic", "Kinematic" };

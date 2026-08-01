@@ -16,8 +16,8 @@
 #include "Hazel/Script/NativeScriptFactory.h"
 #include "Hazel/Script/NativeScriptRegistry.h"
 #include "Hazel/Script/ScriptEngine.h"
-#include "Hazel/Core/Time.h"
 #include "Hazel/Debug/RuntimeHUD.h"
+#include "Hazel/Core/Time.h"
 #include "Hazel/Audio/AudioEngine.h"
 #include "Hazel/Animation/AnimationSystem.h"
 #include "Hazel/Project/Project.h"
@@ -380,6 +380,25 @@ namespace Hazel {
 				sc.Instance.Invoke<float>("OnUpdate", (float)ts);
 			});
 		}
+
+		SyncTextComponentWorldLabels();
+	}
+
+	void Scene::SyncTextComponentWorldLabels()
+	{
+		constexpr size_t kScriptLabelSlots = 8;
+		size_t index = kScriptLabelSlots;
+
+		m_Registry.view<TransformComponent, TextComponent>().each([&](auto, TransformComponent& transform, TextComponent& text) {
+			if (index >= RuntimeHUD::MaxWorldLabels || text.Text.empty())
+				return;
+
+			glm::vec3 position = transform.Translation + glm::vec3(0.0f, text.OffsetY, 0.0f);
+			RuntimeHUD::SetWorldLabel(index++, position, text.Text, text.Color);
+		});
+
+		for (; index < RuntimeHUD::MaxWorldLabels; ++index)
+			RuntimeHUD::SetWorldLabel(index, glm::vec3(0.0f), "", glm::vec4(0.0f));
 	}
 
 	void Scene::OnUpdateEditor(Timestep ts)
@@ -528,6 +547,7 @@ namespace Hazel {
 		CopyComponent<MeshRendererComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<StaticMeshComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<DirectionalLightComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<TextComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<RigidBody2DComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<BoxCollider2DComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<AudioComponent>(target->m_Registry, m_Registry, enttMap);
@@ -614,6 +634,7 @@ namespace Hazel {
 		CopyComponentIfExists<MeshRendererComponent>(newEntity, entity);
 		CopyComponentIfExists<StaticMeshComponent>(newEntity, entity);
 		CopyComponentIfExists<DirectionalLightComponent>(newEntity, entity);
+		CopyComponentIfExists<TextComponent>(newEntity, entity);
 		CopyComponentIfExists<RigidBody2DComponent>(newEntity, entity);
 		CopyComponentIfExists<BoxCollider2DComponent>(newEntity, entity);
 		CopyComponentIfExists<CameraComponent>(newEntity, entity);
@@ -689,6 +710,7 @@ namespace Hazel {
 			CopyComponentIfExists<MeshRendererComponent>(newEntity, sourceEntity);
 			CopyComponentIfExists<StaticMeshComponent>(newEntity, sourceEntity);
 			CopyComponentIfExists<DirectionalLightComponent>(newEntity, sourceEntity);
+			CopyComponentIfExists<TextComponent>(newEntity, sourceEntity);
 			CopyComponentIfExists<RigidBody2DComponent>(newEntity, sourceEntity);
 			CopyComponentIfExists<BoxCollider2DComponent>(newEntity, sourceEntity);
 			CopyComponentIfExists<CameraComponent>(newEntity, sourceEntity);
@@ -822,6 +844,7 @@ namespace Hazel {
 		CopyComponentIfExists<MeshRendererComponent>(newEntity, entity);
 		CopyComponentIfExists<StaticMeshComponent>(newEntity, entity);
 		CopyComponentIfExists<DirectionalLightComponent>(newEntity, entity);
+		CopyComponentIfExists<TextComponent>(newEntity, entity);
 		CopyComponentIfExists<RigidBody2DComponent>(newEntity, entity);
 		CopyComponentIfExists<BoxCollider2DComponent>(newEntity, entity);
 		CopyComponentIfExists<CameraComponent>(newEntity, entity);
@@ -934,6 +957,10 @@ namespace Hazel {
 	}
 	template<>
 	void Scene::OnComponentAdded<DirectionalLightComponent>(Entity, DirectionalLightComponent&)
+	{
+	}
+	template<>
+	void Scene::OnComponentAdded<TextComponent>(Entity, TextComponent&)
 	{
 	}
 	template<>

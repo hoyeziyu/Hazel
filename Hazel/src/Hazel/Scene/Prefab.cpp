@@ -37,6 +37,9 @@ namespace Hazel {
 		if (entity.HasComponent<StaticMeshComponent>())
 			newEntity.AddComponent<StaticMeshComponent>(entity.GetComponent<StaticMeshComponent>());
 
+		if (entity.HasComponent<TextComponent>())
+			newEntity.AddComponent<TextComponent>(entity.GetComponent<TextComponent>());
+
 		if (entity.HasComponent<CameraComponent>())
 			newEntity.AddComponent<CameraComponent>(entity.GetComponent<CameraComponent>());
 
