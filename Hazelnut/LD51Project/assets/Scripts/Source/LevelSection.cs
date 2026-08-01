@@ -14,8 +14,10 @@ namespace LD51
 	public class TileData
 	{
 		public Entity? TileEntity;
+		public Entity? ItemEntity;
 		public TileType Type;
 		public bool IsVisible;
+		public bool BridgeOpen;
 		public TrapType TrapType;
 		public ItemType ItemType;
 	}

@@ -1,55 +1,50 @@
 # M23 — LD51 Dichotomy Shell
 
-> 阶段 F：Runtime HUD、致命地块、慢动作/FOV、第二关卡。
+> 阶段 G：PressurePlate / Bridge 机关与 Mechanisms 关卡。
 
 ---
 
-## Phase A–E
+## Phase A–F
 
-见 git 历史：`ebca7e1` → `6df5c94`。
+见 git 历史：`ebca7e1` → `66c6c62`。
 
 ---
 
-## Phase F（本提交）
+## Phase G（本提交）
 
 | 项 | 说明 |
 |----|------|
-| `RuntimeHUD` + `HUD` C# | 脚本 `HUD.SetLine` / `Clear`，Play 模式 Viewport ImGui 叠加 |
-| `Time.TimeScale` | 全局时间缩放；`TimeManager` 慢动作 + 相机 FOV |
-| `CameraComponent.VerticalFOV` | 脚本可读写透视 FOV（度） |
-| `SpikesTile` / `LavaTile` | 新 Prefab + `IsDeadlyTile` + 玩家死亡 |
-| `Challenge.png` | 第二关卡（Spikes 行 + Lava 格 + 中心 Goal） |
+| `PressurePlateItem` | 踩踏切换桥梁状态（沙盒区镜像 plate 同样生效） |
+| `BridgeUpDown` / `BridgeLeftRight` | 关闭时不可通过（Replicator 踩入即死亡） |
+| `IsBlockedTile` | 关闭桥梁 / 未升起地块判定 |
+| `Mechanisms.png` | 默认关卡：plate → bridge → goal 线性谜题 |
+| HUD 第 4 行 | 显示 `Bridges: OPEN/CLOSED` |
 
 ### 操作
 
 | 键 | 功能 |
 |----|------|
-| W/A/S/D 或方向键 | 沙盒区移动（录制路径） |
-| Space | 预览相邻沙盒格（日志） |
-| F（按住） | 慢动作 + 缩小 FOV |
-| 等待 10s | 自动切换至 Replicator 回放 |
-| 踩 Spikes/Lava | 死亡并重置回合计时 |
-
-Viewport 左上角 HUD 显示倒计时、当前控制角色（Player / Replicator）、慢动作提示。
+| W/A/S/D | 沙盒区移动；**先踩蓝色 PressurePlate** 打开桥梁 |
+| 等待 10s | Replicator 回放；未开桥时踩桥会死亡 |
+| F（按住） | 慢动作 |
 
 ### 验证
 
 ```powershell
-cmake --build --preset=debug --target hazel-engine HazelTests Hazelnut
+cmake --build --preset=debug --target Hazelnut
 dotnet build Hazelnut/LD51Project/assets/Scripts/LD51.csproj -c Debug
-cd build\msvc-debug; ctest -C Debug --output-on-failure
 .\bin\Debug-windows-x86_64\Hazelnut\Hazelnut.exe Hazelnut\LD51Project\LD51.hzproj
 ```
 
-Play 后：HUD 显示倒计时；Challenge 关卡含致命地块；Replicator 回放时可踩 lava/spikes 触发死亡。
+Play：Player 阶段沿 +Z 走到 plate 并继续；10s 后 Replicator 需桥梁已打开才能到达 Goal。
 
 ---
 
-## Phase G（后续）
+## Phase H（后续）
 
-- Bridge / PressurePlate 机关
-- 完整 LD51 资产导入
 - TextComponent 世界空间 UI
+- TrapType（Axe）与完整 LD51 资产
+- Bridge 方向性阻挡（仅垂直/水平格）
 
 ---
 

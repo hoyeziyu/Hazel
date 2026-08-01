@@ -25,8 +25,11 @@ namespace LD51
 		public Prefab LevelContainer = null!;
 		public Prefab SpikesTile = null!;
 		public Prefab LavaTile = null!;
+		public Prefab PressurePlateItem = null!;
+		public Prefab BridgeUpDownItem = null!;
+		public Prefab BridgeLeftRightItem = null!;
 
-		public string LevelFile = "assets/Levels/Challenge.png";
+		public string LevelFile = "assets/Levels/Mechanisms.png";
 
 		public Entity m_CameraEntity = null!;
 		public AudioComponent AC = null!;
@@ -40,6 +43,7 @@ namespace LD51
 		private readonly Dictionary<ItemType, Prefab> m_ItemPrefabs = new Dictionary<ItemType, Prefab>();
 		private LevelSection? m_Section;
 		private bool m_IsReplicatingMoves;
+		private bool m_BridgesOpen;
 		private readonly List<TileAnimationInfo> m_TilesToAnimate = new List<TileAnimationInfo>();
 
 		protected override void OnCreate()
@@ -57,6 +61,9 @@ namespace LD51
 			m_TilePrefabs[TileType.Lava] = LavaTile;
 			m_TilePrefabs[TileType.LavaDeadly] = LavaTile;
 			m_ItemPrefabs[ItemType.Goal] = GoalItem;
+			m_ItemPrefabs[ItemType.PressurePlate] = PressurePlateItem;
+			m_ItemPrefabs[ItemType.BridgeUpDown] = BridgeUpDownItem;
+			m_ItemPrefabs[ItemType.BridgeLeftRight] = BridgeLeftRightItem;
 
 			string levelPath = ResolveLevelPath(LevelFile);
 			if (!File.Exists(levelPath))
@@ -154,6 +161,84 @@ namespace LD51
 			int tileZ = Mathf.FloorToInt(position.Z);
 			var goal = m_Section.GoalTile;
 			return goal.X == tileX && goal.Z == tileZ;
+		}
+
+		public bool IsBlockedTile(Vector3 position)
+		{
+			TileData? tile = GetTileAt(position);
+			if (tile == null)
+				return true;
+
+			if (!tile.IsVisible)
+				return true;
+
+			if (IsBridgeItem(tile.ItemType))
+				return !tile.BridgeOpen;
+
+			return false;
+		}
+
+		public void OnEntitySteppedTile(Vector3 position)
+		{
+			TileData? tile = GetTileAt(position);
+			if (tile == null)
+				tile = GetTileAt(new Vector3(position.X, position.Y, position.Z + 11.0f));
+
+			if (tile == null || tile.ItemType != ItemType.PressurePlate)
+				return;
+
+			ToggleBridges();
+
+			if (AC != null)
+			{
+				var ac = AC;
+				Audio.PostEvent(new AudioCommandID("Click"), ref ac);
+			}
+		}
+
+		private void ToggleBridges()
+		{
+			if (m_Section == null)
+				return;
+
+			m_BridgesOpen = !m_BridgesOpen;
+
+			foreach (var kvp in m_Section.Tiles)
+			{
+				TileData tile = kvp.Value;
+				if (!IsBridgeItem(tile.ItemType))
+					continue;
+
+				tile.BridgeOpen = m_BridgesOpen;
+				UpdateBridgeVisual(tile);
+			}
+
+			HUD.SetLine(3, m_BridgesOpen ? "Bridges: OPEN" : "Bridges: CLOSED");
+			Log.Info("LevelManager: bridges {0}", m_BridgesOpen ? "opened" : "closed");
+		}
+
+		private static bool IsBridgeItem(ItemType item)
+		{
+			return item == ItemType.BridgeUpDown || item == ItemType.BridgeLeftRight;
+		}
+
+		private static void UpdateBridgeVisual(TileData tile)
+		{
+			if (tile.ItemEntity == null)
+				return;
+
+			float y = tile.BridgeOpen ? 0.45f : -0.25f;
+			tile.ItemEntity.Translation = new Vector3(0, y, 0);
+		}
+
+		private TileData? GetTileAt(Vector3 position)
+		{
+			if (m_Section == null)
+				return null;
+
+			int tileX = Mathf.FloorToInt(position.X);
+			int tileZ = Mathf.FloorToInt(position.Z);
+			return m_Section.GetTile(tileX, tileZ);
 		}
 
 		public bool IsDeadlyTile(Vector3 position)
@@ -275,20 +360,36 @@ namespace LD51
 						m_Section.GoalTile = new TileKey { X = (int)tx, Z = (int)tzLevel };
 						sectionContainer.InstantiateChild(GoalItem, new Vector3(tx, 0.5f, tzSandbox));
 					}
+					else if (item == ItemType.PressurePlate)
+					{
+						sectionContainer.InstantiateChild(PressurePlateItem, new Vector3(tx, 0.15f, tzSandbox));
+					}
 
+					Entity? itemEntity = null;
 					if (item != ItemType.None && m_ItemPrefabs.TryGetValue(item, out Prefab itemPrefab))
-						tileEntity.InstantiateChild(itemPrefab, Vector3.Zero);
+						itemEntity = tileEntity.InstantiateChild(itemPrefab, Vector3.Zero);
 
-					m_Section.AddTile((int)tx, (int)tzLevel, new TileData
+					bool bridgeOpen = !IsBridgeItem(item);
+					var tileData = new TileData
 					{
 						TileEntity = tileEntity,
+						ItemEntity = itemEntity,
 						Type = tile,
 						IsVisible = false,
+						BridgeOpen = bridgeOpen,
 						ItemType = item,
 						TrapType = level.Traps[x, y]
-					});
+					};
+
+					if (IsBridgeItem(item))
+						UpdateBridgeVisual(tileData);
+
+					m_Section.AddTile((int)tx, (int)tzLevel, tileData);
 				}
 			}
+
+			m_BridgesOpen = false;
+			HUD.SetLine(3, "Bridges: CLOSED");
 		}
 	}
 }

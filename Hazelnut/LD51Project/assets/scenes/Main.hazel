@@ -41,6 +41,15 @@ Entities:
         - Name: LavaTile
           Type: Prefab
           Value: 20402389245123987117
+        - Name: PressurePlateItem
+          Type: Prefab
+          Value: 20402389245123987118
+        - Name: BridgeUpDownItem
+          Type: Prefab
+          Value: 20402389245123987119
+        - Name: BridgeLeftRightItem
+          Type: Prefab
+          Value: 20402389245123987120
   - Entity: 16876354252294603917
     TagComponent:
       Tag: Camera

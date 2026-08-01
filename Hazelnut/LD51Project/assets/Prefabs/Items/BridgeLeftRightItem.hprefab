@@ -1,0 +1,18 @@
+Prefab:
+  - Entity: 10069443060331666462
+    TagComponent:
+      Tag: BridgeLeftRightItem
+    Parent: 0
+    Children: []
+    PrefabComponent:
+      Prefab: 20402389245123987120
+      Entity: 10069443060331666462
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.35, 0.15, 0.9]
+    StaticMeshComponent:
+      StaticMesh: 18402389245123987102
+      Material: 19402389245123987103
+      Color: [0.55, 0.35, 0.15, 1]
+      Visible: true

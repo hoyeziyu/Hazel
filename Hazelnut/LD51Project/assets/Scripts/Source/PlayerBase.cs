@@ -61,11 +61,13 @@ namespace LD51
 				Translation = new Vector3(m_TargetLocation.X, previousY, m_TargetLocation.Z);
 				StopAnimation(0);
 
-				if (m_LevelManager != null && m_LevelManager.IsDeadlyTile(Translation))
+				if (m_LevelManager != null && (m_LevelManager.IsDeadlyTile(Translation) || m_LevelManager.IsBlockedTile(Translation)))
 				{
 					m_LevelManager.OnPlayerDied(this);
 					return;
 				}
+
+				m_LevelManager?.OnEntitySteppedTile(Translation);
 
 				OnTargetReached();
 			}
